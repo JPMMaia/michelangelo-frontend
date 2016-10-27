@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "TutorialData.h"
 #include "Common/EngineException.h"
 
 #include <curl/curl.h>
@@ -19,6 +20,8 @@ namespace MichelangeloAPI
 
 		void Authenticate();
 
+		std::vector<TutorialData> GetTutorials() const;
+
 		CURL* GetCURL();
 		const CURL* GetCURL() const;
 
@@ -28,9 +31,12 @@ namespace MichelangeloAPI
 	private:
 		void Initialize();
 		void Shutdown();
+		void SetCookie() const;
 
+		static int WriteCallback(char* data, size_t size, size_t count, std::string* userData);
 		static bool ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookie);
 		static std::string BuildCookie(const std::initializer_list<std::string>& cookieValues);
+		static bool ExtractVerificationToken(const std::string& body, std::string& verificationToken);
 
 	private:
 		CURL* m_curl = nullptr;

@@ -8,6 +8,9 @@
     <Filter Include="MichelangeloAPI">
       <UniqueIdentifier>{ee63b01e-161e-42a1-a295-5cae5681e6f1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MichelangeloAPI\Resources">
+      <UniqueIdentifier>{716ae19f-3907-44c5-8fef-e1ea5ac9dbbc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MichelangeloAPI\main.cpp">
@@ -25,6 +28,12 @@
       <Filter>MichelangeloAPI</Filter>
     </ClInclude>
     <ClInclude Include="MichelangeloAPI\HeaderConstants.h">
+      <Filter>MichelangeloAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="MichelangeloAPI\TutorialData.h">
+      <Filter>MichelangeloAPI\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="MichelangeloAPI\URLConstants.h">
       <Filter>MichelangeloAPI</Filter>
     </ClInclude>
   </ItemGroup>

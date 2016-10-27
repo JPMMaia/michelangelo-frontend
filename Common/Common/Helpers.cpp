@@ -63,40 +63,6 @@ std::string Helpers::WStringToString(const std::wstring& wstr)
 	return converter.to_bytes(wstr);
 }
 
-void Helpers::ReadData(const std::wstring& filename, std::vector<char>& buffer)
-{
-	using namespace std;
-
-	// Open file for reading in binary mode, and seek to the end of file immediately:
-	ifstream file(filename, ios::in | ios::binary | ios::ate);
-	if (!file.good())
-		throw runtime_error("Couldn't open file " + Helpers::WStringToString(filename));
-
-	// Get size of file and seek to the begin of file:
-	auto size = file.tellg();
-	file.seekg(0, ios::beg);
-
-	// Read content of file:
-	buffer.resize(static_cast<uint32_t>(size));
-	file.read(buffer.data(), size);
-	if (!file.good())
-		throw runtime_error("Error while reading file " + Helpers::WStringToString(filename));
-}
-void Helpers::WriteData(const std::wstring& filename, const std::vector<char>& buffer)
-{
-	using namespace std;
-
-	// Open file for writing in binary mode:
-	ofstream file(filename, ios::out | ios::binary);
-	if (!file.good())
-		throw runtime_error("Couldn't open file " + Helpers::WStringToString(filename));
-
-	// Write contents to file:
-	file.write(buffer.data(), buffer.size());
-	if (!file.good())
-		throw runtime_error("Error while writing file " + Helpers::WStringToString(filename));
-}
-
 void Common::ThrowIfFailed(HRESULT hr)
 {
 	if (FAILED(hr))

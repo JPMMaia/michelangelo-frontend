@@ -1,19 +1,13 @@
 ﻿#include "WebAPI.h"
 #include "HeaderConstants.h"
+#include "URLConstants.h"
+#include "nlohmann/JSON/json.hpp"
 
 #include <regex>
 
 using namespace Common;
 using namespace MichelangeloAPI;
-
-int WriteCallback(char* data, size_t size, size_t nmemb, std::string* writerData)
-{
-	if (writerData == nullptr)
-		return 0;
-
-	writerData->append(data, size * nmemb);
-	return static_cast<int>(size * nmemb);
-}
+using namespace std;
 
 WebAPI::WebAPI()
 {
@@ -27,45 +21,34 @@ WebAPI::~WebAPI()
 void WebAPI::Authenticate()
 {
 	// Set call back functions:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WriteCallback));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, WriteCallback));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, WebAPI::WriteCallback));
+
+	// Set parameters:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, URLConstants::LoginPage.c_str()));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 1L));
 
 	// TODO in case of timeout retry
 	std::string loginPageBody;
 	std::string loginPageHeader;
 	{
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, "https://michelangelo.graphics/Account/Login"));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 1L));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &loginPageBody));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &loginPageHeader));
-
 		ThrowIfCURLFailed(curl_easy_perform(m_curl));
 	}
 
 	// Extract the request verification token:
-	std::string requestVerificationToken;
-	{
-		//	TODO now it works only for direct registrations on the site, it would be good to extend it to external logins (Google, Facebook) if possible. They have a different token and possibly the login sequence is different as well.
-		std::regex tokenRegex("form action=\"\\/Account\\/Login\" .*><input name=\"__RequestVerificationToken\" type=\"hidden\" value=\".*\"");
-		std::smatch match;
-		std::string tag;
-		std::regex_search(loginPageBody, match, tokenRegex);
-		for (auto x : match) tag = x;
-
-		// Now there should be quite a large substring in the tag including the form and its first input field (which bears the token)
-		std::regex tokenValue_regex("value=\".*\""); // Match the value of the token
-		std::regex_search(tag, match, tokenValue_regex);
-		for (auto x : match) tag = x;
-
-		requestVerificationToken = tag.substr(7, tag.length() - 8);
-	}
+	std::string verificationToken; 
+	if (!ExtractVerificationToken(loginPageBody, verificationToken))
+		ThrowEngineException(L"Failed to extract verification token.");
 
 	std::string verificationCookieValue;
 	if (!ExtractCookieValue(loginPageHeader, HeaderConstants::RequestCookie, verificationCookieValue))
-		ThrowEngineException(L"Failed to extract verification cookie");
+		ThrowEngineException(L"Failed to extract verification cookie.");
 
+	std::string responseBody;
 	std::string responseHeader;
 	{
 		// Put the cookie token into the header:
@@ -75,11 +58,10 @@ void WebAPI::Authenticate()
 
 		// The credentials go here, plus the body request token:
 		//TODO replace the LOGIN and PWD by the username and password of the user!!! Otherwise it wil not work!
-		auto postBody = "__RequestVerificationToken=" + requestVerificationToken + "&Email=jpmmaia@gmail.com&Password=yslxqCIVAIqYFuAqYUImyNo5375NYhVGyVwdNerkrjnV8HMEPnwiyQBISnSAThj5&RememberMe=false";
+		auto postBody = "__RequestVerificationToken=" + verificationToken + "&Email=jpmmaia@gmail.com&Password=yslxqCIVAIqYFuAqYUImyNo5375NYhVGyVwdNerkrjnV8HMEPnwiyQBISnSAThj5&RememberMe=false";
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 1L));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, postBody.c_str()));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(postBody.length())));
-		std::string responseBody;
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
 
@@ -94,6 +76,39 @@ void WebAPI::Authenticate()
 	// Set application cookie:
 	auto cookie = BuildCookie({ verificationCookieValue, applicationCookieValue });
 	m_cookie = curl_slist_append(m_cookie, cookie.c_str());
+	SetCookie();
+}
+
+std::vector<TutorialData> WebAPI::GetTutorials() const
+{
+	std::string header;
+	std::string tutorialsJsonString;
+	{
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, URLConstants::TutorialsAPI.c_str()));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 0L));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, WebAPI::WriteCallback));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &tutorialsJsonString));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &header));
+		ThrowIfCURLFailed(curl_easy_perform(m_curl));
+	}
+
+	// Create json object:
+	using json = nlohmann::json;
+	auto tutorialsJson = json::parse(tutorialsJsonString.c_str());
+
+	std::vector<TutorialData> tutorialsData;
+	tutorialsData.reserve(tutorialsJson.size());
+	for(auto& element : tutorialsJson)
+	{
+		TutorialData data;
+		data.ID = element.at("id").get<string>();
+		data.Name = element.at("name").get<string>();
+		tutorialsData.push_back(std::move(data));
+	}
+
+	return tutorialsData;
 }
 
 CURL* WebAPI::GetCURL()
@@ -139,6 +154,21 @@ void WebAPI::Shutdown()
 
 	curl_global_cleanup();
 }
+void WebAPI::SetCookie() const
+{
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, m_cookie));
+}
+
+int WebAPI::WriteCallback(char* data, size_t size, size_t count, std::string* userData)
+{
+	if (!userData)
+		return 0;
+
+	auto dataSize = size * count;
+	userData->append(data, dataSize);
+
+	return static_cast<int>(dataSize);
+}
 
 bool WebAPI::ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookie)
 {
@@ -167,4 +197,27 @@ std::string WebAPI::BuildCookie(const std::initializer_list<std::string>& cookie
 		cookie += cookieValue + HeaderConstants::Semicolon;
 
 	return cookie;
+}
+
+bool WebAPI::ExtractVerificationToken(const std::string& body, std::string& verificationToken)
+{
+	//	TODO now it works only for direct registrations on the site, it would be good to extend it to external logins (Google, Facebook) if possible. They have a different token and possibly the login sequence is different as well.
+	std::regex tokenRegex("form action=\"\\/Account\\/Login\" .*><input name=\"__RequestVerificationToken\" type=\"hidden\" value=\".*\"");
+	std::smatch match;
+	std::string tag;
+	if (!std::regex_search(body, match, tokenRegex))
+		return false;
+
+	for (auto x : match) tag = x;
+
+	// Now there should be quite a large substring in the tag including the form and its first input field (which bears the token)
+	std::regex tokenValue_regex("value=\".*\""); // Match the value of the token
+	if (!std::regex_search(tag, match, tokenValue_regex))
+		return false;
+
+	for (auto x : match) tag = x;
+
+	verificationToken = tag.substr(7, tag.length() - 8);
+
+	return true;
 }
