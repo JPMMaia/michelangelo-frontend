@@ -13,8 +13,19 @@
     <ClCompile Include="MichelangeloAPI\main.cpp">
       <Filter>MichelangeloAPI</Filter>
     </ClCompile>
+    <ClCompile Include="MichelangeloAPI\WebAPI.cpp">
+      <Filter>MichelangeloAPI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MichelangeloAPI\WebAPI.h">
+      <Filter>MichelangeloAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="MichelangeloAPI\HeaderConstants.h">
+      <Filter>MichelangeloAPI</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
