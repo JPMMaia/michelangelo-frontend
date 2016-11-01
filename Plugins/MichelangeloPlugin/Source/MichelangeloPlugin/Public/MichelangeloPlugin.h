@@ -3,6 +3,9 @@
 #pragma once
 
 #include "ModuleManager.h"
+#include "WebAPI.h"
+
+#include <memory>
 
 class FToolBarBuilder;
 class FMenuBuilder;
@@ -17,6 +20,10 @@ public:
 	
 	/** This function will be bound to Command (by default it will bring up plugin window) */
 	void PluginButtonClicked();
+
+	FReply LoginButtonClicked();
+	void OnEmailTextCommitted(const FText& InText, ETextCommit::Type InCommitInfo);
+	void OnPasswordTextCommitted(const FText& InText, ETextCommit::Type InCommitInfo);
 	
 private:
 
@@ -27,4 +34,8 @@ private:
 
 private:
 	TSharedPtr<class FUICommandList> PluginCommands;
+	
+	std::unique_ptr<MichelangeloAPI::WebAPI> m_webAPI;
+	FText m_emailText;
+	FText m_passwordText;
 };

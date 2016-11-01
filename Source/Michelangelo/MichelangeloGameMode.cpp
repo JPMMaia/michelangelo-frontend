@@ -3,6 +3,6 @@
 #include "Michelangelo.h"
 #include "MichelangeloGameMode.h"
 
-
-
-
+AMichelangeloGameMode::AMichelangeloGameMode()
+{
+}

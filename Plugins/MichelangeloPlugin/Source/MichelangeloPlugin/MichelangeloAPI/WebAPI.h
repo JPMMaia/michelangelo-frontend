@@ -1,9 +1,17 @@
 ﻿#pragma once
 
 #include "TutorialData.h"
-#include "Common/EngineException.h"
+#include "EngineException.h"
+
+// ReSharper disable once CppUnusedIncludeDirective
+#include <AllowWindowsPlatformTypes.h>
 
 #include <curl/curl.h>
+#undef PF_MAX
+
+// ReSharper disable once CppUnusedIncludeDirective
+#include <HideWindowsPlatformTypes.h>
+
 #include <initializer_list>
 
 namespace MichelangeloAPI
@@ -18,7 +26,7 @@ namespace MichelangeloAPI
 		WebAPI();
 		~WebAPI();
 
-		void Authenticate();
+		bool Authenticate(const std::string& username, const std::string& password, bool rememberMe);
 
 		std::vector<TutorialData> GetTutorials() const;
 

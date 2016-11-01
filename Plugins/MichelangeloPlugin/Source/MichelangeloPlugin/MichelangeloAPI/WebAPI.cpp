@@ -1,4 +1,5 @@
-﻿#include "WebAPI.h"
+﻿#include "MichelangeloPluginPrivatePCH.h"
+#include "WebAPI.h"
 #include "HeaderConstants.h"
 #include "URLConstants.h"
 #include "nlohmann/JSON/json.hpp"
@@ -18,7 +19,7 @@ WebAPI::~WebAPI()
 	Shutdown();
 }
 
-void WebAPI::Authenticate()
+bool WebAPI::Authenticate(const std::string& username, const std::string& password, bool rememberMe)
 {
 	// Set call back functions:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));
@@ -58,7 +59,7 @@ void WebAPI::Authenticate()
 
 		// The credentials go here, plus the body request token:
 		//TODO replace the LOGIN and PWD by the username and password of the user!!! Otherwise it wil not work!
-		auto postBody = "__RequestVerificationToken=" + verificationToken + "&Email=jpmmaia@gmail.com&Password=yslxqCIVAIqYFuAqYUImyNo5375NYhVGyVwdNerkrjnV8HMEPnwiyQBISnSAThj5&RememberMe=false";
+		auto postBody = "__RequestVerificationToken=" + verificationToken + "&Email=" + username + "&Password=" + password + "&RememberMe=" + (rememberMe ? "true" : "false");
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 1L));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, postBody.c_str()));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(postBody.length())));
@@ -66,7 +67,8 @@ void WebAPI::Authenticate()
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
 
 		// Now we will authorize the user and receive back an application token:
-		ThrowIfCURLFailed(curl_easy_perform(m_curl));
+		if(curl_easy_perform(m_curl) != CURLE_OK)
+			return false;
 	}
 
 	std::string applicationCookieValue; 
@@ -76,7 +78,8 @@ void WebAPI::Authenticate()
 	// Set application cookie:
 	auto cookie = BuildCookie({ verificationCookieValue, applicationCookieValue });
 	m_cookie = curl_slist_append(m_cookie, cookie.c_str());
-	SetCookie();
+
+	return true;
 }
 
 std::vector<TutorialData> WebAPI::GetTutorials() const
@@ -91,6 +94,7 @@ std::vector<TutorialData> WebAPI::GetTutorials() const
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, WebAPI::WriteCallback));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &tutorialsJsonString));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &header));
+		SetCookie();
 		ThrowIfCURLFailed(curl_easy_perform(m_curl));
 	}
 

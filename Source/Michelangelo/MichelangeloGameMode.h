@@ -6,14 +6,13 @@
 #include "MichelangeloGameMode.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MICHELANGELO_API AMichelangeloGameMode : public AGameMode
 {
 	GENERATED_BODY()
-	
-	
-	
-	
+
+public:
+	AMichelangeloGameMode();
 };

@@ -1,7 +1,10 @@
+#include "../Private/MichelangeloPluginPrivatePCH.h"
 #include "Helpers.h"
 #include "EngineException.h"
 
+#include "AllowWindowsPlatformTypes.h"
 #include <comdef.h>
+#include "HideWindowsPlatformTypes.h"
 
 using namespace Common;
 
@@ -61,6 +64,10 @@ std::string Helpers::WStringToString(const std::wstring& wstr)
 	std::wstring_convert<convertType, wchar_t> converter;
 
 	return converter.to_bytes(wstr);
+}
+std::string Helpers::FStringToString(const FString& fstr)
+{
+	return std::string(TCHAR_TO_UTF8(*fstr));
 }
 
 void Common::ThrowIfFailed(HRESULT hr)

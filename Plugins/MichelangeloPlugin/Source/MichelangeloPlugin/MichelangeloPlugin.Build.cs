@@ -6,33 +6,41 @@ public class MichelangeloPlugin : ModuleRules
 {
 	public MichelangeloPlugin(TargetInfo Target)
 	{
-		
-		PublicIncludePaths.AddRange(
+        // Add required public include paths:
+        PublicIncludePaths.AddRange(
 			new string[] {
-				"MichelangeloPlugin/Public"
-				// ... add public include paths required here ...
+				"MichelangeloPlugin/Public",
+                "MichelangeloPlugin/Common",
+                "MichelangeloPlugin/MichelangeloAPI",
+                "MichelangeloPlugin/nlohmann/JSON"
 			}
 			);
-				
-		
-		PrivateIncludePaths.AddRange(
+
+        // Add required private include paths:
+        PrivateIncludePaths.AddRange(
 			new string[] {
 				"MichelangeloPlugin/Private",
-				// ... add other private include paths required here ...
+                "MichelangeloPlugin/Common",
+                "MichelangeloPlugin/MichelangeloAPI"
 			}
 			);
-			
-		
-		PublicDependencyModuleNames.AddRange(
+
+        // Add public dependencies that you statically link with:
+        PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
 				"Core",
-				// ... add other public dependencies that you statically link with here ...
+                "CoreUObject",
+                "Engine",
+                "InputCore",
+                "Http",
+                "Json",
+                "JsonUtilities"
 			}
 			);
-			
-		
-		PrivateDependencyModuleNames.AddRange(
+
+        // Add private dependencies that you statically link with:
+        PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
 				"Projects",
@@ -43,16 +51,25 @@ public class MichelangeloPlugin : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				// ... add private dependencies that you statically link with here ...	
+                "OnlineSubsystem"
 			}
 			);
-		
-		
-		DynamicallyLoadedModuleNames.AddRange(
+
+        // Add any modules that your module loads dynamically:
+        DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
-				// ... add any modules that your module loads dynamically here ...
 			}
 			);
-	}
+
+        // Add lib curl:
+        AddEngineThirdPartyPrivateStaticDependencies(Target, "libcurl");
+        PublicIncludePaths.Add("C:/Program Files (x86)/Epic Games/4.13/Engine/Source/ThirdParty/libcurl/include/Windows");
+        PublicAdditionalLibraries.Add("C:/Program Files (x86)/Epic Games/4.13/Engine/Source/ThirdParty/libcurl/lib/Win64/VS2015/libcurl_a.lib");
+        Definitions.Add("CURL_STATICLIB=1");
+
+        // Build fast:
+        MinFilesUsingPrecompiledHeaderOverride = 1;
+        bFasterWithoutUnity = true;
+    }
 }

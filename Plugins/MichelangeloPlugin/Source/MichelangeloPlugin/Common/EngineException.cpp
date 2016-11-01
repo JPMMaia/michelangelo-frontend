@@ -1,6 +1,9 @@
-﻿#include "EngineException.h"
+﻿#include "../Private/MichelangeloPluginPrivatePCH.h"
+#include "EngineException.h"
 
+#include "AllowWindowsPlatformTypes.h"
 #include <sstream>
+#include "HideWindowsPlatformTypes.h"
 
 using namespace Common;
 using namespace std;

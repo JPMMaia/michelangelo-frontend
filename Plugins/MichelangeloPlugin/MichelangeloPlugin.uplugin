@@ -14,11 +14,11 @@
 	"CanContainContent": false,
 	"IsBetaVersion": false,
 	"Installed": false,
-	"Modules": [
-		{
-			"Name": "MichelangeloPlugin",
-			"Type": "Developer",
-			"LoadingPhase": "Default"
-		}
-	]
+  "Modules": [
+    {
+      "Name": "MichelangeloPlugin",
+      "Type": "Developer",
+      "LoadingPhase": "Default"
+    }
+  ]
 }
