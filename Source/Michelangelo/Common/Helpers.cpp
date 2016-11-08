@@ -1,4 +1,4 @@
-#include "../Private/MichelangeloPluginPrivatePCH.h"
+#include "Michelangelo.h"
 #include "Helpers.h"
 #include "EngineException.h"
 

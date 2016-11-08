@@ -1,4 +1,4 @@
-﻿#include "MichelangeloPluginPrivatePCH.h"
+﻿#include "Michelangelo.h"
 #include "WebAPI.h"
 #include "HeaderConstants.h"
 #include "URLConstants.h"

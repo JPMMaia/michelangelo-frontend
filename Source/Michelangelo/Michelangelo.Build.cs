@@ -46,6 +46,8 @@ public class Michelangelo : ModuleRules
         // Uncomment if you are using online features
         PrivateDependencyModuleNames.Add("OnlineSubsystem");
 
-        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+        // Build fast:
+        MinFilesUsingPrecompiledHeaderOverride = 1;
+        bFasterWithoutUnity = true;
     }
 }
