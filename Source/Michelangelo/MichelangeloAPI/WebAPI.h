@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "TutorialData.h"
-#include "EngineException.h"
+#include "../Common/EngineException.h"
 
 // ReSharper disable once CppUnusedIncludeDirective
 #include <AllowWindowsPlatformTypes.h>

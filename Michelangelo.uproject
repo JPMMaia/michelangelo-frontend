@@ -3,14 +3,14 @@
 	"EngineAssociation": "4.13",
 	"Category": "",
 	"Description": "",
-  "Modules": [
-    {
-      "Name": "Michelangelo",
-      "Type": "Runtime",
-      "LoadingPhase": "Default"
-    }
-  ],
-  "Plugins": [
+	"Modules": [
+		{
+			"Name": "Michelangelo",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
 		{
 			"Name": "OnlineSubsystemSteam",
 			"Enabled": true
@@ -18,6 +18,14 @@
 		{
 			"Name": "OnlineFramework",
 			"Enabled": true
+		},
+		{
+			"Name": "MichelangeloPlugin",
+			"Enabled": false
+		},
+		{
+			"Name": "EditorModeExample",
+			"Enabled": false
 		}
 	]
 }

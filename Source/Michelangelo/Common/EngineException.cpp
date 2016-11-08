@@ -1,4 +1,4 @@
-﻿#include "../Private/MichelangeloPluginPrivatePCH.h"
+﻿#include "Michelangelo.h"
 #include "EngineException.h"
 
 #include "AllowWindowsPlatformTypes.h"
