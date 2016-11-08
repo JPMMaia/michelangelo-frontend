@@ -4,7 +4,7 @@
 
 #include "GameFramework/Actor.h"
 #include "MichelangeloAPI/WebAPI.h"
-#include "FTutorialData.h"
+#include "FGrammarData.h"
 #include "AWebAPI.generated.h"
 
 UCLASS()
@@ -26,7 +26,7 @@ public:
 	bool Authenticate(const FString& email, const FString& password, bool rememberMe);
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
-	TArray<FTutorialData> GetTutorials() const;
+	TArray<FGrammarData> GetTutorials() const;
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
 	bool IsAuthenticated() const;
