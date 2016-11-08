@@ -19,4 +19,6 @@ struct MICHELANGELO_API FTutorialData
 	FString Name;
 
 	FTutorialData();
+
+	const FString& GetName() const;
 };

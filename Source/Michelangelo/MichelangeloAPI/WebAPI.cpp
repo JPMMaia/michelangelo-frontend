@@ -79,6 +79,8 @@ bool WebAPI::Authenticate(const std::string& username, const std::string& passwo
 	auto cookie = BuildCookie({ verificationCookieValue, applicationCookieValue });
 	m_cookie = curl_slist_append(m_cookie, cookie.c_str());
 
+	m_isAuthenticated = true;
+
 	return true;
 }
 
@@ -131,6 +133,11 @@ curl_slist* WebAPI::GetCookie()
 const curl_slist* WebAPI::GetCookie() const
 {
 	return m_cookie;
+}
+
+bool WebAPI::IsAuthenticated() const
+{
+	return m_isAuthenticated;
 }
 
 void WebAPI::Initialize()

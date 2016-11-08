@@ -28,6 +28,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
 	TArray<FTutorialData> GetTutorials() const;
 
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	bool IsAuthenticated() const;
+
 private:
 	MichelangeloAPI::WebAPI m_webAPI;
 };

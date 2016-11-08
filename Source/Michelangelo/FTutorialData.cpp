@@ -9,3 +9,8 @@ FTutorialData::FTutorialData() :
 	Name("Unknown")
 {
 }
+
+const FString& FTutorialData::GetName() const
+{
+	return this->Name;
+}

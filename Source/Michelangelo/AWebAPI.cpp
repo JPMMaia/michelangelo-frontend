@@ -29,12 +29,15 @@ void AAWebAPI::Tick( float DeltaTime )
 }
 
 bool AAWebAPI::Authenticate(const FString& email, const FString& password, bool rememberMe)
-{
+{	
 	return m_webAPI.Authenticate(Helpers::FStringToString(email), Helpers::FStringToString(password), rememberMe);
 }
 
 TArray<FTutorialData> AAWebAPI::GetTutorials() const
 {
+	if (!IsAuthenticated())
+		return TArray<FTutorialData>();
+
 	auto tutorialsData = m_webAPI.GetTutorials();
 
 	TArray<FTutorialData> output;
@@ -47,4 +50,9 @@ TArray<FTutorialData> AAWebAPI::GetTutorials() const
 	}
 
 	return output;
+}
+
+bool AAWebAPI::IsAuthenticated() const
+{
+	return m_webAPI.IsAuthenticated();
 }

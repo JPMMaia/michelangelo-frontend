@@ -36,6 +36,8 @@ namespace MichelangeloAPI
 		curl_slist* GetCookie();
 		const curl_slist* GetCookie() const;
 
+		bool IsAuthenticated() const;
+
 	private:
 		void Initialize();
 		void Shutdown();
@@ -49,6 +51,7 @@ namespace MichelangeloAPI
 	private:
 		CURL* m_curl = nullptr;
 		curl_slist* m_cookie = nullptr;
+		bool m_isAuthenticated = false;
 	};
 
 #ifndef ThrowIfCURLFailed
