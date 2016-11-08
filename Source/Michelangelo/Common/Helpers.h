@@ -21,6 +21,7 @@ namespace Common
 		std::wstring StringToWString(const std::string& str);
 		std::string WStringToString(const std::wstring& wstr);
 		std::string FStringToString(const FString& fstr);
+		FString StringToFString(const std::string& str);
 
 		template<typename ContainerType>
 		void ReadData(const std::wstring& filename, ContainerType& buffer)

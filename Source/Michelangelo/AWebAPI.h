@@ -4,6 +4,7 @@
 
 #include "GameFramework/Actor.h"
 #include "MichelangeloAPI/WebAPI.h"
+#include "FTutorialData.h"
 #include "AWebAPI.generated.h"
 
 UCLASS()
@@ -23,6 +24,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="WebAPI")
 	bool Authenticate(const FString& email, const FString& password, bool rememberMe);
+
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	TArray<FTutorialData> GetTutorials() const;
 
 private:
 	MichelangeloAPI::WebAPI m_webAPI;

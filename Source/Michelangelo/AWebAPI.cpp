@@ -32,3 +32,19 @@ bool AAWebAPI::Authenticate(const FString& email, const FString& password, bool 
 {
 	return m_webAPI.Authenticate(Helpers::FStringToString(email), Helpers::FStringToString(password), rememberMe);
 }
+
+TArray<FTutorialData> AAWebAPI::GetTutorials() const
+{
+	auto tutorialsData = m_webAPI.GetTutorials();
+
+	TArray<FTutorialData> output;
+	for(auto& tutorialData : tutorialsData)
+	{
+		FTutorialData fTutorialData;
+		fTutorialData.ID = Helpers::StringToFString(tutorialData.ID);
+		fTutorialData.Name = Helpers::StringToFString(tutorialData.Name);
+		output.Add(fTutorialData);
+	}
+
+	return output;
+}

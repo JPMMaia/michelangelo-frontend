@@ -69,6 +69,10 @@ std::string Helpers::FStringToString(const FString& fstr)
 {
 	return std::string(TCHAR_TO_UTF8(*fstr));
 }
+FString Helpers::StringToFString(const std::string& str)
+{
+	return FString(str.c_str());
+}
 
 void Common::ThrowIfFailed(HRESULT hr)
 {
