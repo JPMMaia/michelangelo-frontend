@@ -28,7 +28,7 @@ namespace MichelangeloAPI
 
 		bool Authenticate(const std::string& username, const std::string& password, bool rememberMe);
 
-		std::vector<TutorialData> GetTutorials() const;
+		std::vector<TutorialData> GetGrammars(const std::string& url) const;
 
 		CURL* GetCURL();
 		const CURL* GetCURL() const;

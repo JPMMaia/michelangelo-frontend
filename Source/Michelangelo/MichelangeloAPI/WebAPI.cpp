@@ -84,12 +84,12 @@ bool WebAPI::Authenticate(const std::string& username, const std::string& passwo
 	return true;
 }
 
-std::vector<TutorialData> WebAPI::GetTutorials() const
+std::vector<TutorialData> WebAPI::GetGrammars(const std::string& url) const
 {
 	std::string header;
 	std::string tutorialsJsonString;
 	{
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, URLConstants::TutorialsAPI.c_str()));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 0L));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));

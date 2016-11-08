@@ -26,6 +26,15 @@ public:
 	bool Authenticate(const FString& email, const FString& password, bool rememberMe);
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	TArray<FGrammarData> GetGrammars(const FString& url) const;
+
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	TArray<FGrammarData> GetOwnGrammars() const;
+
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	TArray<FGrammarData> GetSharedGrammars() const;
+
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
 	TArray<FGrammarData> GetTutorials() const;
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
