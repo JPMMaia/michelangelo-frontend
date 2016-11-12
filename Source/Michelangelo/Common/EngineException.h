@@ -22,10 +22,9 @@ namespace Common
 #ifndef ThrowEngineException
 #define ThrowEngineException(message)											\
 {																				\
-	MessageBox(0, message, 0, 0);												\
-	std::wstring functionName = Common::Helpers::StringToWString(__FUNCSIG__);	\
-	std::wstring filename = Common::Helpers::StringToWString(__FILE__);			\
-	throw EngineException(message, functionName, filename, __LINE__);			\
+	std::wstring __functionName__ = Common::Helpers::StringToWString(__FUNCSIG__);	\
+	std::wstring __filename__ = Common::Helpers::StringToWString(__FILE__);			\
+	throw EngineException(message, __functionName__, __filename__, __LINE__);			\
 }
 #endif
 

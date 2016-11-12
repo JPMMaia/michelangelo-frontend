@@ -1,4 +1,5 @@
-﻿#include "WebAPI.h"
+﻿#include "Michelangelo.h"
+#include "WebAPI.h"
 #include "HeaderConstants.h"
 #include "URLConstants.h"
 #include "nlohmann/JSON/json.hpp"
@@ -18,7 +19,7 @@ WebAPI::~WebAPI()
 	Shutdown();
 }
 
-void WebAPI::Authenticate()
+bool WebAPI::Authenticate(const std::string& username, const std::string& password, bool rememberMe)
 {
 	// Set call back functions:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));
@@ -58,7 +59,7 @@ void WebAPI::Authenticate()
 
 		// The credentials go here, plus the body request token:
 		//TODO replace the LOGIN and PWD by the username and password of the user!!! Otherwise it wil not work!
-		auto postBody = "__RequestVerificationToken=" + verificationToken + "&Email=jpmmaia@gmail.com&Password=yslxqCIVAIqYFuAqYUImyNo5375NYhVGyVwdNerkrjnV8HMEPnwiyQBISnSAThj5&RememberMe=false";
+		auto postBody = "__RequestVerificationToken=" + verificationToken + "&Email=" + username + "&Password=" + password + "&RememberMe=" + (rememberMe ? "true" : "false");
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 1L));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, postBody.c_str()));
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(postBody.length())));
@@ -66,7 +67,8 @@ void WebAPI::Authenticate()
 		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
 
 		// Now we will authorize the user and receive back an application token:
-		ThrowIfCURLFailed(curl_easy_perform(m_curl));
+		if(curl_easy_perform(m_curl) != CURLE_OK)
+			return false;
 	}
 
 	std::string applicationCookieValue; 
@@ -76,39 +78,43 @@ void WebAPI::Authenticate()
 	// Set application cookie:
 	auto cookie = BuildCookie({ verificationCookieValue, applicationCookieValue });
 	m_cookie = curl_slist_append(m_cookie, cookie.c_str());
-	SetCookie();
+
+	m_isAuthenticated = true;
+
+	return true;
 }
 
-std::vector<TutorialData> WebAPI::GetTutorials() const
+std::vector<GrammarData> WebAPI::GetGrammars(const std::string& url) const
 {
-	std::string header;
-	std::string tutorialsJsonString;
-	{
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, URLConstants::TutorialsAPI.c_str()));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 0L));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, WebAPI::WriteCallback));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &tutorialsJsonString));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &header));
-		ThrowIfCURLFailed(curl_easy_perform(m_curl));
-	}
+	auto grammarJson = GetJSON(url);
 
-	// Create json object:
-	using json = nlohmann::json;
-	auto tutorialsJson = json::parse(tutorialsJsonString.c_str());
-
-	std::vector<TutorialData> tutorialsData;
-	tutorialsData.reserve(tutorialsJson.size());
-	for(auto& element : tutorialsJson)
+	std::vector<GrammarData> grammarsData;
+	grammarsData.reserve(grammarJson.size());
+	for(auto& element : grammarJson)
 	{
-		TutorialData data;
+		GrammarData data;
 		data.ID = element.at("id").get<string>();
 		data.Name = element.at("name").get<string>();
-		tutorialsData.push_back(std::move(data));
+		data.Type = element.at("type").get<string>();
+		
+		grammarsData.push_back(std::move(data));
 	}
 
-	return tutorialsData;
+	return grammarsData;
+}
+GrammarSpecificData WebAPI::GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const
+{
+	auto grammarJson = GetJSON(url + grammarID);
+
+	GrammarSpecificData grammarData;
+	grammarData.ID = grammarJson.at("id").get<string>();
+	grammarData.Name = grammarJson.at("name").get<string>();
+	grammarData.Type = grammarJson.at("type").get<string>();
+	grammarData.Code = grammarJson.at("code").get<string>();
+	grammarData.Shared = grammarJson.at("shared").get<bool>();
+	grammarData.IsOwner = grammarJson.at("isOwner").get<bool>();
+
+	return grammarData;
 }
 
 CURL* WebAPI::GetCURL()
@@ -127,6 +133,11 @@ curl_slist* WebAPI::GetCookie()
 const curl_slist* WebAPI::GetCookie() const
 {
 	return m_cookie;
+}
+
+bool WebAPI::IsAuthenticated() const
+{
+	return m_isAuthenticated;
 }
 
 void WebAPI::Initialize()
@@ -157,6 +168,26 @@ void WebAPI::Shutdown()
 void WebAPI::SetCookie() const
 {
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, m_cookie));
+}
+
+nlohmann::json WebAPI::GetJSON(const std::string& url) const
+{
+	std::string header;
+	std::string jsonString;
+	{
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 0L));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, WebAPI::WriteCallback));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &jsonString));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &header));
+		SetCookie();
+		ThrowIfCURLFailed(curl_easy_perform(m_curl));
+	}
+
+	// Create json object:
+	return nlohmann::json::parse(jsonString.c_str());
 }
 
 int WebAPI::WriteCallback(char* data, size_t size, size_t count, std::string* userData)

@@ -1,13 +1,34 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "4.10",
+	"EngineAssociation": "4.13",
 	"Category": "",
 	"Description": "",
 	"Modules": [
 		{
 			"Name": "Michelangelo",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "OnlineSubsystemSteam",
+			"Enabled": true
+		},
+		{
+			"Name": "OnlineFramework",
+			"Enabled": true
+		},
+		{
+			"Name": "MichelangeloPlugin",
+			"Enabled": false
+		},
+		{
+			"Name": "EditorModeExample",
+			"Enabled": false
 		}
 	]
 }

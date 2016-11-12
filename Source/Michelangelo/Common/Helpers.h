@@ -1,9 +1,12 @@
 #pragma once
 
+#include "AllowWindowsPlatformTypes.h"
 #include <codecvt>
 #include <future>
 #include <fstream>
 #include <windows.h>
+#include "HideWindowsPlatformTypes.h"
+
 #include "EngineException.h"
 
 namespace Common
@@ -17,6 +20,8 @@ namespace Common
 
 		std::wstring StringToWString(const std::string& str);
 		std::string WStringToString(const std::wstring& wstr);
+		std::string FStringToString(const FString& fstr);
+		FString StringToFString(const std::string& str);
 
 		template<typename ContainerType>
 		void ReadData(const std::wstring& filename, ContainerType& buffer)
@@ -58,13 +63,6 @@ namespace Common
 		std::future<typename std::result_of<FunctionType(ArgumentsType...)>::type> RunAsync(FunctionType&& function, ArgumentsType&&... arguments)
 		{
 			return std::async(std::launch::async, std::forward<FunctionType>(function), std::forward<ArgumentsType>(arguments)...);
-		}
-
-		inline std::wstring AnsiToWString(const std::string& str)
-		{
-			WCHAR buffer[512];
-			MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, buffer, 512);
-			return std::wstring(buffer);
 		}
 	}
 

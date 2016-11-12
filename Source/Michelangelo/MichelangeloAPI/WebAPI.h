@@ -1,9 +1,19 @@
 ﻿#pragma once
 
-#include "TutorialData.h"
-#include "Common/EngineException.h"
+#include "GrammarData.h"
+#include "GrammarSpecificData.h"
+#include "../Common/EngineException.h"
+#include "nlohmann/JSON/json.hpp"
+
+// ReSharper disable once CppUnusedIncludeDirective
+#include <AllowWindowsPlatformTypes.h>
 
 #include <curl/curl.h>
+#undef PF_MAX
+
+// ReSharper disable once CppUnusedIncludeDirective
+#include <HideWindowsPlatformTypes.h>
+
 #include <initializer_list>
 
 namespace MichelangeloAPI
@@ -18,9 +28,10 @@ namespace MichelangeloAPI
 		WebAPI();
 		~WebAPI();
 
-		void Authenticate();
+		bool Authenticate(const std::string& username, const std::string& password, bool rememberMe);
 
-		std::vector<TutorialData> GetTutorials() const;
+		std::vector<GrammarData> GetGrammars(const std::string& url) const;
+		GrammarSpecificData GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const;
 
 		CURL* GetCURL();
 		const CURL* GetCURL() const;
@@ -28,10 +39,14 @@ namespace MichelangeloAPI
 		curl_slist* GetCookie();
 		const curl_slist* GetCookie() const;
 
+		bool IsAuthenticated() const;
+
 	private:
 		void Initialize();
 		void Shutdown();
 		void SetCookie() const;
+
+		nlohmann::json GetJSON(const std::string& url) const;
 
 		static int WriteCallback(char* data, size_t size, size_t count, std::string* userData);
 		static bool ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookie);
@@ -41,6 +56,7 @@ namespace MichelangeloAPI
 	private:
 		CURL* m_curl = nullptr;
 		curl_slist* m_cookie = nullptr;
+		bool m_isAuthenticated = false;
 	};
 
 #ifndef ThrowIfCURLFailed
