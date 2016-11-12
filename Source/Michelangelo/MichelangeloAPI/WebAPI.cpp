@@ -21,63 +21,37 @@ WebAPI::~WebAPI()
 
 bool WebAPI::Authenticate(const std::string& username, const std::string& password, bool rememberMe)
 {
-	// Set call back functions:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, WebAPI::WriteCallback));
-
-	// Set parameters:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, URLConstants::LoginPage.c_str()));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 1L));
-
 	// TODO in case of timeout retry
 	std::string loginPageBody;
 	std::string loginPageHeader;
-	{
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &loginPageBody));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &loginPageHeader));
-		ThrowIfCURLFailed(curl_easy_perform(m_curl));
-	}
+	if (!PerformGETRequest(URLConstants::LoginPage, loginPageHeader, loginPageBody, false))
+		return false;
 
 	// Extract the request verification token:
-	std::string verificationToken; 
-	if (!ExtractVerificationToken(loginPageBody, verificationToken))
+	std::string requestVerificationToken; 
+	if (!ExtractVerificationToken(loginPageBody, requestVerificationToken))
 		ThrowEngineException(L"Failed to extract verification token.");
 
-	std::string verificationCookieValue;
-	if (!ExtractCookieValue(loginPageHeader, HeaderConstants::RequestCookie, verificationCookieValue))
+	// Extract the request verification token cookie value:
+	std::string requestVerificationTokenCookieValue;
+	if (!ExtractCookieValue(loginPageHeader, HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenCookieValue))
 		ThrowEngineException(L"Failed to extract verification cookie.");
+	AddCookie(HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenCookieValue);
 
+	// Perform a post request, sending the login information:
 	std::string responseBody;
 	std::string responseHeader;
 	{
-		// Put the cookie token into the header:
-		auto headerCookie = BuildCookie({ verificationCookieValue });
-		SListHandle headerChunk(curl_slist_append(nullptr, headerCookie.c_str()), &curl_slist_free_all);
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, headerChunk.get()));
-
-		// The credentials go here, plus the body request token:
-		//TODO replace the LOGIN and PWD by the username and password of the user!!! Otherwise it wil not work!
-		auto postBody = "__RequestVerificationToken=" + verificationToken + "&Email=" + username + "&Password=" + password + "&RememberMe=" + (rememberMe ? "true" : "false");
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 1L));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, postBody.c_str()));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(postBody.length())));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
-
-		// Now we will authorize the user and receive back an application token:
-		if(curl_easy_perform(m_curl) != CURLE_OK)
+		auto postBody = "__RequestVerificationToken=" + requestVerificationToken + "&Email=" + username + "&Password=" + password + "&RememberMe=" + (rememberMe ? "true" : "false");
+		if (!PerformPOSTRequest(URLConstants::LoginPage, postBody, responseHeader, responseBody, true))
 			return false;
 	}
 
+	// Extract the application cookie:
 	std::string applicationCookieValue; 
-	if (!ExtractCookieValue(responseHeader, HeaderConstants::ApplicationCookie, applicationCookieValue))
+	if (!ExtractCookieValue(responseHeader, HeaderConstants::ApplicationCookieName, applicationCookieValue))
 		ThrowEngineException(L"Failed to extract application cookie");
-
-	// Set application cookie:
-	auto cookie = BuildCookie({ verificationCookieValue, applicationCookieValue });
-	m_cookie = curl_slist_append(m_cookie, cookie.c_str());
+	AddCookie(HeaderConstants::ApplicationCookieName, applicationCookieValue);
 
 	m_isAuthenticated = true;
 
@@ -86,7 +60,7 @@ bool WebAPI::Authenticate(const std::string& username, const std::string& passwo
 
 std::vector<GrammarData> WebAPI::GetGrammars(const std::string& url) const
 {
-	auto grammarJson = GetJSON(url);
+	auto grammarJson = PerformGETJSONRequest(url);
 
 	std::vector<GrammarData> grammarsData;
 	grammarsData.reserve(grammarJson.size());
@@ -104,7 +78,7 @@ std::vector<GrammarData> WebAPI::GetGrammars(const std::string& url) const
 }
 GrammarSpecificData WebAPI::GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const
 {
-	auto grammarJson = GetJSON(url + grammarID);
+	auto grammarJson = PerformGETJSONRequest(url + grammarID);
 
 	GrammarSpecificData grammarData;
 	grammarData.ID = grammarJson.at("id").get<string>();
@@ -117,6 +91,11 @@ GrammarSpecificData WebAPI::GetGrammarSpecificData(const std::string& url, const
 	return grammarData;
 }
 
+SceneGeometry WebAPI::GetGeometry(const GrammarSpecificData& data) const
+{
+	return SceneGeometry();
+}
+
 CURL* WebAPI::GetCURL()
 {
 	return m_curl;
@@ -124,15 +103,6 @@ CURL* WebAPI::GetCURL()
 const CURL* WebAPI::GetCURL() const
 {
 	return m_curl;
-}
-
-curl_slist* WebAPI::GetCookie()
-{
-	return m_cookie;
-}
-const curl_slist* WebAPI::GetCookie() const
-{
-	return m_cookie;
 }
 
 bool WebAPI::IsAuthenticated() const
@@ -148,15 +118,18 @@ void WebAPI::Initialize()
 	m_curl = curl_easy_init();
 	if (!m_curl)
 		ThrowEngineException(L"Failed to initialize CURL.");
+
+	// Set call back functions:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, WebAPI::WriteCallback));
+
+	// Set parameters:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 1L));
 }
 void WebAPI::Shutdown()
 {
-	if (m_cookie)
-	{
-		curl_slist_free_all(m_cookie);
-		m_cookie = nullptr;
-	}
-
 	if (m_curl)
 	{
 		curl_easy_cleanup(m_curl);
@@ -165,29 +138,100 @@ void WebAPI::Shutdown()
 
 	curl_global_cleanup();
 }
-void WebAPI::SetCookie() const
-{
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, m_cookie));
-}
 
-nlohmann::json WebAPI::GetJSON(const std::string& url) const
+bool WebAPI::PerformGETRequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const
+{
+	// Set URL:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
+
+	// Clear post flags:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 0L));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
+
+	// Set output for header and body:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
+
+	// Set cookie if flag is set:
+	CurlList header;
+	if (setCookie)
+		SetCookie(header);
+
+	// Perform request:
+	if (curl_easy_perform(m_curl) != CURLE_OK)
+		return false;
+
+	return true;
+}
+bool WebAPI::PerformPOSTRequest(const std::string& url, const std::string& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const
+{
+	// Set URL:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
+
+	// Set post body:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 1L));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, requestBody.c_str()));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(requestBody.length())));
+	
+	// Set output for header and body:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
+
+	// Set cookie if flag is set:
+	CurlList header;
+	if (setCookie)
+		SetCookie(header);
+
+	// Perform request:
+	if (curl_easy_perform(m_curl) != CURLE_OK)
+		return false;
+
+	return true;
+}
+nlohmann::json WebAPI::PerformGETJSONRequest(const std::string& url) const
 {
 	std::string header;
-	std::string jsonString;
-	{
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 0L));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, WebAPI::WriteCallback));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &jsonString));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &header));
-		SetCookie();
-		ThrowIfCURLFailed(curl_easy_perform(m_curl));
-	}
+	std::string body;
+	if (!PerformGETRequest(url, header, body, true))
+		ThrowEngineException(L"Couldn't perform request");
 
 	// Create json object:
-	return nlohmann::json::parse(jsonString.c_str());
+	return nlohmann::json::parse(body.c_str());
+}
+
+void WebAPI::AddCookie(const std::string& name, const std::string& value)
+{
+	auto location = m_cookies.find(name);
+
+	if(m_cookieString.empty())
+		m_cookieString += HeaderConstants::Cookie;
+
+	// The cookie doesn't exist. Let's add it:
+	if (location == m_cookies.end())
+	{
+		// Add cookie:
+		m_cookies.emplace(name, value);
+
+		// Update cookie string:
+		m_cookieString += name + "=" + value + HeaderConstants::Semicolon;
+	}
+	// The cookie already exist, therefore let's update it:
+	else
+	{
+		// Update cookie value:
+		m_cookies[name] = value;
+
+		// Rebuild cookie string:
+		m_cookieString.clear();
+		m_cookieString += HeaderConstants::Cookie;
+		for (auto&& pair : m_cookies)
+			m_cookieString += pair.first + "=" + pair.second + HeaderConstants::Semicolon;
+	}
+}
+void WebAPI::SetCookie(CurlList& header) const
+{
+	header.Append(m_cookieString);
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, header.Get()));
 }
 
 int WebAPI::WriteCallback(char* data, size_t size, size_t count, std::string* userData)
@@ -201,33 +245,27 @@ int WebAPI::WriteCallback(char* data, size_t size, size_t count, std::string* us
 	return static_cast<int>(dataSize);
 }
 
-bool WebAPI::ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookie)
+bool WebAPI::ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookieValue)
 {
 	// Check if there's a set-cookie in the response:
 	if (header.find(HeaderConstants::SetCookie) == std::string::npos)
 		return false;
 
-	// Extract the cookie:
-	auto start = header.find(cookieName);
-	if (start == std::string::npos)
+	// Find the cookie name start:
+	auto cookieNameStart = header.find(cookieName);
+	if (cookieNameStart == std::string::npos)
 		return false;
 
-	auto end = header.find(HeaderConstants::Semicolon, start);
-	cookie = header.substr(start, end - start);
+	// Calculate the start of the cookie value:
+	auto cookieValueStart = cookieNameStart + cookieName.size() + 1;
+
+	// Find the end of the cookie value:
+	auto cookieValueEnd = header.find(HeaderConstants::Semicolon, cookieNameStart);
+
+	// Extract the cookie value:
+	cookieValue = header.substr(cookieValueStart, cookieValueEnd - cookieValueStart);
 
 	return true;
-}
-
-std::string WebAPI::BuildCookie(const std::initializer_list<std::string>& cookieValues)
-{
-	std::string cookie;
-
-	cookie += HeaderConstants::Cookie;
-
-	for(auto& cookieValue : cookieValues)
-		cookie += cookieValue + HeaderConstants::Semicolon;
-
-	return cookie;
 }
 
 bool WebAPI::ExtractVerificationToken(const std::string& body, std::string& verificationToken)

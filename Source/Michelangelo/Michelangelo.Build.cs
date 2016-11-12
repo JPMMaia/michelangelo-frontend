@@ -49,5 +49,8 @@ public class Michelangelo : ModuleRules
         // Build fast:
         MinFilesUsingPrecompiledHeaderOverride = 1;
         bFasterWithoutUnity = true;
+
+        // Enable exceptions:
+        UEBuildConfiguration.bForceEnableExceptions = true;
     }
 }

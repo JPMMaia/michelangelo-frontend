@@ -2,6 +2,8 @@
 
 #include "GrammarData.h"
 #include "GrammarSpecificData.h"
+#include "SceneGeometry.h"
+#include "CurlList.h"
 #include "../Common/EngineException.h"
 #include "nlohmann/JSON/json.hpp"
 
@@ -15,15 +17,12 @@
 #include <HideWindowsPlatformTypes.h>
 
 #include <initializer_list>
+#include <unordered_map>
 
 namespace MichelangeloAPI
 {
 	class WebAPI
 	{
-	public:
-		typedef void (*SListCleanup) (curl_slist*);
-		typedef std::unique_ptr<curl_slist, SListCleanup> SListHandle;
-
 	public:
 		WebAPI();
 		~WebAPI();
@@ -33,29 +32,33 @@ namespace MichelangeloAPI
 		std::vector<GrammarData> GetGrammars(const std::string& url) const;
 		GrammarSpecificData GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const;
 
+		SceneGeometry GetGeometry(const GrammarSpecificData& data) const;
+
 		CURL* GetCURL();
 		const CURL* GetCURL() const;
-
-		curl_slist* GetCookie();
-		const curl_slist* GetCookie() const;
 
 		bool IsAuthenticated() const;
 
 	private:
 		void Initialize();
 		void Shutdown();
-		void SetCookie() const;
 
-		nlohmann::json GetJSON(const std::string& url) const;
+		bool PerformGETRequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
+		bool PerformPOSTRequest(const std::string& url, const std::string& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
+		nlohmann::json PerformGETJSONRequest(const std::string& url) const;
 
+		void AddCookie(const std::string& name, const std::string& value);
+		void SetCookie(CurlList& header) const;
+		
 		static int WriteCallback(char* data, size_t size, size_t count, std::string* userData);
-		static bool ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookie);
-		static std::string BuildCookie(const std::initializer_list<std::string>& cookieValues);
+		static bool ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookieValue);
 		static bool ExtractVerificationToken(const std::string& body, std::string& verificationToken);
 
 	private:
 		CURL* m_curl = nullptr;
-		curl_slist* m_cookie = nullptr;
+		
+		std::unordered_map<std::string, std::string> m_cookies;
+		std::string m_cookieString;
 		bool m_isAuthenticated = false;
 	};
 
