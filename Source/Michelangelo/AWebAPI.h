@@ -5,6 +5,9 @@
 #include "GameFramework/Actor.h"
 #include "MichelangeloAPI/WebAPI.h"
 #include "FGrammarData.h"
+#include "FGrammarSpecificData.h"
+#include "EGrammarType.h"
+#include "Common/Helpers.h"
 #include "AWebAPI.generated.h"
 
 UCLASS()
@@ -29,13 +32,13 @@ public:
 	TArray<FGrammarData> GetGrammars(const FString& url) const;
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
-	TArray<FGrammarData> GetOwnGrammars() const;
+	TArray<FGrammarData> GetGrammarsByType(EGrammarType grammarType) const;
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
-	TArray<FGrammarData> GetSharedGrammars() const;
+	FGrammarSpecificData GetGrammarSpecificData(const FString& url, const FString& id) const;
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
-	TArray<FGrammarData> GetTutorials() const;
+	FGrammarSpecificData GetGrammarSpecificDataByType(EGrammarType grammarType, const FString& id) const;
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
 	bool IsAuthenticated() const;

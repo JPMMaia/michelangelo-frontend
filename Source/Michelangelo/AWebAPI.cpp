@@ -2,7 +2,6 @@
 
 #include "Michelangelo.h"
 #include "AWebAPI.h"
-#include "Common/Helpers.h"
 #include "MichelangeloAPI/URLConstants.h"
 
 using namespace Common;
@@ -48,8 +47,75 @@ TArray<FGrammarData> AAWebAPI::GetGrammars(const FString& url) const
 		FGrammarData fGrammarData;
 		fGrammarData.ID = Helpers::StringToFString(grammarData.ID);
 		fGrammarData.Name = Helpers::StringToFString(grammarData.Name);
-		// TODO type
+		fGrammarData.Type = Helpers::StringToFString(grammarData.Type);
 		output.Add(fGrammarData);
+	}
+
+	return output;
+}
+TArray<FGrammarData> AAWebAPI::GetGrammarsByType(EGrammarType grammarType) const
+{
+	TArray<FGrammarData> output;
+
+	switch(grammarType)
+	{
+	case EGrammarType::Own:
+		output = GetGrammars(Helpers::StringToFString(URLConstants::OwnGrammarAPI));
+		break;
+
+	case EGrammarType::Shared:
+		output = GetGrammars(Helpers::StringToFString(URLConstants::SharedGrammarAPI));
+		break;
+
+	case EGrammarType::Tutorial:
+		output = GetGrammars(Helpers::StringToFString(URLConstants::TutorialAPI));
+		break;
+	
+	default: 
+		break;
+	}
+
+	return output;
+}
+
+FGrammarSpecificData AAWebAPI::GetGrammarSpecificData(const FString& url, const FString& id) const
+{
+	if (!IsAuthenticated())
+		return FGrammarSpecificData();
+
+	auto grammarData = m_webAPI.GetGrammarSpecificData(Helpers::FStringToString(url), Helpers::FStringToString(id));
+
+	FGrammarSpecificData output;
+	output.ID = Helpers::StringToFString(grammarData.ID);
+	output.Name = Helpers::StringToFString(grammarData.Name);
+	output.Type = Helpers::StringToFString(grammarData.Type);
+	output.Code = Helpers::StringToFString(grammarData.Code);
+	output.Shared = grammarData.Shared;
+	output.IsOwner = grammarData.IsOwner;
+
+	return output;
+}
+
+FGrammarSpecificData AAWebAPI::GetGrammarSpecificDataByType(EGrammarType grammarType, const FString& id) const
+{
+	FGrammarSpecificData output;
+
+	switch (grammarType)
+	{
+	case EGrammarType::Own:
+		output = GetGrammarSpecificData(Helpers::StringToFString(URLConstants::OwnGrammarAPI), id);
+		break;
+
+	case EGrammarType::Shared:
+		output = GetGrammarSpecificData(Helpers::StringToFString(URLConstants::SharedGrammarAPI), id);
+		break;
+
+	case EGrammarType::Tutorial:
+		output = GetGrammarSpecificData(Helpers::StringToFString(URLConstants::TutorialAPI), id);
+		break;
+
+	default:
+		break;
 	}
 
 	return output;
