@@ -121,19 +121,6 @@ FGrammarSpecificData AAWebAPI::GetGrammarSpecificDataByType(EGrammarType grammar
 	return output;
 }
 
-TArray<FGrammarData> AAWebAPI::GetOwnGrammars() const
-{
-	return GetGrammars(Helpers::StringToFString(URLConstants::OwnGrammarAPI));
-}
-TArray<FGrammarData> AAWebAPI::GetSharedGrammars() const
-{
-	return GetGrammars(Helpers::StringToFString(URLConstants::SharedGrammarAPI));
-}
-TArray<FGrammarData> AAWebAPI::GetTutorials() const
-{
-	return GetGrammars(Helpers::StringToFString(URLConstants::TutorialAPI));
-}
-
 bool AAWebAPI::IsAuthenticated() const
 {
 	return m_webAPI.IsAuthenticated();
