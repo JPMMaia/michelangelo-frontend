@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AllowWindowsPlatformTypes.h"
+#include <array>
 #include <codecvt>
 #include <future>
 #include <fstream>
@@ -22,6 +23,7 @@ namespace Common
 		std::string WStringToString(const std::wstring& wstr);
 		std::string FStringToString(const FString& fstr);
 		FString StringToFString(const std::string& str);
+		FMatrix ArrayToMatrix(const std::array<float, 16>& transformArray);
 
 		template<typename ContainerType>
 		void ReadData(const std::wstring& filename, ContainerType& buffer)

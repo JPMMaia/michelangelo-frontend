@@ -91,9 +91,40 @@ GrammarSpecificData WebAPI::GetGrammarSpecificData(const std::string& url, const
 	return grammarData;
 }
 
-SceneGeometry WebAPI::GetGeometry(const GrammarSpecificData& data) const
+SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data) const
 {
-	return SceneGeometry();
+	std::string responseHeader;
+	std::string responseBody;
+	{
+		std::string requestBody;
+		requestBody += "ID=" + data.ID + "&";
+		requestBody += "Name=" + data.Name + "&";
+		requestBody += "Type=" + data.Type + "&";
+		requestBody += "Code=" + data.Code;
+		if (!PerformPOSTRequest(url, requestBody, responseHeader, responseBody, true))
+			ThrowEngineException(L"Failed to perform request.");
+	}
+
+	auto dataJson = nlohmann::json::parse(responseBody.c_str());
+	auto objectsArray = dataJson.at("o");
+
+	SceneGeometry scene;
+	scene.Objects.reserve(objectsArray.size());
+	for (auto& element : objectsArray)
+	{
+		ObjectGeometry object;
+		object.Name = element.at("g").get<string>();
+		
+		auto transformArray = element.at("t");
+		for(size_t i = 0; i < transformArray.size(); ++i)
+		{
+			object.Transform[i] = transformArray[i];
+		}
+
+		scene.Objects.push_back(std::move(object));
+	}
+
+	return scene;
 }
 
 CURL* WebAPI::GetCURL()

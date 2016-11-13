@@ -3,30 +3,16 @@
 #include "Michelangelo.h"
 #include "AWebAPI.h"
 #include "MichelangeloAPI/URLConstants.h"
+#include "UGameDataSingletonLibrary.h"
+#include "UGameDataSingleton.h"
+#include "AInstancedStaticMeshActorManager.h"
 
 using namespace Common;
 using namespace MichelangeloAPI;
 
-// Sets default values
 AAWebAPI::AAWebAPI()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-}
-
-// Called when the game starts or when spawned
-void AAWebAPI::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void AAWebAPI::Tick( float DeltaTime )
-{
-	Super::Tick( DeltaTime );
-
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 bool AAWebAPI::Authenticate(const FString& email, const FString& password, bool rememberMe)
@@ -119,6 +105,52 @@ FGrammarSpecificData AAWebAPI::GetGrammarSpecificDataByType(EGrammarType grammar
 	}
 
 	return output;
+}
+
+void AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& data)
+{
+	GrammarSpecificData apiData;
+	apiData.ID = Helpers::FStringToString(data.ID);
+	apiData.Name = Helpers::FStringToString(data.Name);
+	apiData.Type = Helpers::FStringToString(data.Type);
+	apiData.Code = Helpers::FStringToString(data.Code);
+	apiData.Shared = data.Shared;
+	apiData.IsOwner = data.IsOwner;
+
+	auto sceneGeometry = m_webAPI.GetGeometry(Helpers::FStringToString(url), apiData);
+
+	// Spawn actors from objects:
+	{
+		auto instancedStaticMeshActorManager = UGameDataSingletonLibrary::GetGameDataSingleton()->GetInstancedStaticMeshActorManager(GetWorld());
+
+		for (auto& object : sceneGeometry.Objects)
+		{
+			auto worldTransform = FTransform(Helpers::ArrayToMatrix(object.Transform));
+
+			auto actor = instancedStaticMeshActorManager->GetInstancedStaticMeshActor(Helpers::StringToFString(object.Name));
+			actor->InstancedStaticMeshComponent->AddInstanceWorldSpace(worldTransform);
+		}
+	}
+}
+void AAWebAPI::GenerateGeometryByType(EGrammarType grammarType, const FGrammarSpecificData& data)
+{
+	switch (grammarType)
+	{
+	case EGrammarType::Own:
+		GenerateGeometry(Helpers::StringToFString(URLConstants::OwnGrammarAPI), data);
+		break;
+
+	case EGrammarType::Shared:
+		GenerateGeometry(Helpers::StringToFString(URLConstants::SharedGrammarAPI), data);
+		break;
+
+	case EGrammarType::Tutorial:
+		GenerateGeometry(Helpers::StringToFString(URLConstants::TutorialAPI), data);
+		break;
+
+	default:
+		break;
+	}
 }
 
 bool AAWebAPI::IsAuthenticated() const

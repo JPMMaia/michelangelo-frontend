@@ -16,14 +16,7 @@ class MICHELANGELO_API AAWebAPI : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	AAWebAPI();
-
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-	
-	// Called every frame
-	virtual void Tick( float DeltaSeconds ) override;
 
 	UFUNCTION(BlueprintCallable, Category="WebAPI")
 	bool Authenticate(const FString& email, const FString& password, bool rememberMe);
@@ -39,6 +32,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
 	FGrammarSpecificData GetGrammarSpecificDataByType(EGrammarType grammarType, const FString& id) const;
+
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	void GenerateGeometry(const FString& url, const FGrammarSpecificData& data);
+
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	void GenerateGeometryByType(EGrammarType grammarType, const FGrammarSpecificData& data);
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
 	bool IsAuthenticated() const;

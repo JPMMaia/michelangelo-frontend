@@ -31,8 +31,7 @@ namespace MichelangeloAPI
 
 		std::vector<GrammarData> GetGrammars(const std::string& url) const;
 		GrammarSpecificData GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const;
-
-		SceneGeometry GetGeometry(const GrammarSpecificData& data) const;
+		SceneGeometry GetGeometry(const std::string& url, const GrammarSpecificData& data) const;
 
 		CURL* GetCURL();
 		const CURL* GetCURL() const;
