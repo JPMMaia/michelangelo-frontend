@@ -13,7 +13,7 @@ AInstancedStaticMeshActorManager::AInstancedStaticMeshActorManager(const FObject
 void AInstancedStaticMeshActorManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	// Get game data singleton:
 	auto gameData = UGameDataSingletonLibrary::GetGameDataSingleton();
 

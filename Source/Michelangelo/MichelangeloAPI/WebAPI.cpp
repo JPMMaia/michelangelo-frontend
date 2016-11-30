@@ -112,16 +112,7 @@ SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificD
 	scene.Objects.reserve(objectsArray.size());
 	for (auto& element : objectsArray)
 	{
-		ObjectGeometry object;
-		object.Name = element.at("g").get<string>();
-		
-		auto transformArray = element.at("t");
-		for(size_t i = 0; i < transformArray.size(); ++i)
-		{
-			object.Transform[i] = transformArray[i];
-		}
-
-		scene.Objects.push_back(std::move(object));
+		scene.Objects.push_back(ObjectGeometry::CreateFromJSON(element));
 	}
 
 	return scene;

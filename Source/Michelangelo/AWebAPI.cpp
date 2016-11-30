@@ -125,9 +125,12 @@ void AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 
 		for (auto& object : sceneGeometry.Objects)
 		{
-			auto worldTransform = FTransform(Helpers::ArrayToMatrix(object.Transform));
+			if (object.GetType() != ObjectGeometry::Type::Static)
+				continue;
 
-			auto actor = instancedStaticMeshActorManager->GetInstancedStaticMeshActor(Helpers::StringToFString(object.Name));
+			auto worldTransform = FTransform(Helpers::ArrayToMatrix(object.GetTransform()));
+
+			auto actor = instancedStaticMeshActorManager->GetInstancedStaticMeshActor(Helpers::StringToFString(object.GetName()));
 			actor->InstancedStaticMeshComponent->AddInstanceWorldSpace(worldTransform);
 		}
 	}

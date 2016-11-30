@@ -11,7 +11,7 @@ class AInstancedStaticMeshActorManager : public AActor
 public:
 	explicit AInstancedStaticMeshActorManager(const FObjectInitializer& ObjectInitializer);
 
-	virtual void BeginPlay() override;
+	void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable, Category = "InstancecdStaticMeshActor")
 	void AddInstancedStaticMeshActors(const FString& name, UStaticMesh* staticMesh);
