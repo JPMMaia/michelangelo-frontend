@@ -81,6 +81,12 @@ FMatrix Helpers::ArrayToMatrix(const std::array<float, 16>& transformArray)
 		FPlane(transformArray[8], transformArray[9], transformArray[10], transformArray[11]),
 		FPlane(transformArray[12], transformArray[13], transformArray[14], transformArray[15])
 	);
+	/*return FMatrix(
+		FPlane(transformArray[0], transformArray[4], transformArray[8], transformArray[12]),
+		FPlane(transformArray[1], transformArray[5], transformArray[9], transformArray[13]),
+		FPlane(transformArray[2], transformArray[6], transformArray[10], transformArray[14]),
+		FPlane(transformArray[3], transformArray[7], transformArray[11], transformArray[15])
+	);*/
 }
 
 void Common::ThrowIfFailed(HRESULT hr)

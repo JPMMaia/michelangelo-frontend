@@ -3,6 +3,7 @@
 #include "HeaderConstants.h"
 #include "URLConstants.h"
 #include "nlohmann/JSON/json.hpp"
+#include "ObjectGeometry.h"
 
 #include <regex>
 
@@ -101,7 +102,10 @@ SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificD
 		requestBody += "Name=" + data.Name + "&";
 		requestBody += "Type=" + data.Type + "&";
 		requestBody += "Code=" + data.Code;
-		if (!PerformPOSTRequest(url, requestBody, responseHeader, responseBody, true))
+
+		auto escapedRequestBody = std::string(curl_easy_escape(m_curl, requestBody.data(), requestBody.size()));
+
+		if (!PerformPOSTRequest(url, escapedRequestBody, responseHeader, responseBody, true))
 			ThrowEngineException(L"Failed to perform request.");
 	}
 
@@ -189,6 +193,9 @@ bool WebAPI::PerformPOSTRequest(const std::string& url, const std::string& reque
 {
 	// Set URL:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
+
+	// Encode body:
+	//std::unique_ptr<char, std::function<void(char*)>> encodedString(curl_easy_escape(m_curl, requestBody.data(), requestBody.size()), curl_free);
 
 	// Set post body:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 1L));

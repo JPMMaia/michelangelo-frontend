@@ -13,9 +13,10 @@ namespace MichelangeloAPI
 		enum class Type
 		{
 			Empty,
-			Static,
+			Camera,
+			StaticMesh,
 			ProceduralMesh,
-			ProceduralMeshIndexed,
+			Unknown
 		};
 
 	public:
@@ -28,10 +29,10 @@ namespace MichelangeloAPI
 		const std::vector<float>& GetIndices() const;
 		const std::array<float, 16>& GetTransform() const;
 
-		static ObjectGeometry CreateFromJSON(const nlohmann::json jsonObject);
+		static ObjectGeometry CreateFromJSON(const nlohmann::json& jsonObject);
 
 	private:
-		Type m_type = Type::Static;
+		Type m_type = Type::StaticMesh;
 		std::string m_name;
 		std::vector<float> m_vertices;
 		std::vector<float> m_indices;

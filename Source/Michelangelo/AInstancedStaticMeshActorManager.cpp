@@ -4,47 +4,89 @@
 #include "Common/Helpers.h"
 
 using namespace Common;
+using namespace MichelangeloAPI;
 
 AInstancedStaticMeshActorManager::AInstancedStaticMeshActorManager(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 }
 
-void AInstancedStaticMeshActorManager::BeginPlay()
+void AInstancedStaticMeshActorManager::AddGeometry(const ObjectGeometry& geometry)
 {
-	Super::BeginPlay();
+	switch(geometry.GetType())
+	{
+	case ObjectGeometry::Type::StaticMesh: 
+		AddStaticMeshGeometry(geometry);
+		break;
 
-	// Get game data singleton:
-	auto gameData = UGameDataSingletonLibrary::GetGameDataSingleton();
+	case ObjectGeometry::Type::ProceduralMesh: 
+		AddProceduralMeshGeometry(geometry);
+		break;
 
-	// Generate default instanced static mesh actors for basic primitives:
-	auto staticMeshGenerator = gameData->GetStaticMeshGenerator();
-	AddInstancedStaticMeshActors("Box", staticMeshGenerator->CubeStaticMesh);
-	AddInstancedStaticMeshActors("Sphere", staticMeshGenerator->SphereStaticMesh);
-	AddInstancedStaticMeshActors("Cylinder", staticMeshGenerator->CylinderStaticMesh);
-	AddInstancedStaticMeshActors("Cone", staticMeshGenerator->ConeStaticMesh);
+	default: 
+		break;
+	}
 }
-
-void AInstancedStaticMeshActorManager::AddInstancedStaticMeshActors(const FString& name, UStaticMesh* staticMesh)
+void AInstancedStaticMeshActorManager::AddStaticMeshGeometry(const MichelangeloAPI::ObjectGeometry& geometry)
 {
+	auto name = Helpers::StringToFString(geometry.GetName());
+
+	// If the actor doesn't exist:
+	if (this->InstancedStaticMeshActors.Find(name) == nullptr)
+	{
+		// Instantiate actor:
+		FActorSpawnParameters parameters;
+		parameters.Name = FName(*name);
+		parameters.Owner = this;
+		auto actor = GetWorld()->SpawnActor<AInstancedStaticMeshActor>(AInstancedStaticMeshActor::StaticClass(), parameters);
+
+		// Set static mesh:
+		auto staticMeshGenerator = UGameDataSingletonLibrary::GetGameDataSingleton()->GetStaticMeshGenerator();
+		actor->InstancedStaticMeshComponent->SetStaticMesh(staticMeshGenerator->GetStaticMesh(name));
+
+		// Add to map:
+		this->InstancedStaticMeshActors.Add(name, actor);
+	}
+
+	// Create world transform:
+	auto worldTransform = FTransform(Helpers::ArrayToMatrix(geometry.GetTransform()));
+
+	// Add instance:
+	auto actor = *InstancedStaticMeshActors.Find(Helpers::StringToFString(geometry.GetName()));
+	actor->InstancedStaticMeshComponent->AddInstanceWorldSpace(worldTransform);
+}
+void AInstancedStaticMeshActorManager::AddProceduralMeshGeometry(const MichelangeloAPI::ObjectGeometry& geometry)
+{
+	// TODO implement instancing:
+	auto name = Helpers::StringToFString(geometry.GetName() + std::to_string(InstancedProceduralMeshActors.Num()));
+
 	// If the key already exists:
-	if (this->InstancedStaticMeshActors.Find(name) != nullptr)
+	if (this->InstancedProceduralMeshActors.Find(name) != nullptr)
 		ThrowEngineException(L"Key already exists.");
 
+	// Instantiate actor:
 	FActorSpawnParameters parameters;
 	parameters.Name = FName(*name);
 	parameters.Owner = this;
-	auto actor = GetWorld()->SpawnActor<AInstancedStaticMeshActor>(AInstancedStaticMeshActor::StaticClass(), parameters);
-	actor->InstancedStaticMeshComponent->SetStaticMesh(staticMesh);
+	auto actor = GetWorld()->SpawnActor<AInstancedProceduralMeshActor>(AInstancedProceduralMeshActor::StaticClass(), parameters);
 
-	this->InstancedStaticMeshActors.Add(name, actor);
-}
+	// Create mesh section:
+	{
+		const auto& geometryVertices = geometry.GetVertices();
 
-AInstancedStaticMeshActor* AInstancedStaticMeshActorManager::GetInstancedStaticMeshActor(const FString& name)
-{
-	auto location = this->InstancedStaticMeshActors.Find(name);
-	if (location == nullptr)
-		return nullptr;
+		TArray<FVector> vertices;
+		auto vertexIterator = geometryVertices.begin();
+		while (vertexIterator != geometryVertices.end())
+			vertices.Add(FVector(*vertexIterator++, *vertexIterator++, *vertexIterator++));
 
-	return *location;
+		const auto& geometryIndices = geometry.GetIndices();
+		TArray<int32> triangles;
+		triangles.AddUninitialized(geometryIndices.size());
+		FMemory::Memcpy(triangles.GetData(), geometryIndices.data(), geometryIndices.size() * sizeof(int32));
+
+		actor->CreateMeshSection(vertices, triangles, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), false);
+	}
+
+	// Add to map:
+	this->InstancedProceduralMeshActors.Add(name, actor);
 }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "AInstancedStaticMeshActor.h"
+#include "AInstancedProceduralMeshActor.h"
+#include "MichelangeloAPI/ObjectGeometry.h"
 #include "AInstancedStaticMeshActorManager.generated.h"
 
 UCLASS(Blueprintable, BlueprintType)
@@ -11,14 +13,13 @@ class AInstancedStaticMeshActorManager : public AActor
 public:
 	explicit AInstancedStaticMeshActorManager(const FObjectInitializer& ObjectInitializer);
 
-	void BeginPlay() override;
+	void AddGeometry(const MichelangeloAPI::ObjectGeometry& geometry);
+	void AddStaticMeshGeometry(const MichelangeloAPI::ObjectGeometry& geometry);
+	void AddProceduralMeshGeometry(const MichelangeloAPI::ObjectGeometry& geometry);
 
-	UFUNCTION(BlueprintCallable, Category = "InstancecdStaticMeshActor")
-	void AddInstancedStaticMeshActors(const FString& name, UStaticMesh* staticMesh);
-
-	UFUNCTION(BlueprintCallable, Category = "InstancecdStaticMeshActor")
-	AInstancedStaticMeshActor* GetInstancedStaticMeshActor(const FString& name);
-
-	UPROPERTY(EditAnywhere, Category = "InstancecdStaticMeshActor")
+	UPROPERTY(EditAnywhere, Category = "InstancedMeshActorManager")
 	TMap<FString, AInstancedStaticMeshActor*> InstancedStaticMeshActors;
+
+	UPROPERTY(EditAnywhere, Category = "InstancedMeshActorManager")
+	TMap<FString, AInstancedProceduralMeshActor*> InstancedProceduralMeshActors;
 };

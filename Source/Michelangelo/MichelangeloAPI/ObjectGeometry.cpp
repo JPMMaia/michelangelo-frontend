@@ -26,7 +26,7 @@ const std::array<float, 16>& ObjectGeometry::GetTransform() const
 	return m_transform;
 }
 
-ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json jsonObject)
+ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json& jsonObject)
 {
 	ObjectGeometry geometry;
 
@@ -35,11 +35,8 @@ ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json jsonObject)
 
 	// Parse the transformation matrix:
 	{
-		auto transformArray = jsonObject.at("t");
-		for (size_t i = 0; i < transformArray.size(); ++i)
-		{
-			geometry.m_transform[i] = transformArray[i];
-		}
+		const auto& transformArray = jsonObject.at("t");
+		std::copy(transformArray.cbegin(), transformArray.cend(), geometry.m_transform.begin());
 	}
 
 	// Convert name to lower case:
@@ -50,22 +47,53 @@ ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json jsonObject)
 	{
 		geometry.m_type = Type::Empty;
 	}
-		
+
 	// Mesh:
 	else if (name == "mesh")
 	{
+		geometry.m_type = Type::ProceduralMesh;
+
 		auto verticesJSON = jsonObject.at("v");
-		
-		// TODO decide if the mesh is indexed or not
-		// TODO parse vertices and indices
+
+		// Parse coordinates:
+		const auto& coordinates = verticesJSON.at("points");
+		std::copy(coordinates.cbegin(), coordinates.cend(), geometry.m_vertices.begin());
+
+		// If the mesh is indexed:
+		if (verticesJSON.at("indexed").get<bool>())
+		{
+			// Parse indices:
+			const auto& indicesArray = verticesJSON.at("indices");
+			std::copy(indicesArray.cbegin(), indicesArray.cend(), geometry.m_indices.begin());
+		}
+
+		// If the mesh is not indexed:
+		else
+		{
+			// Generate indices:
+			geometry.m_indices.resize(geometry.m_vertices.size());
+			std::iota(geometry.m_indices.begin(), geometry.m_indices.end(), 0);
+		}
 
 		return geometry;
 	}
 
+	// Camera:
+	else if(name == "camera")
+	{
+		geometry.m_type = Type::Camera;
+	}
+
 	// Static:
+	else if (name == "box" || name == "cone" || name == "cylinder" || name == "sphere")
+	{
+		geometry.m_type = Type::StaticMesh;
+	}
+
+	// Unknown:
 	else
 	{
-		geometry.m_type = Type::Static;
+		geometry.m_type = Type::Unknown;
 	}
 
 	return geometry;

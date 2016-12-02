@@ -89,12 +89,13 @@ FGrammarSpecificData AAWebAPI::GetGrammarSpecificDataByType(EGrammarType grammar
 	switch (grammarType)
 	{
 	case EGrammarType::Own:
+	case EGrammarType::Shared: // TODO check this with martin
 		output = GetGrammarSpecificData(Helpers::StringToFString(URLConstants::OwnGrammarAPI), id);
 		break;
 
-	case EGrammarType::Shared:
-		output = GetGrammarSpecificData(Helpers::StringToFString(URLConstants::SharedGrammarAPI), id);
-		break;
+	//case EGrammarType::Shared:
+	//	output = GetGrammarSpecificData(Helpers::StringToFString(URLConstants::SharedGrammarAPI), id);
+	//	break;
 
 	case EGrammarType::Tutorial:
 		output = GetGrammarSpecificData(Helpers::StringToFString(URLConstants::TutorialAPI), id);
@@ -123,15 +124,9 @@ void AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 	{
 		auto instancedStaticMeshActorManager = UGameDataSingletonLibrary::GetGameDataSingleton()->GetInstancedStaticMeshActorManager(GetWorld());
 
-		for (auto& object : sceneGeometry.Objects)
+		for (auto& objectGeometry : sceneGeometry.Objects)
 		{
-			if (object.GetType() != ObjectGeometry::Type::Static)
-				continue;
-
-			auto worldTransform = FTransform(Helpers::ArrayToMatrix(object.GetTransform()));
-
-			auto actor = instancedStaticMeshActorManager->GetInstancedStaticMeshActor(Helpers::StringToFString(object.GetName()));
-			actor->InstancedStaticMeshComponent->AddInstanceWorldSpace(worldTransform);
+			instancedStaticMeshActorManager->AddGeometry(objectGeometry);
 		}
 	}
 }
@@ -140,12 +135,13 @@ void AAWebAPI::GenerateGeometryByType(EGrammarType grammarType, const FGrammarSp
 	switch (grammarType)
 	{
 	case EGrammarType::Own:
+	case EGrammarType::Shared: // TODO check with martin
 		GenerateGeometry(Helpers::StringToFString(URLConstants::OwnGrammarAPI), data);
 		break;
 
-	case EGrammarType::Shared:
-		GenerateGeometry(Helpers::StringToFString(URLConstants::SharedGrammarAPI), data);
-		break;
+	//case EGrammarType::Shared:
+	//	GenerateGeometry(Helpers::StringToFString(URLConstants::SharedGrammarAPI), data);
+	//	break;
 
 	case EGrammarType::Tutorial:
 		GenerateGeometry(Helpers::StringToFString(URLConstants::TutorialAPI), data);
