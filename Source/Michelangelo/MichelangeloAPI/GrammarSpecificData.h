@@ -9,7 +9,7 @@ namespace MichelangeloAPI
 		std::string ID;
 		std::string Name;
 		std::string Type;
-		std::string Code;
+		std::wstring Code;
 		bool Shared;
 		bool IsOwner;
 	};

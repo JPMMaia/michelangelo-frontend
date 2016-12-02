@@ -75,7 +75,7 @@ FGrammarSpecificData AAWebAPI::GetGrammarSpecificData(const FString& url, const 
 	output.ID = Helpers::StringToFString(grammarData.ID);
 	output.Name = Helpers::StringToFString(grammarData.Name);
 	output.Type = Helpers::StringToFString(grammarData.Type);
-	output.Code = Helpers::StringToFString(grammarData.Code);
+	output.Code = Helpers::WStringToFString(grammarData.Code);
 	output.Shared = grammarData.Shared;
 	output.IsOwner = grammarData.IsOwner;
 
@@ -114,7 +114,7 @@ void AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 	apiData.ID = Helpers::FStringToString(data.ID);
 	apiData.Name = Helpers::FStringToString(data.Name);
 	apiData.Type = Helpers::FStringToString(data.Type);
-	apiData.Code = Helpers::FStringToString(data.Code);
+	apiData.Code = Helpers::FStringToWString(data.Code);
 	apiData.Shared = data.Shared;
 	apiData.IsOwner = data.IsOwner;
 

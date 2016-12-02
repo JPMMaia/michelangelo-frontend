@@ -43,7 +43,7 @@ namespace MichelangeloAPI
 		void Shutdown();
 
 		bool PerformGETRequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
-		bool PerformPOSTRequest(const std::string& url, const std::string& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
+		bool PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const std::string& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
 		nlohmann::json PerformGETJSONRequest(const std::string& url) const;
 
 		void AddCookie(const std::string& name, const std::string& value);

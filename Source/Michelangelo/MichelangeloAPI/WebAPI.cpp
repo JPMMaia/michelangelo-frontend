@@ -5,6 +5,7 @@
 #include "nlohmann/JSON/json.hpp"
 #include "ObjectGeometry.h"
 
+#include <CoreMisc.h>
 #include <regex>
 
 using namespace Common;
@@ -44,7 +45,8 @@ bool WebAPI::Authenticate(const std::string& username, const std::string& passwo
 	std::string responseHeader;
 	{
 		auto postBody = "__RequestVerificationToken=" + requestVerificationToken + "&Email=" + username + "&Password=" + password + "&RememberMe=" + (rememberMe ? "true" : "false");
-		if (!PerformPOSTRequest(URLConstants::LoginPage, postBody, responseHeader, responseBody, true))
+		CurlList requestHeader;
+		if (!PerformPOSTRequest(URLConstants::LoginPage, requestHeader, postBody, responseHeader, responseBody, true))
 			return false;
 	}
 
@@ -85,7 +87,7 @@ GrammarSpecificData WebAPI::GetGrammarSpecificData(const std::string& url, const
 	grammarData.ID = grammarJson.at("id").get<string>();
 	grammarData.Name = grammarJson.at("name").get<string>();
 	grammarData.Type = grammarJson.at("type").get<string>();
-	grammarData.Code = grammarJson.at("code").get<string>();
+	grammarData.Code = Helpers::StringToWString(grammarJson.at("code").get<string>());
 	grammarData.Shared = grammarJson.at("shared").get<bool>();
 	grammarData.IsOwner = grammarJson.at("isOwner").get<bool>();
 
@@ -101,15 +103,15 @@ SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificD
 		requestBody += "ID=" + data.ID + "&";
 		requestBody += "Name=" + data.Name + "&";
 		requestBody += "Type=" + data.Type + "&";
-		requestBody += "Code=" + data.Code;
-
-		auto escapedRequestBody = std::string(curl_easy_escape(m_curl, requestBody.data(), requestBody.size()));
-
-		if (!PerformPOSTRequest(url, escapedRequestBody, responseHeader, responseBody, true))
+		requestBody += "Code=" + Helpers::WStringToString(data.Code);
+		
+		CurlList requestHeader;
+		if (!PerformPOSTRequest(url, requestHeader, requestBody, responseHeader, responseBody, true))
 			ThrowEngineException(L"Failed to perform request.");
 	}
 
 	auto dataJson = nlohmann::json::parse(responseBody.c_str());
+	Helpers::WriteData(L"Test.txt", responseBody);
 	auto objectsArray = dataJson.at("o");
 
 	SceneGeometry scene;
@@ -182,6 +184,7 @@ bool WebAPI::PerformGETRequest(const std::string& url, std::string& responseHead
 	CurlList header;
 	if (setCookie)
 		SetCookie(header);
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, header.Get()));
 
 	// Perform request:
 	if (curl_easy_perform(m_curl) != CURLE_OK)
@@ -189,13 +192,10 @@ bool WebAPI::PerformGETRequest(const std::string& url, std::string& responseHead
 
 	return true;
 }
-bool WebAPI::PerformPOSTRequest(const std::string& url, const std::string& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const
+bool WebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const std::string& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const
 {
 	// Set URL:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
-
-	// Encode body:
-	//std::unique_ptr<char, std::function<void(char*)>> encodedString(curl_easy_escape(m_curl, requestBody.data(), requestBody.size()), curl_free);
 
 	// Set post body:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 1L));
@@ -207,9 +207,9 @@ bool WebAPI::PerformPOSTRequest(const std::string& url, const std::string& reque
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
 
 	// Set cookie if flag is set:
-	CurlList header;
 	if (setCookie)
-		SetCookie(header);
+		SetCookie(requestHeader);
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, requestHeader.Get()));
 
 	// Perform request:
 	if (curl_easy_perform(m_curl) != CURLE_OK)
@@ -260,7 +260,6 @@ void WebAPI::AddCookie(const std::string& name, const std::string& value)
 void WebAPI::SetCookie(CurlList& header) const
 {
 	header.Append(m_cookieString);
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, header.Get()));
 }
 
 int WebAPI::WriteCallback(char* data, size_t size, size_t count, std::string* userData)

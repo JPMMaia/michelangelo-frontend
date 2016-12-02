@@ -22,6 +22,8 @@ namespace Common
 		std::wstring StringToWString(const std::string& str);
 		std::string WStringToString(const std::wstring& wstr);
 		std::string FStringToString(const FString& fstr);
+		FString WStringToFString(const std::wstring& wstr);
+		std::wstring FStringToWString(const FString& fstr);
 		FString StringToFString(const std::string& str);
 		FMatrix ArrayToMatrix(const std::array<float, 16>& transformArray);
 

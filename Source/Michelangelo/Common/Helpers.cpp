@@ -69,6 +69,14 @@ std::string Helpers::FStringToString(const FString& fstr)
 {
 	return std::string(TCHAR_TO_UTF8(*fstr));
 }
+FString Helpers::WStringToFString(const std::wstring& wstr)
+{
+	return StringToFString(WStringToString(wstr));
+}
+std::wstring Helpers::FStringToWString(const FString& fstr)
+{
+	return StringToWString(FStringToString(fstr));
+}
 FString Helpers::StringToFString(const std::string& str)
 {
 	return FString(str.c_str());
