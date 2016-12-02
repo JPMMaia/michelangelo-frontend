@@ -14,9 +14,20 @@ public:
 	UStaticMeshGenerator* GetStaticMeshGenerator();
 	AInstancedStaticMeshActorManager* GetInstancedStaticMeshActorManager(UWorld* world);
 
+	UFUNCTION(BlueprintCallable, Category = "Game Data Singleton")
+	const FString& GetSavedEmail() const;
+
+	UFUNCTION(BlueprintCallable, Category="Game Data Singleton")
+	void SetSavedEmail(const FString& savedEmail);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Data Singleton")
 	UStaticMeshGenerator* StaticMeshGenerator;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Data Singleton")
 	AInstancedStaticMeshActorManager* InstancedStaticMeshActorManager;
+
+private:
+	FString m_savedEmail;
+
+	static constexpr TCHAR* s_loginCredentialsFilename = L"LoginCredentials.data";
 };

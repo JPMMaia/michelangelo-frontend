@@ -8,6 +8,7 @@
 #include "FGrammarSpecificData.h"
 #include "EGrammarType.h"
 #include "Common/Helpers.h"
+#include "FStatus.h"
 #include "AWebAPI.generated.h"
 
 UCLASS()
@@ -19,7 +20,10 @@ public:
 	AAWebAPI();
 
 	UFUNCTION(BlueprintCallable, Category="WebAPI")
-	bool Authenticate(const FString& email, const FString& password, bool rememberMe);
+	FStatus Authenticate(const FString& email, const FString& password, bool rememberMe);
+
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	void LogOut();
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
 	TArray<FGrammarData> GetGrammars(const FString& url) const;

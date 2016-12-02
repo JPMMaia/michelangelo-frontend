@@ -21,23 +21,23 @@ WebAPI::~WebAPI()
 	Shutdown();
 }
 
-bool WebAPI::Authenticate(const std::string& username, const std::string& password, bool rememberMe)
+WebAPI::LoginError WebAPI::Authenticate(const std::string& username, const std::string& password, bool rememberMe)
 {
 	// TODO in case of timeout retry
 	std::string loginPageBody;
 	std::string loginPageHeader;
-	if (!PerformGETRequest(URLConstants::LoginPage, loginPageHeader, loginPageBody, false))
-		return false;
+	if (!PerformGETRequest(URLConstants::LogInAPI, loginPageHeader, loginPageBody, false))
+		return LoginError::Unknown;
 
 	// Extract the request verification token:
 	std::string requestVerificationToken; 
-	if (!ExtractVerificationToken(loginPageBody, requestVerificationToken))
-		ThrowEngineException(L"Failed to extract verification token.");
+	if (!ExtractLogInVerificationToken(loginPageBody, requestVerificationToken))
+		return LoginError::Unknown;
 
 	// Extract the request verification token cookie value:
 	std::string requestVerificationTokenCookieValue;
 	if (!ExtractCookieValue(loginPageHeader, HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenCookieValue))
-		ThrowEngineException(L"Failed to extract verification cookie.");
+		return LoginError::Unknown;
 	AddCookie(HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenCookieValue);
 
 	// Perform a post request, sending the login information:
@@ -46,19 +46,46 @@ bool WebAPI::Authenticate(const std::string& username, const std::string& passwo
 	{
 		auto postBody = "__RequestVerificationToken=" + requestVerificationToken + "&Email=" + username + "&Password=" + password + "&RememberMe=" + (rememberMe ? "true" : "false");
 		CurlList requestHeader;
-		if (!PerformPOSTRequest(URLConstants::LoginPage, requestHeader, postBody, responseHeader, responseBody, true))
-			return false;
+		if (!PerformPOSTRequest(URLConstants::LogInAPI, requestHeader, postBody, responseHeader, responseBody, true))
+			return LoginError::Unknown;
 	}
 
 	// Extract the application cookie:
 	std::string applicationCookieValue; 
 	if (!ExtractCookieValue(responseHeader, HeaderConstants::ApplicationCookieName, applicationCookieValue))
-		ThrowEngineException(L"Failed to extract application cookie");
+		return LoginError::WrongCredentials;
 	AddCookie(HeaderConstants::ApplicationCookieName, applicationCookieValue);
 
 	m_isAuthenticated = true;
 
-	return true;
+	return LoginError::None;
+}
+
+void WebAPI::LogOut()
+{
+	if (!m_isAuthenticated)
+		return;
+
+	// Get body of the main page:
+	std::string mainPageHeader;
+	std::string mainPageBody;
+	if (!PerformGETRequest(URLConstants::MainPage, mainPageHeader, mainPageBody, true))
+		return;
+
+	// Extract the request verification token:
+	std::string requestVerificationTokenValue;
+	if (!ExtractLogOutVerificationToken(mainPageBody, requestVerificationTokenValue))
+		return;
+
+	// Perform logout:
+	std::string responseBody;
+	std::string responseHeader;
+	CurlList requestHeader;
+	auto requestBody = HeaderConstants::RequestVerificationTokenCookieName + "=" + requestVerificationTokenValue;
+	if (!PerformPOSTRequest(URLConstants::LogOutAPI, requestHeader, requestBody, responseHeader, responseBody, true))
+		return; // TODO internal error?
+
+	m_isAuthenticated = false;
 }
 
 std::vector<GrammarData> WebAPI::GetGrammars(const std::string& url) const
@@ -296,7 +323,7 @@ bool WebAPI::ExtractCookieValue(const std::string& header, const std::string& co
 	return true;
 }
 
-bool WebAPI::ExtractVerificationToken(const std::string& body, std::string& verificationToken)
+bool WebAPI::ExtractLogInVerificationToken(const std::string& body, std::string& verificationToken)
 {
 	//	TODO now it works only for direct registrations on the site, it would be good to extend it to external logins (Google, Facebook) if possible. They have a different token and possibly the login sequence is different as well.
 	std::regex tokenRegex("form action=\"\\/Account\\/Login\" .*><input name=\"__RequestVerificationToken\" type=\"hidden\" value=\".*\"");
@@ -318,3 +345,25 @@ bool WebAPI::ExtractVerificationToken(const std::string& body, std::string& veri
 
 	return true;
 }
+bool WebAPI::ExtractLogOutVerificationToken(const std::string& body, std::string& verificationToken)
+{
+	std::regex tokenRegex("form action=\"\\/Account\\/LogOff\" .*><input name=\"__RequestVerificationToken\" type=\"hidden\" value=\".*\"");
+	std::smatch match;
+	std::string tag;
+	if (!std::regex_search(body, match, tokenRegex))
+		return false;
+
+	for (auto x : match) tag = x;
+
+	// Now there should be quite a large substring in the tag including the form and its first input field (which bears the token)
+	std::regex tokenValue_regex("value=\".*\""); // Match the value of the token
+	if (!std::regex_search(tag, match, tokenValue_regex))
+		return false;
+
+	for (auto x : match) tag = x;
+
+	verificationToken = tag.substr(7, tag.length() - 8);
+
+	return true;
+}
+

@@ -15,9 +15,39 @@ AAWebAPI::AAWebAPI()
 	PrimaryActorTick.bCanEverTick = false;
 }
 
-bool AAWebAPI::Authenticate(const FString& email, const FString& password, bool rememberMe)
+FStatus AAWebAPI::Authenticate(const FString& email, const FString& password, bool rememberMe)
 {	
-	return m_webAPI.Authenticate(Helpers::FStringToString(email), Helpers::FStringToString(password), rememberMe);
+	if (email.IsEmpty())
+		return FStatus(false, TEXT("Email field must not be empty!"));
+
+	if (password.IsEmpty())
+		return FStatus(false, TEXT("Password field must not be empty!"));
+
+	if(rememberMe)
+	{
+		// Save email for future use:
+		auto gameDataSingleton = UGameDataSingletonLibrary::GetGameDataSingleton();
+		gameDataSingleton->SetSavedEmail(email);
+	}
+
+	auto error = m_webAPI.Authenticate(Helpers::FStringToString(email), Helpers::FStringToString(password), false);
+
+	switch(error)
+	{
+	case WebAPI::LoginError::None: 
+		return FStatus(true, TEXT("Success!"));
+	
+		case WebAPI::LoginError::WrongCredentials:
+		return FStatus(false, TEXT("Wrong credentials!"));
+	
+		default: 
+		return FStatus(false, "Unexpected error.");
+	}
+}
+
+void AAWebAPI::LogOut()
+{
+	m_webAPI.LogOut();
 }
 
 TArray<FGrammarData> AAWebAPI::GetGrammars(const FString& url) const

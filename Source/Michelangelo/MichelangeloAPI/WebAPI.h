@@ -24,10 +24,19 @@ namespace MichelangeloAPI
 	class WebAPI
 	{
 	public:
+		enum class LoginError
+		{
+			None,
+			WrongCredentials,
+			Unknown
+		};
+
+	public:
 		WebAPI();
 		~WebAPI();
 
-		bool Authenticate(const std::string& username, const std::string& password, bool rememberMe);
+		LoginError Authenticate(const std::string& username, const std::string& password, bool rememberMe);
+		void LogOut();
 
 		std::vector<GrammarData> GetGrammars(const std::string& url) const;
 		GrammarSpecificData GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const;
@@ -51,7 +60,8 @@ namespace MichelangeloAPI
 		
 		static int WriteCallback(char* data, size_t size, size_t count, std::string* userData);
 		static bool ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookieValue);
-		static bool ExtractVerificationToken(const std::string& body, std::string& verificationToken);
+		static bool ExtractLogInVerificationToken(const std::string& body, std::string& verificationToken);
+		static bool ExtractLogOutVerificationToken(const std::string& body, std::string& verificationToken);
 
 	private:
 		CURL* m_curl = nullptr;
