@@ -5,7 +5,6 @@
 #include "nlohmann/JSON/json.hpp"
 #include "ObjectGeometry.h"
 
-#include <CoreMisc.h>
 #include <regex>
 
 using namespace Common;
@@ -137,8 +136,8 @@ SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificD
 			ThrowEngineException(L"Failed to perform request.");
 	}
 
-	auto dataJson = nlohmann::json::parse(responseBody.c_str());
 	Helpers::WriteData(L"Test.txt", responseBody);
+	auto dataJson = nlohmann::json::parse(responseBody.c_str());
 	auto objectsArray = dataJson.at("o");
 
 	SceneGeometry scene;

@@ -1,9 +1,7 @@
 ﻿#include "Michelangelo.h"
 #include "EngineException.h"
 
-#include "AllowWindowsPlatformTypes.h"
 #include <sstream>
-#include "HideWindowsPlatformTypes.h"
 
 using namespace Common;
 using namespace std;

@@ -1,12 +1,9 @@
 #pragma once
 
-#include "AllowWindowsPlatformTypes.h"
 #include <array>
 #include <codecvt>
 #include <future>
 #include <fstream>
-#include <windows.h>
-#include "HideWindowsPlatformTypes.h"
 
 #include "EngineException.h"
 
@@ -21,11 +18,6 @@ namespace Common
 
 		std::wstring StringToWString(const std::string& str);
 		std::string WStringToString(const std::wstring& wstr);
-		std::string FStringToString(const FString& fstr);
-		FString WStringToFString(const std::wstring& wstr);
-		std::wstring FStringToWString(const FString& fstr);
-		FString StringToFString(const std::string& str);
-		FMatrix ArrayToMatrix(const std::array<float, 16>& transformArray);
 
 		template<typename ContainerType>
 		void ReadData(const std::wstring& filename, ContainerType& buffer)
@@ -69,6 +61,4 @@ namespace Common
 			return std::async(std::launch::async, std::forward<FunctionType>(function), std::forward<ArgumentsType>(arguments)...);
 		}
 	}
-
-	void ThrowIfFailed(HRESULT hr);
 }

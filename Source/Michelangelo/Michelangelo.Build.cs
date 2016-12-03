@@ -25,22 +25,15 @@ public class Michelangelo : ModuleRules
 
         PublicIncludePaths.AddRange(
             new string[] {
-                "Plugins/MichelangeloPlugin/Source/MichelangeloPlugin/Public",
-                "Plugins/MichelangeloPlugin/Source/MichelangeloPlugin/Common",
-                "Plugins/MichelangeloPlugin/Source/MichelangeloPlugin/MichelangeloAPI",
-                "Plugins/MichelangeloPlugin/Source/MichelangeloPlugin/nlohmann/JSON"
-				// ... add public include paths required here ...
-			}
+                "MichelangeloAPI/Source"
+            }
             );
 
 
         PrivateIncludePaths.AddRange(
             new string[] {
-                "Plugins/MichelangeloPlugin/Source/MichelangeloPlugin/Private",
-                "Plugins/MichelangeloPlugin/Source/MichelangeloPlugin/Common",
-                "Plugins/MichelangeloPlugin/Source/MichelangeloPlugin/MichelangeloAPI"
-				// ... add other private include paths required here ...
-			}
+                "MichelangeloAPI/Source"
+            }
             );
 
         // Uncomment if you are using online features

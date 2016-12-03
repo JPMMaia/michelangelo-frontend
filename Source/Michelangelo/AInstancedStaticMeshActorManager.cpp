@@ -2,6 +2,7 @@
 #include "AInstancedStaticMeshActorManager.h"
 #include "UGameDataSingletonLibrary.h"
 #include "Common/Helpers.h"
+#include "UnrealHelpers.h"
 
 using namespace Common;
 using namespace MichelangeloAPI;
