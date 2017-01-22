@@ -107,17 +107,7 @@ std::vector<GrammarData> WebAPI::GetGrammars(const std::string& url) const
 }
 GrammarSpecificData WebAPI::GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const
 {
-	auto grammarJson = PerformGETJSONRequest(url + grammarID);
-
-	GrammarSpecificData grammarData;
-	grammarData.ID = grammarJson.at("id").get<string>();
-	grammarData.Name = grammarJson.at("name").get<string>();
-	grammarData.Type = grammarJson.at("type").get<string>();
-	grammarData.Code = Helpers::StringToWString(grammarJson.at("code").get<string>());
-	grammarData.Shared = grammarJson.at("shared").get<bool>();
-	grammarData.IsOwner = grammarJson.at("isOwner").get<bool>();
-
-	return grammarData;
+	return GrammarSpecificData::FromJson(PerformGETJSONRequest(url + grammarID));
 }
 
 SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data) const
@@ -138,16 +128,8 @@ SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificD
 
 	Helpers::WriteData(L"Test.txt", responseBody);
 	auto dataJson = nlohmann::json::parse(responseBody.c_str());
-	auto objectsArray = dataJson.at("o");
 
-	SceneGeometry scene;
-	scene.Objects.reserve(objectsArray.size());
-	for (auto& element : objectsArray)
-	{
-		scene.Objects.push_back(ObjectGeometry::CreateFromJSON(element));
-	}
-
-	return scene;
+	return SceneGeometry::CreateFromJson(dataJson);
 }
 
 CURL* WebAPI::GetCURL()

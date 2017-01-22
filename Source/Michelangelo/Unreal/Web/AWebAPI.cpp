@@ -100,17 +100,7 @@ FGrammarSpecificData AAWebAPI::GetGrammarSpecificData(const FString& url, const 
 	if (!IsAuthenticated())
 		return FGrammarSpecificData();
 
-	auto grammarData = m_webAPI.GetGrammarSpecificData(Helpers::FStringToString(url), Helpers::FStringToString(id));
-
-	FGrammarSpecificData output;
-	output.ID = Helpers::StringToFString(grammarData.ID);
-	output.Name = Helpers::StringToFString(grammarData.Name);
-	output.Type = Helpers::StringToFString(grammarData.Type);
-	output.Code = Helpers::WStringToFString(grammarData.Code);
-	output.Shared = grammarData.Shared;
-	output.IsOwner = grammarData.IsOwner;
-
-	return output;
+	return FGrammarSpecificData::FromGrammarSpecificData(m_webAPI.GetGrammarSpecificData(Helpers::FStringToString(url), Helpers::FStringToString(id)));
 }
 
 FGrammarSpecificData AAWebAPI::GetGrammarSpecificDataByType(EGrammarType grammarType, const FString& id) const
@@ -155,7 +145,7 @@ void AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 	{
 		auto instancedStaticMeshActorManager = UGameDataSingletonLibrary::GetGameDataSingleton()->GetInstancedStaticMeshActorManager(GetWorld());
 
-		for (auto& objectGeometry : sceneGeometry.Objects)
+		for (auto& objectGeometry : sceneGeometry.GetObjects())
 		{
 			instancedStaticMeshActorManager->AddGeometry(objectGeometry);
 		}

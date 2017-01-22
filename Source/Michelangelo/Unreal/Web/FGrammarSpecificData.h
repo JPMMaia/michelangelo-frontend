@@ -2,6 +2,10 @@
 
 #include "FGrammarSpecificData.generated.h"
 
+namespace MichelangeloAPI {
+	struct GrammarSpecificData;
+}
+
 USTRUCT(BlueprintType)
 struct MICHELANGELO_API FGrammarSpecificData
 {
@@ -26,4 +30,6 @@ struct MICHELANGELO_API FGrammarSpecificData
 	bool IsOwner;
 
 	FGrammarSpecificData();
+
+	static FGrammarSpecificData FromGrammarSpecificData(const MichelangeloAPI::GrammarSpecificData& object);
 };

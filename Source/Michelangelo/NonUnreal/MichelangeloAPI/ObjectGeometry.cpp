@@ -57,6 +57,7 @@ ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json& jsonObject)
 
 		// Parse coordinates:
 		const auto& coordinates = verticesJSON.at("points");
+		geometry.m_vertices.resize(coordinates.size());
 		std::copy(coordinates.cbegin(), coordinates.cend(), geometry.m_vertices.begin());
 
 		// If the mesh is indexed:
@@ -64,6 +65,7 @@ ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json& jsonObject)
 		{
 			// Parse indices:
 			const auto& indicesArray = verticesJSON.at("indices");
+			geometry.m_indices.resize(indicesArray.size());
 			std::copy(indicesArray.cbegin(), indicesArray.cend(), geometry.m_indices.begin());
 		}
 

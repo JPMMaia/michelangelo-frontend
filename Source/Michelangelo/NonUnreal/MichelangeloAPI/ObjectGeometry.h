@@ -29,7 +29,7 @@ namespace MichelangeloAPI
 		const std::vector<float>& GetIndices() const;
 		const std::array<float, 16>& GetTransform() const;
 
-		static ObjectGeometry CreateFromJSON(const nlohmann::json& jsonObject);
+		static ObjectGeometry CreateFromJSON(const nlohmann::json& sceneGeometryJson);
 
 	private:
 		Type m_type = Type::StaticMesh;

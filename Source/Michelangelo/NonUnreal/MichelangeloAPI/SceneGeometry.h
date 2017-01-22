@@ -1,14 +1,20 @@
 #pragma once
 
-#include <array>
-#include <string>
-#include <vector>
 #include "ObjectGeometry.h"
+
+#include <vector>
 
 namespace MichelangeloAPI
 {
-	struct SceneGeometry
+	class SceneGeometry
 	{
-		std::vector<ObjectGeometry> Objects;
+	public:
+		static SceneGeometry CreateFromJson(const nlohmann::json& objectJson);
+
+	public:
+		const std::vector<ObjectGeometry>& GetObjects() const;
+
+	private:
+		std::vector<ObjectGeometry> m_objects;
 	};
 }

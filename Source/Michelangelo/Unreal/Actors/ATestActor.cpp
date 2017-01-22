@@ -2,6 +2,12 @@
 #include "Unreal/Actors/ATestActor.h"
 #include "Unreal/Web/AWebAPI.h"
 
+#include <fstream>
+#include "Unreal/UGameDataSingletonLibrary.h"
+#include "Unreal/Common/UnrealHelpers.h"
+
+using namespace std;
+
 ATestActor::ATestActor(const FObjectInitializer& objectInitializer) :
 	Super(objectInitializer)
 {	
@@ -13,18 +19,64 @@ ATestActor::ATestActor(const FObjectInitializer& objectInitializer) :
 
 void ATestActor::BeginPlay()
 {
-	/*{
+	{
 		FActorSpawnParameters parameters;
 		parameters.Name = FName(TEXT("GeneratedProceduralMesh"));
 		parameters.Owner = this;
 		auto actor = GetWorld()->SpawnActor<AAWebAPI>(AAWebAPI::StaticClass(), parameters);
 
+		// Read geometry from file:
+		MichelangeloAPI::SceneGeometry sceneGeometry;
+		{
+			ifstream fileStream(L"TestClock.json", ios::in);
+
+			nlohmann::json json;
+			fileStream >> json;
+
+			sceneGeometry = MichelangeloAPI::SceneGeometry::CreateFromJson(json);
+		}
+
 		// TODO add authentication
-		actor->Authenticate("", "", false);
-		auto grammars = actor->GetGrammarsByType(EGrammarType::Tutorial);
-		auto grammarData = actor->GetGrammarSpecificDataByType(EGrammarType::Tutorial, grammars[0].ID);
-		actor->GenerateGeometryByType(EGrammarType::Tutorial, grammarData);
-	}*/
+		actor->Authenticate("jpmmaia@gmail.com", "LijOZ5nCDHSs6adrI3fSfKPYQrlf8V6yZCcih4WUAEqQeCsCLfWgGCTCDVDXmCxj", false);
+		//auto grammars = actor->GetGrammarsByType(EGrammarType::Tutorial);
+		//auto grammarData = actor->GetGrammarSpecificDataByType(EGrammarType::Tutorial, grammars[0].ID);
+		//actor->GenerateGeometryByType(EGrammarType::Shared, grammarData);
+
+		auto instancedStaticMeshActorManager = UGameDataSingletonLibrary::GetGameDataSingleton()->GetInstancedStaticMeshActorManager(GetWorld());
+		for (auto& objectGeometry : sceneGeometry.GetObjects())
+		{
+			instancedStaticMeshActorManager->AddGeometry(objectGeometry);
+		}
+
+		{
+			DrawDebugLine(
+				GetWorld(),
+				FVector(0.0f, 0.0f, 0.0f),
+				FVector(0.0f, 100.0f, 0.0f),
+				FColor(255, 0, 0),
+				true, -1, 0,
+				12.333
+			);
+
+			DrawDebugLine(
+				GetWorld(),
+				FVector(0.0f, 0.0f, 0.0f),
+				FVector(0.0f, 0.0f, 100.0f),
+				FColor(0, 255, 0),
+				true, -1, 0,
+				12.333
+			);
+
+			DrawDebugLine(
+				GetWorld(),
+				FVector(0.0f, 0.0f, 0.0f),
+				FVector(-100.0f, 0.0f, 0.0f),
+				FColor(0, 0, 255),
+				true, -1, 0,
+				12.333
+			);
+		}
+	}
 
 
 	/*
@@ -49,4 +101,6 @@ void ATestActor::BeginPlay()
 	}
 	}
 	*/
+
+
 }

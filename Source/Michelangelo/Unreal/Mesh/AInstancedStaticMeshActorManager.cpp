@@ -50,7 +50,9 @@ void AInstancedStaticMeshActorManager::AddStaticMeshGeometry(const MichelangeloA
 	}
 
 	// Create world transform:
-	auto worldTransform = FTransform(Helpers::ArrayToMatrix(geometry.GetTransform()));
+	auto matrix = Helpers::ArrayToMatrix(geometry.GetTransform());
+	matrix = Helpers::MichelangeloToUnrealPrimitiveTransform(matrix);
+	auto worldTransform = FTransform(matrix);
 
 	// Add instance:
 	auto actor = *InstancedStaticMeshActors.Find(Helpers::StringToFString(geometry.GetName()));
