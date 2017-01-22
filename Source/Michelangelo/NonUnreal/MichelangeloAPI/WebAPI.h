@@ -1,11 +1,11 @@
 ﻿#pragma once
 
-#include "GrammarData.h"
-#include "GrammarSpecificData.h"
-#include "SceneGeometry.h"
-#include "CurlList.h"
-#include "../Common/EngineException.h"
-#include "nlohmann/JSON/json.hpp"
+#include "NonUnreal/MichelangeloAPI/GrammarData.h"
+#include "NonUnreal/MichelangeloAPI/GrammarSpecificData.h"
+#include "NonUnreal/MichelangeloAPI/SceneGeometry.h"
+#include "NonUnreal/MichelangeloAPI/CurlList.h"
+#include "NonUnreal/Common/EngineException.h"
+#include "NonUnreal/nlohmann/JSON/json.hpp"
 
 #ifndef NATIVE_CPP
 // ReSharper disable once CppUnusedIncludeDirective

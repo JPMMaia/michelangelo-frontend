@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameFramework/Actor.h"
+#include <GameFramework/Actor.h>
 #include <Components/InstancedStaticMeshComponent.h>
 #include "AInstancedStaticMeshActor.generated.h"
 

@@ -1,6 +1,6 @@
 #include "Michelangelo.h"
 #include "UGameDataSingletonLibrary.h"
-#include "Common/EngineException.h"
+#include "../NonUnreal/Common/EngineException.h"
 
 using namespace Common;
 

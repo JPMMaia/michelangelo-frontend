@@ -1,6 +1,6 @@
 #include "Michelangelo.h"
-#include "ATestActor.h"
-#include "AWebAPI.h"
+#include "Unreal/Actors/ATestActor.h"
+#include "Unreal/Web/AWebAPI.h"
 
 ATestActor::ATestActor(const FObjectInitializer& objectInitializer) :
 	Super(objectInitializer)

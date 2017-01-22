@@ -1,8 +1,8 @@
 #include "Michelangelo.h"
-#include "AInstancedStaticMeshActorManager.h"
-#include "UGameDataSingletonLibrary.h"
-#include "Common/Helpers.h"
-#include "UnrealHelpers.h"
+#include "Unreal/Mesh/AInstancedStaticMeshActorManager.h"
+#include "Unreal/UGameDataSingletonLibrary.h"
+#include "NonUnreal/Common/Helpers.h"
+#include "Unreal/Common/UnrealHelpers.h"
 
 using namespace Common;
 using namespace MichelangeloAPI;

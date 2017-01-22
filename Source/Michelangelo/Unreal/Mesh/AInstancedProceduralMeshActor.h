@@ -1,7 +1,7 @@
 #pragma once
 
 #include <GameFramework/Actor.h>
-#include "ProceduralMeshComponent.h"
+#include <ProceduralMeshComponent.h>
 #include "AInstancedProceduralMeshActor.generated.h"
 
 UCLASS()

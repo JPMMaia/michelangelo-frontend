@@ -3,12 +3,12 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "MichelangeloAPI/WebAPI.h"
-#include "FGrammarData.h"
-#include "FGrammarSpecificData.h"
-#include "EGrammarType.h"
-#include "Common/Helpers.h"
-#include "FStatus.h"
+#include "NonUnreal/MichelangeloAPI/WebAPI.h"
+#include "Unreal/Web/FGrammarData.h"
+#include "Unreal/Web/FGrammarSpecificData.h"
+#include "Unreal/Web/EGrammarType.h"
+#include "NonUnreal/Common/Helpers.h"
+#include "Unreal/Common/FStatus.h"
 #include "AWebAPI.generated.h"
 
 UCLASS()

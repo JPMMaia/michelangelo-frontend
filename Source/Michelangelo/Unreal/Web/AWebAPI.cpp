@@ -2,11 +2,11 @@
 
 #include "Michelangelo.h"
 #include "AWebAPI.h"
-#include "MichelangeloAPI/URLConstants.h"
-#include "UGameDataSingletonLibrary.h"
-#include "UGameDataSingleton.h"
-#include "AInstancedStaticMeshActorManager.h"
-#include "UnrealHelpers.h"
+#include "NonUnreal/MichelangeloAPI/URLConstants.h"
+#include "Unreal/UGameDataSingletonLibrary.h"
+#include "Unreal/UGameDataSingleton.h"
+#include "Unreal/Mesh/AInstancedStaticMeshActorManager.h"
+#include "Unreal/Common/UnrealHelpers.h"
 
 using namespace Common;
 using namespace MichelangeloAPI;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "UStaticMeshGenerator.h"
-#include "AInstancedStaticMeshActorManager.h"
+#include "Unreal/Mesh/UStaticMeshGenerator.h"
+#include "Unreal/Mesh/AInstancedStaticMeshActorManager.h"
 #include "UGameDataSingleton.generated.h"
 
 UCLASS(Blueprintable, BlueprintType)

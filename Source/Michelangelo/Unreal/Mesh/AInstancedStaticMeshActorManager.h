@@ -1,8 +1,8 @@
 #pragma once
 
-#include "AInstancedStaticMeshActor.h"
-#include "AInstancedProceduralMeshActor.h"
-#include "MichelangeloAPI/ObjectGeometry.h"
+#include "Unreal/Mesh/AInstancedStaticMeshActor.h"
+#include "Unreal/Mesh/AInstancedProceduralMeshActor.h"
+#include "NonUnreal/MichelangeloAPI/ObjectGeometry.h"
 #include "AInstancedStaticMeshActorManager.generated.h"
 
 UCLASS(Blueprintable, BlueprintType)

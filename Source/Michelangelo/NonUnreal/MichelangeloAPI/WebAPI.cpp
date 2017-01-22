@@ -2,7 +2,7 @@
 #include "WebAPI.h"
 #include "HeaderConstants.h"
 #include "URLConstants.h"
-#include "nlohmann/JSON/json.hpp"
+#include "NonUnreal/nlohmann/JSON/json.hpp"
 #include "ObjectGeometry.h"
 
 #include <regex>

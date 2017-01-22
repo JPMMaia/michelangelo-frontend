@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UGameDataSingleton.h"
+#include "Unreal/UGameDataSingleton.h"
 #include "UGameDataSingletonLibrary.generated.h"
 
 //note about UBlueprintFunctionLibrary
