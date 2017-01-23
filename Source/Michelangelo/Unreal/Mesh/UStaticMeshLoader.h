@@ -3,12 +3,12 @@
 #include "UStaticMeshGenerator.generated.h"
 
 UCLASS(Blueprintable, BlueprintType)
-class UStaticMeshGenerator : public UObject
+class UStaticMeshLoader : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	explicit UStaticMeshGenerator(const FObjectInitializer& ObjectInitializer);
+	explicit UStaticMeshLoader(const FObjectInitializer& ObjectInitializer);
 
 	UStaticMesh* GetStaticMesh(const FString& name);
 

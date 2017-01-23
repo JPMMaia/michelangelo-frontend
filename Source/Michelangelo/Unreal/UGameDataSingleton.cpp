@@ -3,9 +3,7 @@
 #include "UGameDataSingleton.h"
 
 UGameDataSingleton::UGameDataSingleton(const FObjectInitializer& ObjectInitializer) :
-	Super(ObjectInitializer),
-	StaticMeshGenerator(nullptr),
-	InstancedStaticMeshActorManager(nullptr)
+	Super(ObjectInitializer)
 {
 	TArray<FString> data;
 	if(FFileHelper::LoadANSITextFileToStrings(s_loginCredentialsFilename, nullptr, data))
@@ -18,20 +16,28 @@ UGameDataSingleton::UGameDataSingleton(const FObjectInitializer& ObjectInitializ
 	}
 }
 
-UStaticMeshGenerator* UGameDataSingleton::GetStaticMeshGenerator()
+UStaticMeshLoader* UGameDataSingleton::GetStaticMeshLoader()
 {
 	if (!this->StaticMeshGenerator)
-		this->StaticMeshGenerator = NewObject<UStaticMeshGenerator>();
+		this->StaticMeshGenerator = NewObject<UStaticMeshLoader>();
 
 	return this->StaticMeshGenerator;
 }
-
-AInstancedStaticMeshActorManager* UGameDataSingleton::GetInstancedStaticMeshActorManager(UWorld* world)
+UMaterialLoader* UGameDataSingleton::GetMaterialLoader()
 {
-	if (!this->InstancedStaticMeshActorManager)
-		this->InstancedStaticMeshActorManager = world->SpawnActor<AInstancedStaticMeshActorManager>(AInstancedStaticMeshActorManager::StaticClass());
+	if (!this->MaterialManager)
+		this->MaterialManager = NewObject<UMaterialLoader>();
 
-	return this->InstancedStaticMeshActorManager;
+	return this->MaterialManager;
+}
+
+AActor* UGameDataSingleton::GetSpawner() const
+{
+	return Spawner;
+}
+void UGameDataSingleton::SetSpawner(AActor* spawner)
+{
+	Spawner = spawner;
 }
 
 const FString& UGameDataSingleton::GetSavedEmail() const

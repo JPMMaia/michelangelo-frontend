@@ -1,18 +1,22 @@
 #pragma once
 
-#include "Unreal/Mesh/UStaticMeshGenerator.h"
-#include "Unreal/Mesh/AInstancedStaticMeshActorManager.h"
+#include "Unreal/Mesh/UStaticMeshLoader.h"
+#include "Unreal/Materials/UMaterialLoader.h"
 #include "UGameDataSingleton.generated.h"
 
 UCLASS(Blueprintable, BlueprintType)
 class UGameDataSingleton : public UObject
 {
 	GENERATED_BODY()
+
 public:
 	explicit UGameDataSingleton(const FObjectInitializer& ObjectInitializer);
 
-	UStaticMeshGenerator* GetStaticMeshGenerator();
-	AInstancedStaticMeshActorManager* GetInstancedStaticMeshActorManager(UWorld* world);
+	UStaticMeshLoader* GetStaticMeshLoader();
+	UMaterialLoader* GetMaterialLoader();
+	
+	AActor* GetSpawner() const;
+	void SetSpawner(AActor* spawner);
 
 	UFUNCTION(BlueprintCallable, Category = "Game Data Singleton")
 	const FString& GetSavedEmail() const;
@@ -21,10 +25,13 @@ public:
 	void SetSavedEmail(const FString& savedEmail);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Data Singleton")
-	UStaticMeshGenerator* StaticMeshGenerator;
+	UStaticMeshLoader* StaticMeshGenerator = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Data Singleton")
-	AInstancedStaticMeshActorManager* InstancedStaticMeshActorManager;
+	UMaterialLoader* MaterialManager = nullptr;
+
+	UPROPERTY()
+	AActor* Spawner = nullptr;
 
 private:
 	FString m_savedEmail;

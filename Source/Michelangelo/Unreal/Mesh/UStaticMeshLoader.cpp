@@ -1,7 +1,7 @@
 #include "Michelangelo.h"
-#include "UStaticMeshGenerator.h"
+#include "UStaticMeshLoader.h"
 
-UStaticMeshGenerator::UStaticMeshGenerator(const FObjectInitializer& ObjectInitializer)
+UStaticMeshLoader::UStaticMeshGenerator(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	StaticMeshes.Add(TEXT("Box"), ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("/Engine/BasicShapes/Cube")).Object);
@@ -10,7 +10,7 @@ UStaticMeshGenerator::UStaticMeshGenerator(const FObjectInitializer& ObjectIniti
 	StaticMeshes.Add(TEXT("Cone"), ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("/Engine/BasicShapes/Cone")).Object);
 }
 
-UStaticMesh* UStaticMeshGenerator::GetStaticMesh(const FString& name)
+UStaticMesh* UStaticMeshLoader::GetStaticMesh(const FString& name)
 {
 	return *StaticMeshes.Find(name);
 }

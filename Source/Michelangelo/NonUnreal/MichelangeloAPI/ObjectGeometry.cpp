@@ -5,33 +5,17 @@
 
 using namespace MichelangeloAPI;
 
-ObjectGeometry::Type ObjectGeometry::GetType() const
-{
-	return m_type;
-}
-const std::string& ObjectGeometry::GetName() const
-{
-	return m_name;
-}
-const std::vector<float>& ObjectGeometry::GetVertices() const
-{
-	return m_vertices;
-}
-const std::vector<float>& ObjectGeometry::GetIndices() const
-{
-	return m_indices;
-}
-const std::array<float, 16>& ObjectGeometry::GetTransform() const
-{
-	return m_transform;
-}
-
 ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json& jsonObject)
 {
 	ObjectGeometry geometry;
 
 	auto name = jsonObject.at("g").get<std::string>();
 	geometry.m_name = name;
+
+	// Parse the material index:
+	{
+		geometry.m_materialIndex = jsonObject.at("m").get<size_t>();
+	}
 
 	// Parse the transformation matrix:
 	{
@@ -81,7 +65,7 @@ ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json& jsonObject)
 	}
 
 	// Camera:
-	else if(name == "camera")
+	else if (name == "camera")
 	{
 		geometry.m_type = Type::Camera;
 	}
@@ -99,4 +83,30 @@ ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json& jsonObject)
 	}
 
 	return geometry;
+}
+
+
+ObjectGeometry::Type ObjectGeometry::GetType() const
+{
+	return m_type;
+}
+const std::string& ObjectGeometry::GetName() const
+{
+	return m_name;
+}
+size_t ObjectGeometry::GetMaterialIndex() const
+{
+	return m_materialIndex;
+}
+const std::vector<float>& ObjectGeometry::GetVertices() const
+{
+	return m_vertices;
+}
+const std::vector<float>& ObjectGeometry::GetIndices() const
+{
+	return m_indices;
+}
+const std::array<float, 16>& ObjectGeometry::GetTransform() const
+{
+	return m_transform;
 }

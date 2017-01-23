@@ -7,16 +7,33 @@ SceneGeometry SceneGeometry::CreateFromJson(const nlohmann::json& sceneGeometryJ
 {
 	SceneGeometry scene;
 
-	const auto& objectsJson = sceneGeometryJson.at("o");
-	scene.m_objects.reserve(objectsJson.size());
-	for (auto& element : objectsJson)
+	// Materials:
 	{
-		scene.m_objects.push_back(ObjectGeometry::CreateFromJSON(element));
+		const auto& materialsJson = sceneGeometryJson.at("ml");
+		scene.m_materials.reserve(materialsJson.size());
+		for (auto& element : materialsJson)
+		{
+			scene.m_materials.push_back(Material::CreateFromJSON(element));
+		}
+	}
+
+	// Objects:
+	{
+		const auto& objectsJson = sceneGeometryJson.at("o");
+		scene.m_objects.reserve(objectsJson.size());
+		for (auto& element : objectsJson)
+		{
+			scene.m_objects.push_back(ObjectGeometry::CreateFromJSON(element));
+		}
 	}
 
 	return scene;
 }
 
+const std::vector<Material>& SceneGeometry::GetMaterials() const
+{
+	return m_materials;
+}
 const std::vector<ObjectGeometry>& SceneGeometry::GetObjects() const
 {
 	return m_objects;
