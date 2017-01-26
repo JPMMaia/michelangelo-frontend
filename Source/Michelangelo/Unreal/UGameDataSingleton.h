@@ -2,6 +2,7 @@
 
 #include "Unreal/Mesh/UStaticMeshLoader.h"
 #include "Unreal/Materials/UMaterialLoader.h"
+#include "Unreal/Scene/URenderItemsCollection.h"
 #include "UGameDataSingleton.generated.h"
 
 UCLASS(Blueprintable, BlueprintType)
@@ -10,10 +11,14 @@ class UGameDataSingleton : public UObject
 	GENERATED_BODY()
 
 public:
+	static UGameDataSingleton* Get();
+
+public:
 	explicit UGameDataSingleton(const FObjectInitializer& ObjectInitializer);
 
 	UStaticMeshLoader* GetStaticMeshLoader();
 	UMaterialLoader* GetMaterialLoader();
+	URenderItemsCollection* GetRenderItemsCollection();
 	
 	AActor* GetSpawner() const;
 	void SetSpawner(AActor* spawner);
@@ -29,6 +34,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Data Singleton")
 	UMaterialLoader* MaterialManager = nullptr;
+
+	UPROPERTY()
+	URenderItemsCollection* RenderItemsCollection = nullptr;
 
 	UPROPERTY()
 	AActor* Spawner = nullptr;

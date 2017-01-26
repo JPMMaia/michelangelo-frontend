@@ -1,7 +1,7 @@
 #include "Michelangelo.h"
 #include "UStaticMeshLoader.h"
 
-UStaticMeshLoader::UStaticMeshGenerator(const FObjectInitializer& ObjectInitializer)
+UStaticMeshLoader::UStaticMeshLoader(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	StaticMeshes.Add(TEXT("Box"), ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("/Engine/BasicShapes/Cube")).Object);

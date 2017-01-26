@@ -1,6 +1,12 @@
 #include "Michelangelo.h"
 #include "CoreMisc.h"
 #include "UGameDataSingleton.h"
+#include "UGameDataSingletonLibrary.h"
+
+UGameDataSingleton* UGameDataSingleton::Get()
+{
+	return UGameDataSingletonLibrary::GetGameDataSingleton();
+}
 
 UGameDataSingleton::UGameDataSingleton(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer)
@@ -30,7 +36,13 @@ UMaterialLoader* UGameDataSingleton::GetMaterialLoader()
 
 	return this->MaterialManager;
 }
+URenderItemsCollection* UGameDataSingleton::GetRenderItemsCollection()
+{
+	if (!this->RenderItemsCollection)
+		this->RenderItemsCollection = NewObject<URenderItemsCollection>();
 
+	return this->RenderItemsCollection;
+}
 AActor* UGameDataSingleton::GetSpawner() const
 {
 	return Spawner;

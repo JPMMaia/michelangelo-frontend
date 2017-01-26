@@ -2,9 +2,14 @@
 
 #include "Michelangelo.h"
 #include "MichelangeloGameMode.h"
-#include "Unreal/UGameDataSingletonLibrary.h"
+#include "Unreal/UGameDataSingleton.h"
 
 AMichelangeloGameMode::AMichelangeloGameMode()
 {
-	UGameDataSingletonLibrary::GetGameDataSingleton()->SetSpawner(this);
+}
+
+void AMichelangeloGameMode::StartPlay()
+{
+	UGameDataSingleton::Get()->SetSpawner(this);
+	Super::StartPlay();
 }

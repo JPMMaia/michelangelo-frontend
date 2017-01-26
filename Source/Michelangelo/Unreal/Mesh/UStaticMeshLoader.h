@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UStaticMeshGenerator.generated.h"
+#include "UStaticMeshLoader.generated.h"
 
 UCLASS(Blueprintable, BlueprintType)
 class UStaticMeshLoader : public UObject

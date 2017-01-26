@@ -6,6 +6,7 @@
 
 #include <Materials/MaterialInstanceDynamic.h>
 #include <Materials/MaterialInstance.h>
+#include "Unreal/Common/UnrealHelpers.h"
 
 using namespace MichelangeloAPI;
 
@@ -16,10 +17,10 @@ URenderItem* URenderItem::Create(const SceneGeometry& sceneGeometry, const Objec
 	if (objectGeometry.GetType() == ObjectGeometry::Type::StaticMesh)
 	{
 		// Create static mesh actor:
-		output.m_meshActor = AInstancedStaticMeshActor::CreateFromGeometry(objectGeometry);
+		output->m_meshActor = AInstancedStaticMeshActor::CreateFromGeometry(objectGeometry);
 
 		// Add instance:
-		output.m_meshActor->AddInstance(objectGeometry);
+		output->m_meshActor->AddInstance(objectGeometry);
 	}
 	else if(objectGeometry.GetType() == ObjectGeometry::Type::ProceduralMesh)
 	{
@@ -65,11 +66,11 @@ URenderItem* URenderItem::Create(const SceneGeometry& sceneGeometry, const Objec
 	}
 
 	// Set mesh name:
-	output.m_meshName = objectGeometry.GetName();
+	output->m_meshName = Common::Helpers::StringToFString(objectGeometry.GetName());
 
 	{
 		// Create material instance:
-		output.m_material = output.m_meshActor->CreateDynamicMaterialInstance();
+		output->m_material = output->m_meshActor->CreateDynamicMaterialInstance();
 
 		// Get material data:
 		auto materialIndex = objectGeometry.GetMaterialIndex();
@@ -78,11 +79,11 @@ URenderItem* URenderItem::Create(const SceneGeometry& sceneGeometry, const Objec
 		
 		// Set diffuse albedo:
 		const auto& diffuseAlbedo = materialData.GetDiffuseAlbedo();
-		output.m_material->SetVectorParameterValueInternal("DiffuseAlbedo", FLinearColor(diffuseAlbedo[0], diffuseAlbedo[1], diffuseAlbedo[2], diffuseAlbedo[3]));
+		output->m_material->SetVectorParameterValue("DiffuseAlbedo", FLinearColor(diffuseAlbedo[0], diffuseAlbedo[1], diffuseAlbedo[2], diffuseAlbedo[3]));
 
 		// Set ambient intensity:
 		const auto& ambientIntensity = materialData.GetAmbientIntensity();
-		output.m_material->SetVectorParameterValueInternal("AmbientIntensity", FLinearColor(ambientIntensity[0], ambientIntensity[1], ambientIntensity[2], ambientIntensity[3]));
+		output->m_material->SetVectorParameterValue("AmbientIntensity", FLinearColor(ambientIntensity[0], ambientIntensity[1], ambientIntensity[2], ambientIntensity[3]));
 	}
 
 	return output;

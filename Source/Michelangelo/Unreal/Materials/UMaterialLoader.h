@@ -1,7 +1,7 @@
 #pragma once
 
 #include <UObject.h>
-#include "UMaterialManager.generated.h"
+#include "UMaterialLoader.generated.h"
 
 UCLASS()
 class MICHELANGELO_API UMaterialLoader : public UObject

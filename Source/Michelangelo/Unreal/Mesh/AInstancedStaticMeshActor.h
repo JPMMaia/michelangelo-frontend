@@ -21,5 +21,7 @@ public:
 	UMaterialInstanceDynamic* CreateDynamicMaterialInstance() override;
 
 private:
+	static size_t s_id;
+
 	UInstancedStaticMeshComponent* m_instancedStaticMeshComponent;
 };

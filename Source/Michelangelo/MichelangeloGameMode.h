@@ -15,4 +15,6 @@ class MICHELANGELO_API AMichelangeloGameMode : public AGameMode
 
 public:
 	AMichelangeloGameMode();
+
+	void StartPlay() override;
 };

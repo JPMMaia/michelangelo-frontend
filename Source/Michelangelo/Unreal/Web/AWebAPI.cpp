@@ -5,7 +5,6 @@
 #include "NonUnreal/MichelangeloAPI/URLConstants.h"
 #include "Unreal/UGameDataSingletonLibrary.h"
 #include "Unreal/UGameDataSingleton.h"
-#include "Unreal/Mesh/AInstancedStaticMeshActorManager.h"
 #include "Unreal/Common/UnrealHelpers.h"
 
 using namespace Common;
@@ -27,7 +26,7 @@ FStatus AAWebAPI::Authenticate(const FString& email, const FString& password, bo
 	if(rememberMe)
 	{
 		// Save email for future use:
-		auto gameDataSingleton = UGameDataSingletonLibrary::GetGameDataSingleton();
+		auto gameDataSingleton = UGameDataSingleton::Get();
 		gameDataSingleton->SetSavedEmail(email);
 	}
 
@@ -143,11 +142,11 @@ void AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 
 	// Spawn actors from objects:
 	{
-		auto instancedStaticMeshActorManager = UGameDataSingletonLibrary::GetGameDataSingleton()->GetInstancedStaticMeshActorManager(GetWorld());
-
+		//auto instancedStaticMeshActorManager = UGameDataSingleton::Get()->GetInstancedStaticMeshActorManager(GetWorld());
+		// TODO
 		for (auto& objectGeometry : sceneGeometry.GetObjects())
 		{
-			instancedStaticMeshActorManager->AddGeometry(objectGeometry);
+			//instancedStaticMeshActorManager->AddGeometry(objectGeometry);
 		}
 	}
 }

@@ -42,11 +42,9 @@ void ATestActor::BeginPlay()
 		//auto grammarData = actor->GetGrammarSpecificDataByType(EGrammarType::Tutorial, grammars[0].ID);
 		//actor->GenerateGeometryByType(EGrammarType::Shared, grammarData);
 
-		auto instancedStaticMeshActorManager = UGameDataSingletonLibrary::GetGameDataSingleton()->GetInstancedStaticMeshActorManager(GetWorld());
-		for (auto& objectGeometry : sceneGeometry.GetObjects())
-		{
-			instancedStaticMeshActorManager->AddGeometry(objectGeometry);
-		}
+		
+		auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
+		renderItems->AddGeometry(sceneGeometry);
 
 		{
 			DrawDebugLine(

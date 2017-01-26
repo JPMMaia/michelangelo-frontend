@@ -25,7 +25,7 @@ public:
 
 private:
 	AMeshActor* m_meshActor = nullptr;
-	UMaterialInterface* m_material = nullptr;
+	UMaterialInstanceDynamic* m_material = nullptr;
 	FString m_meshName;
 	size_t m_materialIndex;
 };

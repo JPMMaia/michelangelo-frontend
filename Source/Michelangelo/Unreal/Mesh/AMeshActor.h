@@ -1,7 +1,7 @@
 #pragma once
 
 #include <GameFramework/Actor.h>
-#include "AInstancedStaticMeshActor.generated.h"
+#include "AMeshActor.generated.h"
 
 namespace MichelangeloAPI
 {
@@ -14,12 +14,6 @@ class MICHELANGELO_API AMeshActor : public AActor
 	GENERATED_BODY()
 
 public:
-	explicit AMeshActor(const FObjectInitializer& objectInitializer) :
-		Super(objectInitializer)
-	{
-	}
-
-	virtual void AddInstance(const MichelangeloAPI::ObjectGeometry& instanceData) = 0;
-	virtual UMaterialInstanceDynamic* CreateDynamicMaterialInstance() = 0;
-	virtual const FString& GetID() = 0;
+	virtual void AddInstance(const MichelangeloAPI::ObjectGeometry& instanceData);
+	virtual UMaterialInstanceDynamic* CreateDynamicMaterialInstance();
 };
