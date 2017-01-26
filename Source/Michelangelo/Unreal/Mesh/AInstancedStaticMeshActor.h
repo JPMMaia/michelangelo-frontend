@@ -18,6 +18,7 @@ public:
 	explicit AInstancedStaticMeshActor(const FObjectInitializer& objectInitializer);
 
 	void AddInstance(const MichelangeloAPI::ObjectGeometry& instanceData) override;
+	UMaterialInstanceDynamic* CreateDynamicMaterialInstance() override;
 
 private:
 	UInstancedStaticMeshComponent* m_instancedStaticMeshComponent;

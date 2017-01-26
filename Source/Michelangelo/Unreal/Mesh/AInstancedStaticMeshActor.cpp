@@ -24,9 +24,7 @@ AInstancedStaticMeshActor* AInstancedStaticMeshActor::CreateFromGeometry(const M
 	// Set static mesh:
 	auto staticMeshGenerator = gameDataSingleton->GetStaticMeshLoader();
 	actor->m_instancedStaticMeshComponent->SetStaticMesh(staticMeshGenerator->GetStaticMesh(name));
-
-	m_instancedStaticMeshComponent->CreateDynamicMaterialInstance(0);
-
+	
 	return actor;
 }
 
@@ -51,4 +49,13 @@ void AInstancedStaticMeshActor::AddInstance(const MichelangeloAPI::ObjectGeometr
 
 	// Add instance:
 	m_instancedStaticMeshComponent->AddInstanceWorldSpace(worldTransform);
+}
+UMaterialInstanceDynamic* AInstancedStaticMeshActor::CreateDynamicMaterialInstance()
+{
+	// Get a source material loaded from a blueprint:
+	auto materialLoader = UGameDataSingletonLibrary::GetGameDataSingleton()->GetMaterialLoader();
+	auto sourceMaterial = materialLoader->GetMaterial("BasicMaterial");
+
+	// Create material instance:
+	return m_instancedStaticMeshComponent->CreateDynamicMaterialInstance(0, sourceMaterial);
 }

@@ -21,3 +21,12 @@ Material Material::CreateFromJSON(const nlohmann::json& materialJson)
 
 	return material;
 }
+
+const std::array<float, 4>& Material::GetDiffuseAlbedo() const
+{
+	return m_diffuseAlbedo;
+}
+const std::array<float, 4>& Material::GetAmbientIntensity() const
+{
+	return m_ambientIntensity;
+}

@@ -1,23 +1,31 @@
 #pragma once
 
 #include <UObject.h>
+
+#include "Unreal/Mesh/AMeshActor.h"
 #include "URenderItem.generated.h"
 
-UCLASS(Blueprintable, BlueprintType)
+namespace MichelangeloAPI 
+{
+	class SceneGeometry;
+}
+
+UCLASS()
 class MICHELANGELO_API URenderItem : public UObject
 {
 	GENERATED_BODY()
 public:
+	static URenderItem* Create(const MichelangeloAPI::SceneGeometry& sceneGeometry, const MichelangeloAPI::ObjectGeometry& objectGeometry);
 
-
-	friend bool operator==(const URenderItem& lhs, const URenderItem& rhs)
-	{
-		return false;
-	}
-	friend bool operator!=(const URenderItem& lhs, const URenderItem& rhs)
-	{
-		return !(lhs == rhs);
-	}
+public:
+	AMeshActor* GetMeshActor() const;
+	UMaterialInterface* GetMaterial() const;
+	const FString& GetMeshName() const;
+	size_t GetMaterialIndex() const;
 
 private:
+	AMeshActor* m_meshActor = nullptr;
+	UMaterialInterface* m_material = nullptr;
+	FString m_meshName;
+	size_t m_materialIndex;
 };

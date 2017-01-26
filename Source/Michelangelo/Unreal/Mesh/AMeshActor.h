@@ -20,4 +20,6 @@ public:
 	}
 
 	virtual void AddInstance(const MichelangeloAPI::ObjectGeometry& instanceData) = 0;
+	virtual UMaterialInstanceDynamic* CreateDynamicMaterialInstance() = 0;
+	virtual const FString& GetID() = 0;
 };

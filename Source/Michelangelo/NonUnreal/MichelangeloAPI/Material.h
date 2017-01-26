@@ -11,6 +11,9 @@ namespace MichelangeloAPI
 	public:
 		static Material CreateFromJSON(const nlohmann::json& materialJson);
 
+		const std::array<float, 4>& GetDiffuseAlbedo() const;
+		const std::array<float, 4>& GetAmbientIntensity() const;
+
 	private:
 		std::array<float, 4> m_diffuseAlbedo;
 		std::array<float, 4> m_ambientIntensity;
