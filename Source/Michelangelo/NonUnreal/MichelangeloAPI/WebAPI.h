@@ -4,21 +4,9 @@
 #include "NonUnreal/MichelangeloAPI/GrammarSpecificData.h"
 #include "NonUnreal/MichelangeloAPI/SceneGeometry.h"
 #include "NonUnreal/MichelangeloAPI/CurlList.h"
-#include "NonUnreal/Common/EngineException.h"
+#include "NonUnreal/MichelangeloAPI/CurlPost.h"
 #include "NonUnreal/nlohmann/JSON/json.hpp"
-
-#ifndef NATIVE_CPP
-// ReSharper disable once CppUnusedIncludeDirective
-#include <AllowWindowsPlatformTypes.h>
-#endif
-
-#include <curl/curl.h>
-#undef PF_MAX
-
-#ifndef NATIVE_CPP
-// ReSharper disable once CppUnusedIncludeDirective
-#include <HideWindowsPlatformTypes.h>
-#endif
+#include "IncludeCurl.h"
 
 #include <initializer_list>
 #include <unordered_map>
@@ -39,7 +27,7 @@ namespace MichelangeloAPI
 		WebAPI();
 		~WebAPI();
 
-		LoginError Authenticate(const std::string& username, const std::string& password, bool rememberMe);
+		LoginError Authenticate(const std::string& email, const std::string& password, bool rememberMe);
 		void LogOut();
 
 		std::vector<GrammarData> GetGrammars(const std::string& url) const;
@@ -56,7 +44,7 @@ namespace MichelangeloAPI
 		void Shutdown();
 
 		bool PerformGETRequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
-		bool PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const std::string& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
+		bool PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const CurlPost& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
 		nlohmann::json PerformGETJSONRequest(const std::string& url) const;
 
 		void AddCookie(const std::string& name, const std::string& value);

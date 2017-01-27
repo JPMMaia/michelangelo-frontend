@@ -24,7 +24,7 @@ namespace Common
 {																				\
 	std::wstring __functionName__ = Common::Helpers::StringToWString(__FUNCSIG__);	\
 	std::wstring __filename__ = Common::Helpers::StringToWString(__FILE__);			\
-	throw EngineException(message, __functionName__, __filename__, __LINE__);			\
+	throw Common::EngineException(message, __functionName__, __filename__, __LINE__);			\
 }
 #endif
 

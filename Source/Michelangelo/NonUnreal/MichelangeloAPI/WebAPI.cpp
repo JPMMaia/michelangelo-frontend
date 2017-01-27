@@ -3,7 +3,6 @@
 #include "HeaderConstants.h"
 #include "URLConstants.h"
 #include "NonUnreal/nlohmann/JSON/json.hpp"
-#include "ObjectGeometry.h"
 
 #include <regex>
 
@@ -20,7 +19,7 @@ WebAPI::~WebAPI()
 	Shutdown();
 }
 
-WebAPI::LoginError WebAPI::Authenticate(const std::string& username, const std::string& password, bool rememberMe)
+WebAPI::LoginError WebAPI::Authenticate(const std::string& email, const std::string& password, bool rememberMe)
 {
 	// TODO in case of timeout retry
 	std::string loginPageBody;
@@ -29,7 +28,7 @@ WebAPI::LoginError WebAPI::Authenticate(const std::string& username, const std::
 		return LoginError::Unknown;
 
 	// Extract the request verification token:
-	std::string requestVerificationToken; 
+	std::string requestVerificationToken;
 	if (!ExtractLogInVerificationToken(loginPageBody, requestVerificationToken))
 		return LoginError::Unknown;
 
@@ -43,14 +42,20 @@ WebAPI::LoginError WebAPI::Authenticate(const std::string& username, const std::
 	std::string responseBody;
 	std::string responseHeader;
 	{
-		auto postBody = "__RequestVerificationToken=" + requestVerificationToken + "&Email=" + username + "&Password=" + password + "&RememberMe=" + (rememberMe ? "true" : "false");
+		CurlPost requestBody;
+		requestBody.AddPair("__RequestVerificationToken", requestVerificationToken);
+		requestBody.AddPair("Email", email);
+		requestBody.AddPair("Password", password);
+		requestBody.AddPair("RememberMe", rememberMe ? "true" : "false");
+		requestBody.GenerateHttpPost();
+
 		CurlList requestHeader;
-		if (!PerformPOSTRequest(URLConstants::LogInAPI, requestHeader, postBody, responseHeader, responseBody, true))
+		if (!PerformPOSTRequest(URLConstants::LogInAPI, requestHeader, requestBody, responseHeader, responseBody, true))
 			return LoginError::Unknown;
 	}
 
 	// Extract the application cookie:
-	std::string applicationCookieValue; 
+	std::string applicationCookieValue;
 	if (!ExtractCookieValue(responseHeader, HeaderConstants::ApplicationCookieName, applicationCookieValue))
 		return LoginError::WrongCredentials;
 	AddCookie(HeaderConstants::ApplicationCookieName, applicationCookieValue);
@@ -76,11 +81,15 @@ void WebAPI::LogOut()
 	if (!ExtractLogOutVerificationToken(mainPageBody, requestVerificationTokenValue))
 		return;
 
+	// Generate request body:
+	CurlPost requestBody;
+	requestBody.AddPair(HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenValue);
+	requestBody.GenerateHttpPost();
+
 	// Perform logout:
 	std::string responseBody;
 	std::string responseHeader;
 	CurlList requestHeader;
-	auto requestBody = HeaderConstants::RequestVerificationTokenCookieName + "=" + requestVerificationTokenValue;
 	if (!PerformPOSTRequest(URLConstants::LogOutAPI, requestHeader, requestBody, responseHeader, responseBody, true))
 		return; // TODO internal error?
 
@@ -93,13 +102,13 @@ std::vector<GrammarData> WebAPI::GetGrammars(const std::string& url) const
 
 	std::vector<GrammarData> grammarsData;
 	grammarsData.reserve(grammarJson.size());
-	for(auto& element : grammarJson)
+	for (auto& element : grammarJson)
 	{
 		GrammarData data;
 		data.ID = element.at("id").get<string>();
 		data.Name = element.at("name").get<string>();
 		data.Type = element.at("type").get<string>();
-		
+
 		grammarsData.push_back(std::move(data));
 	}
 
@@ -115,18 +124,19 @@ SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificD
 	std::string responseHeader;
 	std::string responseBody;
 	{
-		std::string requestBody;
-		requestBody += "ID=" + data.ID + "&";
-		requestBody += "Name=" + data.Name + "&";
-		requestBody += "Type=" + data.Type + "&";
-		requestBody += "Code=" + Helpers::WStringToString(data.Code);
-		
+		CurlPost requestBody;
+		requestBody.AddPair("ID", data.ID);
+		requestBody.AddPair("Name", data.Name);
+		requestBody.AddPair("Type", data.Type);
+		requestBody.AddPair("Code", Helpers::WStringToString(data.Code));
+		requestBody.GenerateHttpPost();
+
 		CurlList requestHeader;
 		if (!PerformPOSTRequest(url, requestHeader, requestBody, responseHeader, responseBody, true))
 			ThrowEngineException(L"Failed to perform request.");
 	}
 
-	Helpers::WriteData(L"Test.txt", responseBody);
+	Helpers::WriteData(L"Test.txt", responseBody); // TODO remove
 	auto dataJson = nlohmann::json::parse(responseBody.c_str());
 
 	return SceneGeometry::CreateFromJson(dataJson);
@@ -200,16 +210,11 @@ bool WebAPI::PerformGETRequest(const std::string& url, std::string& responseHead
 
 	return true;
 }
-bool WebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const std::string& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const
+bool WebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const CurlPost& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const
 {
 	// Set URL:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
 
-	// Set post body:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 1L));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, requestBody.c_str()));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(requestBody.length())));
-	
 	// Set output for header and body:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
@@ -218,6 +223,9 @@ bool WebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader,
 	if (setCookie)
 		SetCookie(requestHeader);
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, requestHeader.Get()));
+
+	// Set post body:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPPOST, requestBody.Get()));
 
 	// Perform request:
 	if (curl_easy_perform(m_curl) != CURLE_OK)
@@ -240,7 +248,7 @@ void WebAPI::AddCookie(const std::string& name, const std::string& value)
 {
 	auto location = m_cookies.find(name);
 
-	if(m_cookieString.empty())
+	if (m_cookieString.empty())
 		m_cookieString += HeaderConstants::Cookie;
 
 	// The cookie doesn't exist. Let's add it:
