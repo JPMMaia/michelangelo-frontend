@@ -17,6 +17,8 @@ class MICHELANGELO_API URenderItemsCollection : public UObject
 {
 	GENERATED_BODY()
 public:
+	void Clear();
+
 	void AddGeometry(const MichelangeloAPI::SceneGeometry& sceneGeometry);
 
 private:

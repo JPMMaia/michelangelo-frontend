@@ -6,6 +6,11 @@
 using namespace Common;
 using namespace MichelangeloAPI;
 
+void URenderItemsCollection::Clear()
+{
+	m_renderItems.clear();
+}
+
 void URenderItemsCollection::AddGeometry(const SceneGeometry& sceneGeometry)
 {
 	for (const auto& object : sceneGeometry.GetObjects())

@@ -44,6 +44,7 @@ void ATestActor::BeginPlay()
 
 		
 		auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
+		renderItems->Clear();
 		renderItems->AddGeometry(sceneGeometry);
 
 		{

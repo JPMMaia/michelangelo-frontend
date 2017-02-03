@@ -2,22 +2,37 @@
 
 #include <GameFramework/Actor.h>
 #include <ProceduralMeshComponent.h>
+
+#include "AMeshActor.h"
 #include "AInstancedProceduralMeshActor.generated.h"
 
+namespace MichelangeloAPI 
+{
+	class ObjectGeometry;
+}
+
 UCLASS()
-class MICHELANGELO_API AInstancedProceduralMeshActor : public AActor
+class MICHELANGELO_API AInstancedProceduralMeshActor : public AMeshActor
 {
 	GENERATED_BODY()
 
 public:
+	static AInstancedProceduralMeshActor* CreateFromGeometry(const MichelangeloAPI::ObjectGeometry& geometry);
+
+public:
 	explicit AInstancedProceduralMeshActor(const FObjectInitializer& objectInitializer);
 
-	UFUNCTION(BlueprintCallable, Category = "InstancedProceduralMeshActor")
-	void CreateMeshSection(const TArray<FVector>& Vertices, const TArray<int32>& Triangles, const TArray<FVector>& Normals, const TArray<FVector2D>& UV0, const TArray<FColor>& VertexColors, const TArray<FProcMeshTangent>& Tangents, bool bCreateCollision);
+	void AddInstance(const MichelangeloAPI::ObjectGeometry& instanceData) override;
+	UMaterialInstanceDynamic* CreateDynamicMaterialInstance() override;
 
-	UPROPERTY(EditAnywhere, Category = "InstancedProceduralMeshActor")
-	UProceduralMeshComponent* ProceduralMeshComponent;
+private:
+	void CreateMeshSection(const MichelangeloAPI::ObjectGeometry& geometry);
 
-	UPROPERTY(BlueprintReadOnly, Category = "InstancedProceduralMeshActor")
-	int32 SectionCount;
+private:
+	static size_t s_id;
+
+	UPROPERTY()
+	UProceduralMeshComponent* m_proceduralMeshComponent;
+
+	int32 m_sectionCount;
 };

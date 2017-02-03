@@ -23,5 +23,6 @@ public:
 private:
 	static size_t s_id;
 
+	UPROPERTY()
 	UInstancedStaticMeshComponent* m_instancedStaticMeshComponent;
 };
