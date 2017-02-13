@@ -13,7 +13,9 @@ SceneGeometry SceneGeometry::CreateFromJson(const nlohmann::json& sceneGeometryJ
 		scene.m_materials.reserve(materialsJson.size());
 		for (auto& element : materialsJson)
 		{
-			scene.m_materials.push_back(Material::CreateFromJSON(element));
+			auto str = element.get<std::string>();
+			auto jsonValue = nlohmann::json::parse(str.c_str());
+			scene.m_materials.push_back(Material::CreateFromJSON(jsonValue));
 		}
 	}
 
