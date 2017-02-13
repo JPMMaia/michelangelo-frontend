@@ -42,7 +42,7 @@ std::wstring Helpers::GetFileExtension(const std::wstring& filename)
 {
 	std::wstring dot(L".");
 	auto end = std::find_end(filename.begin(), filename.end(), dot.begin(), dot.end());
-	if(end == filename.end())
+	if (end == filename.end())
 		ThrowEngineException(L"Filename has no extension.");
 
 	return std::wstring(end + 1, filename.end());
@@ -50,7 +50,7 @@ std::wstring Helpers::GetFileExtension(const std::wstring& filename)
 std::wstring Helpers::GetFilePath(const std::wstring& filename)
 {
 	std::wstring searchString(L"/");
-	
+
 	auto location = std::find_end(filename.begin(), filename.end(), searchString.begin(), searchString.end());
 	if (location == filename.end())
 		return L"";
@@ -72,4 +72,18 @@ std::string Helpers::WStringToString(const std::wstring& wstr)
 	std::wstring_convert<convertType, wchar_t> converter;
 
 	return converter.to_bytes(wstr);
+}
+
+std::string Helpers::EscapeString(CURL* curl, const std::string& value)
+{	
+	// URL Escape:
+	auto escapedCString = curl_easy_escape(curl, value.c_str(), value.size());
+
+	// Convert C string to std::string:
+	std::string escapedString(escapedCString);
+
+	// Free C string:
+	curl_free(escapedCString);
+
+	return escapedString;
 }

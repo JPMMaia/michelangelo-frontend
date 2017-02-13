@@ -47,7 +47,7 @@ WebAPI::LoginError WebAPI::Authenticate(const std::string& email, const std::str
 		requestBody.AddPair("Email", email);
 		requestBody.AddPair("Password", password);
 		requestBody.AddPair("RememberMe", rememberMe ? "true" : "false");
-		requestBody.GenerateHttpPost();
+		requestBody.Generate(m_curl, false);
 
 		CurlList requestHeader;
 		if (!PerformPOSTRequest(URLConstants::LogInAPI, requestHeader, requestBody, responseHeader, responseBody, true))
@@ -84,7 +84,7 @@ void WebAPI::LogOut()
 	// Generate request body:
 	CurlPost requestBody;
 	requestBody.AddPair(HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenValue);
-	requestBody.GenerateHttpPost();
+	requestBody.Generate(m_curl, true);
 
 	// Perform logout:
 	std::string responseBody;
@@ -129,7 +129,7 @@ SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificD
 		requestBody.AddPair("Name", data.Name);
 		requestBody.AddPair("Type", data.Type);
 		requestBody.AddPair("Code", Helpers::WStringToString(data.Code));
-		requestBody.GenerateHttpPost();
+		requestBody.Generate(m_curl, true);
 
 		CurlList requestHeader;
 		if (!PerformPOSTRequest(url, requestHeader, requestBody, responseHeader, responseBody, true))
@@ -222,13 +222,20 @@ bool WebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader,
 	// Set cookie if flag is set:
 	if (setCookie)
 		SetCookie(requestHeader);
+	requestHeader.Append("Content-Type: application/x-www-form-urlencoded");
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, requestHeader.Get()));
 
 	// Set post body:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPPOST, requestBody.Get()));
+	{
+		const auto& postBody = requestBody.GetData();
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 1L));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, postBody.size()));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, postBody.c_str()));
+	}
 
 	// Perform request:
-	if (curl_easy_perform(m_curl) != CURLE_OK)
+	auto error = curl_easy_perform(m_curl);
+	if (error != CURLE_OK)
 		return false;
 
 	return true;

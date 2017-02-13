@@ -141,14 +141,9 @@ void AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 	auto sceneGeometry = m_webAPI.GetGeometry(Helpers::FStringToString(url), apiData);
 
 	// Spawn actors from objects:
-	{
-		//auto instancedStaticMeshActorManager = UGameDataSingleton::Get()->GetInstancedStaticMeshActorManager(GetWorld());
-		// TODO
-		for (auto& objectGeometry : sceneGeometry.GetObjects())
-		{
-			//instancedStaticMeshActorManager->AddGeometry(objectGeometry);
-		}
-	}
+	auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
+	renderItems->Clear();
+	renderItems->AddGeometry(sceneGeometry);
 }
 void AAWebAPI::GenerateGeometryByType(EGrammarType grammarType, const FGrammarSpecificData& data)
 {

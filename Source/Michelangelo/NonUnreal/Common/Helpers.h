@@ -6,6 +6,7 @@
 #include <fstream>
 
 #include "EngineException.h"
+#include "NonUnreal/MichelangeloAPI/IncludeCurl.h"
 
 namespace Common
 {
@@ -18,6 +19,7 @@ namespace Common
 
 		std::wstring StringToWString(const std::string& str);
 		std::string WStringToString(const std::wstring& wstr);
+		std::string EscapeString(CURL* curl, const std::string& value);
 
 		template<typename ContainerType>
 		void ReadData(const std::wstring& filename, ContainerType& buffer)

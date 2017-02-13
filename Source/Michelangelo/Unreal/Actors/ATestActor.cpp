@@ -38,14 +38,13 @@ void ATestActor::BeginPlay()
 
 		// TODO add authentication
 		actor->Authenticate("jpmmaia@gmail.com", "LijOZ5nCDHSs6adrI3fSfKPYQrlf8V6yZCcih4WUAEqQeCsCLfWgGCTCDVDXmCxj", false);
-		//auto grammars = actor->GetGrammarsByType(EGrammarType::Tutorial);
-		//auto grammarData = actor->GetGrammarSpecificDataByType(EGrammarType::Tutorial, grammars[0].ID);
-		//actor->GenerateGeometryByType(EGrammarType::Shared, grammarData);
+		auto grammars = actor->GetGrammarsByType(EGrammarType::Tutorial);
+		auto grammarData = actor->GetGrammarSpecificDataByType(EGrammarType::Tutorial, grammars[0].ID);
+		actor->GenerateGeometryByType(EGrammarType::Shared, grammarData);
 
-		
-		auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
-		renderItems->Clear();
-		renderItems->AddGeometry(sceneGeometry);
+		//auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
+		//renderItems->Clear();
+		//renderItems->AddGeometry(sceneGeometry);
 
 		{
 			DrawDebugLine(

@@ -2,44 +2,34 @@
 #include "CurlPost.h"
 #include "NonUnreal/Common/EngineException.h"
 
+#include <sstream>
+
 using namespace Common;
 using namespace MichelangeloAPI;
-
-CurlPost::~CurlPost()
-{
-	if (m_first)
-	{
-		curl_formfree(m_first);
-	}
-}
 
 void CurlPost::AddPair(const std::string& name, const std::string& value)
 {
 	m_pairs[name] = value;
-	m_dirty = true;
 }
-void CurlPost::GenerateHttpPost()
+void CurlPost::Generate(CURL* curl, bool urlEncode)
 {
-	if (!m_dirty)
-		return;
+	std::stringstream stringStream;
 
+	auto pairCount = m_pairs.size();
 	for (const auto& pair : m_pairs)
 	{
-		auto result =
-			curl_formadd(
-				&m_first, &m_last,
-				CURLFORM_PTRNAME, pair.first.c_str(),
-				CURLFORM_PTRCONTENTS, pair.second.c_str(),
-				CURLFORM_END
-			);
-
-		if (result != 0)
-			ThrowEngineException(L"Failed");
+		stringStream << pair.first << "=" << pair.second;
+		if (--pairCount != 0)
+			stringStream << "&";
 	}
 
-	m_dirty = false;
+	// Convert to string:
+	m_data = stringStream.str();
+	
+	if(urlEncode)
+		m_data = Helpers::EscapeString(curl, m_data);
 }
-const curl_httppost* CurlPost::Get() const
+const std::string& CurlPost::GetData() const
 {
-	return m_first;
+	return m_data;
 }

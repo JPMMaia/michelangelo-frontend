@@ -10,16 +10,13 @@ namespace MichelangeloAPI
 	class CurlPost
 	{
 	public:
-		~CurlPost();
-
 		void AddPair(const std::string& name, const std::string& value);
-		void GenerateHttpPost();
-		const curl_httppost* Get() const;
+		void Generate(CURL* curl, bool urlEncode);
+
+		const std::string& GetData() const;
 
 	private:
 		std::unordered_map<std::string, std::string> m_pairs;
-		curl_httppost* m_first = nullptr;
-		curl_httppost* m_last = nullptr;
-		bool m_dirty = true;
+		std::string m_data;
 	};
 }
