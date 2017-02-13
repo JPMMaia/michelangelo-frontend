@@ -7,6 +7,7 @@
 
 #include "EngineException.h"
 #include "NonUnreal/MichelangeloAPI/IncludeCurl.h"
+#include "nlohmann/json/json.hpp"
 
 namespace Common
 {
@@ -62,5 +63,8 @@ namespace Common
 		{
 			return std::async(std::launch::async, std::forward<FunctionType>(function), std::forward<ArgumentsType>(arguments)...);
 		}
+
+		bool ParseColor(const nlohmann::json& json, const std::string& name, std::array<float, 4>& output);
+		bool ParseFloat(const nlohmann::json& json, const std::string& name, float& output);
 	}
 }

@@ -1,31 +1,28 @@
 #include "Michelangelo.h"
 #include "Material.h"
+#include "NonUnreal/Common/Helpers.h"
 
+using namespace Common;
 using namespace MichelangeloAPI;
 
 Material Material::CreateFromJSON(const nlohmann::json& materialJson)
 {
 	Material material;
 
-	// Ambient:
-	{
-		auto colorArray = materialJson.at("Ambient");
-		std::copy(colorArray.begin(), colorArray.end(), material.m_ambientIntensity.begin());
-
-		if (colorArray.size() == 3)
-			material.m_ambientIntensity[3] = 1.0f;
-	}
-
-	// Diffuse:
-	{
-		auto colorArray = materialJson.at("Diffuse");
-		std::copy(colorArray.begin(), colorArray.end(), material.m_diffuseAlbedo.begin());
-
-		if (colorArray.size() == 3)
-			material.m_diffuseAlbedo[3] = 1.0f;
-	}
-
+	Helpers::ParseColor(materialJson, "Diffuse", material.m_diffuseAlbedo);
+	Helpers::ParseColor(materialJson, "Ambient", material.m_ambientIntensity);
+	Helpers::ParseColor(materialJson, "Specular", material.m_specularIntensity);
+	Helpers::ParseFloat(materialJson, "Shininess", material.m_shininess);
+	
 	return material;
+}
+
+Material::Material() :
+	m_diffuseAlbedo({ 0.0f, 0.0f, 0.0f, 1.0f }),
+	m_ambientIntensity({ 0.0f, 0.0f, 0.0f, 1.0f }),
+	m_specularIntensity({ 0.0f, 0.0f, 0.0f, 1.0f }),
+	m_shininess(1.0f)
+{
 }
 
 const std::array<float, 4>& Material::GetDiffuseAlbedo() const
@@ -35,4 +32,12 @@ const std::array<float, 4>& Material::GetDiffuseAlbedo() const
 const std::array<float, 4>& Material::GetAmbientIntensity() const
 {
 	return m_ambientIntensity;
+}
+const std::array<float, 4>& Material::GetSpecularIntensity() const
+{
+	return m_specularIntensity;
+}
+float Material::GetShininess() const
+{
+	return m_shininess;
 }

@@ -49,6 +49,14 @@ URenderItem* URenderItem::Create(const SceneGeometry& sceneGeometry, const Objec
 		// Set ambient intensity:
 		const auto& ambientIntensity = materialData.GetAmbientIntensity();
 		output->m_material->SetVectorParameterValue("AmbientIntensity", FLinearColor(ambientIntensity[0], ambientIntensity[1], ambientIntensity[2], ambientIntensity[3]));
+
+		// Set specular intensity:
+		const auto& specularIntensity = materialData.GetSpecularIntensity();
+		output->m_material->SetVectorParameterValue("SpecularIntensity", FLinearColor(specularIntensity[0], specularIntensity[1], specularIntensity[2], specularIntensity[3]));
+
+		// Set shininess:
+		auto shininess = materialData.GetShininess();
+		output->m_material->SetScalarParameterValue("Shininess", shininess);
 	}
 
 	return output;

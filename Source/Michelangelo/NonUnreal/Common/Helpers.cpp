@@ -75,7 +75,7 @@ std::string Helpers::WStringToString(const std::wstring& wstr)
 }
 
 std::string Helpers::EscapeString(CURL* curl, const std::string& value)
-{	
+{
 	// URL Escape:
 	auto escapedCString = curl_easy_escape(curl, value.c_str(), value.size());
 
@@ -86,4 +86,25 @@ std::string Helpers::EscapeString(CURL* curl, const std::string& value)
 	curl_free(escapedCString);
 
 	return escapedString;
+}
+
+bool Helpers::ParseColor(const nlohmann::json& json, const std::string& name, std::array<float, 4>& output)
+{
+	auto location = json.find(name);
+	if (location == json.end())
+		return false;
+
+	const auto& colorArray = *location;
+	std::copy(colorArray.begin(), colorArray.end(), output.begin());
+
+	if (colorArray.size() == 3)
+		output[3] = 1.0f;
+}
+bool Helpers::ParseFloat(const nlohmann::json& json, const std::string& name, float& output)
+{
+	auto location = materialJson.find("Shininess");
+	if (location != materialJson.end())
+	{
+		material.m_shininess = location->get<float>();
+	}
 }
