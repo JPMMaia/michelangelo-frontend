@@ -99,12 +99,16 @@ bool Helpers::ParseColor(const nlohmann::json& json, const std::string& name, st
 
 	if (colorArray.size() == 3)
 		output[3] = 1.0f;
+
+	return true;
 }
 bool Helpers::ParseFloat(const nlohmann::json& json, const std::string& name, float& output)
 {
-	auto location = materialJson.find("Shininess");
-	if (location != materialJson.end())
-	{
-		material.m_shininess = location->get<float>();
-	}
+	auto location = json.find("Shininess");
+	if (location == json.end())
+		return false;
+
+	output = location->get<float>();
+
+	return true;
 }

@@ -100,5 +100,7 @@ void ATestActor::BeginPlay()
 	}
 	*/
 
+	{
 
+	}
 }

@@ -7,7 +7,7 @@
 
 #include "EngineException.h"
 #include "NonUnreal/MichelangeloAPI/IncludeCurl.h"
-#include "nlohmann/json/json.hpp"
+#include "NonUnreal/nlohmann/json/json.hpp"
 
 namespace Common
 {
