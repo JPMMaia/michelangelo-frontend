@@ -19,7 +19,7 @@ ATestActor::ATestActor(const FObjectInitializer& objectInitializer) :
 
 void ATestActor::BeginPlay()
 {
-	{
+	/*{
 		FActorSpawnParameters parameters;
 		parameters.Name = FName(TEXT("GeneratedProceduralMesh"));
 		parameters.Owner = this;
@@ -42,7 +42,7 @@ void ATestActor::BeginPlay()
 		auto grammarData = actor->GetGrammarSpecificDataByType(EGrammarType::Tutorial, grammars[0].ID);
 		actor->GenerateGeometryByType(EGrammarType::Shared, grammarData);*/
 
-		auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
+/*		auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
 		renderItems->Clear();
 		renderItems->AddGeometry(sceneGeometry);
 
@@ -99,8 +99,4 @@ void ATestActor::BeginPlay()
 	}
 	}
 	*/
-
-	{
-
-	}
 }

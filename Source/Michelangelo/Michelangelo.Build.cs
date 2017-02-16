@@ -6,7 +6,7 @@ public class Michelangelo : ModuleRules
 {
 	public Michelangelo(TargetInfo Target)
 	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Http", "Json", "JsonUtilities", "ProceduralMeshComponent" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Http", "Json", "JsonUtilities", "ProceduralMeshComponent", "UMG" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

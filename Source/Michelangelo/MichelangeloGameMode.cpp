@@ -8,7 +8,7 @@
 AMichelangeloGameMode::AMichelangeloGameMode()
 {
 	// Set the hud class to use our custom HUD by default:
-	HUDClass = AStandardHUD::StaticClass();
+	//HUDClass = AStandardHUD::StaticClass();
 }
 
 void AMichelangeloGameMode::StartPlay()

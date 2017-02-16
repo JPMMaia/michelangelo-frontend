@@ -13,6 +13,9 @@ class SStandardWidget : public SCompoundWidget
 public:
 	void Construct(const FArguments& InArgs);
 
+	TSharedRef<SWidget> OnGetGrammarType();
+	FReply OnGoButtonClicked();
+
 private:
 	TWeakObjectPtr<class AStandardHUD> m_ownerHUD;
 };
