@@ -33,5 +33,10 @@ public:
 	FOnBorderDraggingEvent OnBorderDraggingEvent;
 
 private:
+
+	UFUNCTION()
+	void ResizeAccordingToMousePosition(const FGeometry& geometry, const FPointerEvent& mouseEvent);
+
+private:
 	bool m_mouseButtonDown;
 };

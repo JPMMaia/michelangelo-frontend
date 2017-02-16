@@ -1,6 +1,8 @@
 #include "Michelangelo.h"
 #include "ResizableBorder.h"
 #include <Runtime/UMG/Public/Blueprint/WidgetBlueprintLibrary.h>
+#include <Runtime/UMG/Public/Blueprint/SlateBlueprintLibrary.h>
+#include <Runtime/Engine/Classes/Kismet/GameplayStatics.h>
 
 UResizableBorder::UResizableBorder(const FObjectInitializer& ObjectInitializer) :
 	UBorder(),
@@ -16,7 +18,7 @@ FEventReply UResizableBorder::OnMouseButtonDown(FGeometry geometry, const FPoint
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Mouse Down")));
 
 	m_mouseButtonDown = true;
-	
+
 	// Detect if a user starts dragging in this widget later, if the left mouse button is clicked:
 	auto detectDragReply = UWidgetBlueprintLibrary::DetectDragIfPressed(mouseEvent, this, EKeys::LeftMouseButton);
 
@@ -45,8 +47,34 @@ FEventReply UResizableBorder::OnMouseMove(FGeometry geometry, const FPointerEven
 	// Detect if a user starts dragging in this widget later, if the left mouse button is clicked:
 	auto detectDragReply = UWidgetBlueprintLibrary::DetectDragIfPressed(mouseEvent, this, EKeys::LeftMouseButton);
 
-	// Execute On Border Dragging event:
-	OnBorderDraggingEvent.ExecuteIfBound(mouseEvent);
-
+	// Resize widget according to the mouse position:
+	ResizeAccordingToMousePosition(geometry, mouseEvent);
+	
 	return UWidgetBlueprintLibrary::CaptureMouse(detectDragReply, this);
+}
+
+void UResizableBorder::ResizeAccordingToMousePosition(const FGeometry& geometry, const FPointerEvent& mouseEvent)
+{
+	// Get current mouse position, relative to the local window:
+	auto currentMousePosition = mouseEvent.GetScreenSpacePosition();
+	currentMousePosition = USlateBlueprintLibrary::AbsoluteToLocal(geometry, currentMousePosition);
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Mouse Move, %d, %d"), static_cast<int>(currentMousePosition.X), static_cast<int>(currentMousePosition.Y)));
+
+	// Get the slot where this border is contained:
+	auto canvasPanelSlot = Cast<UCanvasPanelSlot>(UWidget::Slot);
+	auto slotPosition = canvasPanelSlot->GetPosition();
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Canvas Slot Position, %d, %d"), static_cast<int>(slotPosition.X), static_cast<int>(slotPosition.Y)));
+
+	// Resize slot according to anchors:
+	{
+		auto desiredSize = currentMousePosition - slotPosition;
+
+		auto anchors = canvasPanelSlot->LayoutData.Anchors;
+		if (anchors.IsStretchedHorizontal())
+			desiredSize.X = anchors.Maximum.X;
+		if (anchors.IsStretchedVertical())
+			desiredSize.Y = anchors.Maximum.Y;
+
+		canvasPanelSlot->SetSize(desiredSize);
+	}
 }
