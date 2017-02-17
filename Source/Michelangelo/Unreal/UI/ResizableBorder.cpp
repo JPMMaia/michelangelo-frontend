@@ -29,45 +29,48 @@ void UResizableBorder::AddEdgeSlider(UEdgeSlider* edgeSlider)
 
 FEventReply UResizableBorder::OnMouseButtonDown(FGeometry geometry, const FPointerEvent& mouseEvent)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Mouse Down")));
+	/*GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Mouse Down")));
 
 	m_mouseButtonDown = true;
 
 	// Detect if a user starts dragging in this widget later, if the left mouse button is clicked:
 	auto detectDragReply = UWidgetBlueprintLibrary::DetectDragIfPressed(mouseEvent, this, EKeys::LeftMouseButton);
 
-	return UWidgetBlueprintLibrary::CaptureMouse(detectDragReply, this);
+	return UWidgetBlueprintLibrary::CaptureMouse(detectDragReply, this);*/
+	return FEventReply(true);
 }
 
 FEventReply UResizableBorder::OnMouseButtonUp(FGeometry geometry, const FPointerEvent& mouseEvent)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Mouse Up")));
+	/*GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Mouse Up")));
 
 	m_mouseButtonDown = false;
 
 	// Detect if a user starts dragging in this widget later, if there is mouse movement:
 	auto detectDragReply = UWidgetBlueprintLibrary::DetectDragIfPressed(mouseEvent, this, EKeys::MouseX);
 
-	return UWidgetBlueprintLibrary::ReleaseMouseCapture(detectDragReply);
+	return UWidgetBlueprintLibrary::ReleaseMouseCapture(detectDragReply);*/
+
+	return FEventReply(true);
 }
 
 void UResizableBorder::OnEdgeMouseHovered(ESlidePosition slidePosition)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Edge Hovered Received: %d"), static_cast<uint8>(slidePosition)));
+	/*GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Edge Hovered Received: %d"), static_cast<uint8>(slidePosition)));
 
 	m_hoveringEdgeSlide = true;
-	m_edgeSlidePosition = slidePosition;
+	m_edgeSlidePosition = slidePosition;*/
 }
 void UResizableBorder::OnEdgeMouseUnhovered(ESlidePosition slidePosition)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Edge Unhovered Received: %d"), static_cast<uint8>(slidePosition)));
+	/*GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Edge Unhovered Received: %d"), static_cast<uint8>(slidePosition)));
 
-	m_hoveringEdgeSlide = false;
+	m_hoveringEdgeSlide = false;*/
 }
 
 FEventReply UResizableBorder::OnMouseMove(FGeometry geometry, const FPointerEvent& mouseEvent)
 {
-	if (!m_mouseButtonDown)
+	/*if (!m_mouseButtonDown)
 		return FEventReply(true);
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Mouse Move")));
@@ -81,12 +84,13 @@ FEventReply UResizableBorder::OnMouseMove(FGeometry geometry, const FPointerEven
 		ResizeAccordingToMousePosition(geometry, mouseEvent);
 	}
 	
-	return UWidgetBlueprintLibrary::CaptureMouse(detectDragReply, this);
+	return UWidgetBlueprintLibrary::CaptureMouse(detectDragReply, this);*/
+	return FEventReply(true);
 }
 
 void UResizableBorder::ResizeAccordingToMousePosition(const FGeometry& geometry, const FPointerEvent& mouseEvent)
 {
-	// Get current mouse position, relative to the local window:
+	/*// Get current mouse position, relative to the local window:
 	auto currentMousePosition = GetMouseLocalPosition(geometry, mouseEvent);
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Mouse Move, %d, %d"), static_cast<int>(currentMousePosition.X), static_cast<int>(currentMousePosition.Y)));
 
@@ -106,7 +110,7 @@ void UResizableBorder::ResizeAccordingToMousePosition(const FGeometry& geometry,
 			desiredSize.Y = anchors.Maximum.Y;
 
 		canvasPanelSlot->SetSize(desiredSize);
-	}
+	}*/
 }
 FVector2D UResizableBorder::GetMouseLocalPosition(const FGeometry& geometry, const FPointerEvent& mouseEvent) const
 {

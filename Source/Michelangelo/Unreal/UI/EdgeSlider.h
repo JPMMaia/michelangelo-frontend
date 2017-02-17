@@ -12,7 +12,7 @@
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnEdgeMouseHoveredEvent, ESlidePosition, SlidePosition);
 
 UCLASS()
-class UEdgeSlider : public UButton
+class UEdgeSlider : public UUserWidget
 {
 	GENERATED_BODY()
 
@@ -38,8 +38,14 @@ public:
 public:
 
 	UFUNCTION()
-	void OnMouseHovered();
+	void OnMouseHover();
 
 	UFUNCTION()
-	void OnMouseUnhovered();
+	void OnMouseUnhover();
+
+	UFUNCTION()
+	void OnMousePress();
+
+	UFUNCTION()
+	void OnMouseRelease();
 };
