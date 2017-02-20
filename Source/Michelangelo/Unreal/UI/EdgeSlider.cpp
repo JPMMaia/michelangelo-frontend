@@ -10,17 +10,12 @@
 
 UEdgeSlider::UEdgeSlider(const FObjectInitializer& ObjectInitializer) :
 	UUserWidget(ObjectInitializer),
-	SlidePosition(ESlidePosition::Right),
-	m_isPressed(false)
+	SlidePosition(ESlidePosition::Right)
 {
 }
 
 FReply UEdgeSlider::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	//auto mousePosition = InMouseEvent.GetScreenSpacePosition();
-	//mousePosition = USlateBlueprintLibrary::AbsoluteToLocal(InGeometry, mousePosition);
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Mouse Move, %d, %d"), static_cast<int>(mousePosition.X), static_cast<int>(mousePosition.Y)));
-
 	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
 	{
 		auto parent = GetParent();

@@ -26,9 +26,5 @@ public:
 	explicit UEdgeSlider(const FObjectInitializer& initializer);
 
 public:
-
 	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-
-private:
-	bool m_isPressed;
 };

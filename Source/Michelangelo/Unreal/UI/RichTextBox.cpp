@@ -19,11 +19,14 @@ URichTextBox::URichTextBox(const FObjectInitializer& ObjectInitializer)
 	Decorators.Add(ObjectInitializer.CreateOptionalDefaultSubobject<URichTextBlockDecorator>(this, FName("DefaultDecorator")));
 }
 
-void URichTextBox::ReleaseSlateResources(bool bReleaseChildren)
+FText URichTextBox::GetText() const
 {
-	Super::ReleaseSlateResources(bReleaseChildren);
+	if (MyRichTextBlock.IsValid())
+	{
+		return MyRichTextBlock->GetText();
+	}
 
-	MyRichTextBlock.Reset();
+	return Text;
 }
 
 void URichTextBox::SetText(FText InText)
@@ -34,10 +37,8 @@ void URichTextBox::SetText(FText InText)
 		MyRichTextBlock->SetText(Text);
 	}
 }
-
-FText URichTextBox::GetText()
+void URichTextBox::SetError(FText InError)
 {
-	return Text;
 }
 
 TSharedRef<SWidget> URichTextBox::RebuildWidget()
@@ -62,14 +63,14 @@ TSharedRef<SWidget> URichTextBox::RebuildWidget()
 	}
 
 	MyRichTextBlock =
-		SNew(SRichTextBlock)
+		SNew(SMultiLineEditableRichText)
 		.Justification(Justification)
 		.AutoWrapText(AutoWrapText)
 		.WrapTextAt(WrapTextAt)
 		.Margin(Margin)
 		.LineHeightPercentage(LineHeightPercentage)
-		.TextStyle(&DefaultStyle)
-		.Decorators(CreatedDecorators);
+		.TextStyle(&DefaultStyle);
+		//TODO .Decorators(CreatedDecorators);
 
 	return MyRichTextBlock.ToSharedRef();
 }
@@ -89,6 +90,13 @@ void URichTextBox::SynchronizeProperties()
 
 	MyRichTextBlock->SetText(TextBinding);
 
+	Super::SynchronizeTextLayoutProperties(*MyRichTextBlock);
+}
+void URichTextBox::ReleaseSlateResources(bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+
+	MyRichTextBlock.Reset();
 }
 
 #if WITH_EDITOR
@@ -100,7 +108,7 @@ void URichTextBox::SynchronizeProperties()
 
 const FText URichTextBox::GetPaletteCategory()
 {
-	return LOCTEXT("Common", "Common");
+	return LOCTEXT("Input", "Input");
 }
 
 #endif
