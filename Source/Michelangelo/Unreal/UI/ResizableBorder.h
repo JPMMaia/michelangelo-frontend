@@ -44,7 +44,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = Events, meta = (IsBindableEvent = "True"))
 	FOnBorderDraggingEvent OnBorderDraggingEvent;
 
-private:
+public:
 
 	UFUNCTION()
 	void ResizeAccordingToMousePosition(const FGeometry& geometry, const FPointerEvent& mouseEvent);

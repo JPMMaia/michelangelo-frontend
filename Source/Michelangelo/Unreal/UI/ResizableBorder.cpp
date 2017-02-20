@@ -4,6 +4,7 @@
 #include <Runtime/UMG/Public/Blueprint/SlateBlueprintLibrary.h>
 #include <Runtime/Engine/Classes/Kismet/GameplayStatics.h>
 #include <Runtime/Engine/Classes/Kismet/KismetMathLibrary.h>
+#include <Runtime/UMG/Public/Components/CanvasPanelSlot.h>
 #include "EdgeSlider.h"
 
 UResizableBorder::UResizableBorder(const FObjectInitializer& ObjectInitializer) :
@@ -20,8 +21,6 @@ UResizableBorder::UResizableBorder(const FObjectInitializer& ObjectInitializer) 
 
 void UResizableBorder::AddEdgeSlider(UEdgeSlider* edgeSlider)
 {
-	edgeSlider->OnEdgeMouseHoveredEvent.BindDynamic(this, &UResizableBorder::OnEdgeMouseHovered);
-	edgeSlider->OnEdgeMouseUnhoveredEvent.BindDynamic(this, &UResizableBorder::OnEdgeMouseUnhovered);
 	m_edgeSliders.Add(edgeSlider);
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Edge Added")));
@@ -83,34 +82,36 @@ FEventReply UResizableBorder::OnMouseMove(FGeometry geometry, const FPointerEven
 		// Resize widget according to the mouse position:
 		ResizeAccordingToMousePosition(geometry, mouseEvent);
 	}
-	
+
 	return UWidgetBlueprintLibrary::CaptureMouse(detectDragReply, this);*/
 	return FEventReply(true);
 }
 
 void UResizableBorder::ResizeAccordingToMousePosition(const FGeometry& geometry, const FPointerEvent& mouseEvent)
 {
-	/*// Get current mouse position, relative to the local window:
-	auto currentMousePosition = GetMouseLocalPosition(geometry, mouseEvent);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Mouse Move, %d, %d"), static_cast<int>(currentMousePosition.X), static_cast<int>(currentMousePosition.Y)));
-
 	// Get the position of the slot where this border is contained:
-	auto canvasPanelSlot = Cast<UCanvasPanelSlot>(UWidget::Slot);
-	auto slotPosition = canvasPanelSlot->GetPosition();
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("Canvas Slot Position, %d, %d"), static_cast<int>(slotPosition.X), static_cast<int>(slotPosition.Y)));
-
+	auto parent = Cast<UCanvasPanelSlot>(UWidget::Slot);
+	auto parentPosition = parent->GetPosition();
+	
 	// Resize slot according to anchors:
+	auto geometryPosition = geometry.Position;
+	auto geometrySize = geometry.Size;
+	auto mousePosition = geometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
+	GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Mouse Position, %d, %d"), static_cast<int>(mousePosition.X), static_cast<int>(mousePosition.Y)));
+
+	auto anchors = parent->LayoutData.Anchors;
+	auto desiredSize = parent->GetSize();
+	if (!anchors.IsStretchedHorizontal())
 	{
-		auto desiredSize = currentMousePosition - slotPosition;
+		desiredSize.X = geometryPosition.X + geometrySize.X + mousePosition.X - parentPosition.X;
+	}
 
-		auto anchors = canvasPanelSlot->LayoutData.Anchors;
-		if (anchors.IsStretchedHorizontal())
-			desiredSize.X = anchors.Maximum.X;
-		if (anchors.IsStretchedVertical())
-			desiredSize.Y = anchors.Maximum.Y;
+	if (!anchors.IsStretchedVertical())
+	{
+		desiredSize.Y = geometryPosition.Y + geometrySize.Y + mousePosition.Y - parentPosition.Y;
+	}
 
-		canvasPanelSlot->SetSize(desiredSize);
-	}*/
+	parent->SetSize(desiredSize);
 }
 FVector2D UResizableBorder::GetMouseLocalPosition(const FGeometry& geometry, const FPointerEvent& mouseEvent) const
 {

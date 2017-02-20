@@ -4,68 +4,36 @@
 #include <Runtime/UMG/Public/Blueprint/SlateBlueprintLibrary.h>
 #include <Runtime/Engine/Classes/Kismet/GameplayStatics.h>
 #include <Runtime/Engine/Classes/Kismet/KismetMathLibrary.h>
+#include <Runtime/UMG/Public/Blueprint/DragDropOperation.h>
 #include "ResizableBorder.h"
 #include <thread>
 
 UEdgeSlider::UEdgeSlider(const FObjectInitializer& ObjectInitializer) :
 	UUserWidget(ObjectInitializer),
-	SlidePosition(ESlidePosition::Right)
+	SlidePosition(ESlidePosition::Right),
+	m_isPressed(false)
 {
-	/*UButton::OnHovered.AddDynamic(this, &UEdgeSlider::OnMouseHover);
-	UButton::OnUnhovered.AddDynamic(this, &UEdgeSlider::OnMouseUnhover);
-	UButton::OnPressed.AddDynamic(this, &UEdgeSlider::OnMousePress);
-	UButton::OnReleased.AddDynamic(this, &UEdgeSlider::OnMouseRelease);*/
 }
 
-void UEdgeSlider::PostLoad()
+FReply UEdgeSlider::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	Super::PostLoad();
+	//auto mousePosition = InMouseEvent.GetScreenSpacePosition();
+	//mousePosition = USlateBlueprintLibrary::AbsoluteToLocal(InGeometry, mousePosition);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Mouse Move, %d, %d"), static_cast<int>(mousePosition.X), static_cast<int>(mousePosition.Y)));
 
-	/*auto parent = UWidget::GetParent();
-	if (parent)
+	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
 	{
-		auto resizableBorder = Cast<UResizableBorder>(parent->GetParent());
-		resizableBorder->AddEdgeSlider(this);
-	}*/
-}
-
-void UEdgeSlider::OnMouseHover()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Hover")));
-}
-void UEdgeSlider::OnMouseUnhover()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Unhover")));
-}
-void UEdgeSlider::OnMousePress()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Press")));
-
-	// Detect if a user starts dragging in this widget later, if the left mouse button is clicked:
-	/*auto detectDragReply = UWidgetBlueprintLibrary::DetectDragIfPressed(mouseEvent, this, EKeys::LeftMouseButton);
-	UWidgetBlueprintLibrary::CaptureMouse(detectDragReply, this);*/
-
-	auto lambda = [this]()
-	{
-		using namespace std::chrono_literals;
-
-		GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Lambda")));
-		/*while(this->IsPressed())
+		auto parent = GetParent();
+		if (parent)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Lambda2")));
+			auto grandParent = parent->GetParent();
+			if (grandParent)
+			{
+				auto resizableWidget = Cast<UResizableBorder>(grandParent);
+				resizableWidget->ResizeAccordingToMousePosition(InGeometry, InMouseEvent);
+			}
+		}
+	}
 
-
-
-			std::this_thread::sleep_for(30ms);
-		}*/
-	};
-	std::thread(lambda).detach();
-}
-void UEdgeSlider::OnMouseRelease()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Release")));
-
-	// Detect if a user starts dragging in this widget later, if there is mouse movement:
-	/*auto detectDragReply = UWidgetBlueprintLibrary::DetectDragIfPressed(mouseEvent, this, EKeys::MouseX);
-	UWidgetBlueprintLibrary::ReleaseMouseCapture(detectDragReply);*/
+	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
 }

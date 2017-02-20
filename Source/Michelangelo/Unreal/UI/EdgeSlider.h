@@ -4,12 +4,14 @@
 #include <Runtime/UMG/Public/UMGStyle.h>
 #include <Runtime/UMG/Public/Components/Widget.h>
 #include <Runtime/UMG/Public/Components/Button.h>
+#include <Runtime/UMG/Public/Blueprint/UserWidget.h>
 #include <Runtime/Core/Public/Delegates/Delegate.h>
 #include <Runtime/Core/Public/Delegates/DelegateCombinations.h>
 #include "SlidePosition.h"
+#include "ResizableBorder.h"
 #include "EdgeSlider.generated.h"
 
-DECLARE_DYNAMIC_DELEGATE_OneParam(FOnEdgeMouseHoveredEvent, ESlidePosition, SlidePosition);
+class UDragDropOperation;
 
 UCLASS()
 class UEdgeSlider : public UUserWidget
@@ -21,31 +23,12 @@ public:
 	ESlidePosition SlidePosition;
 
 public:
-	UPROPERTY(EditAnywhere, Category = Events, meta = (IsBindableEvent = "True"))
-	FOnEdgeMouseHoveredEvent OnEdgeMouseHoveredEvent;
-
-	UPROPERTY(EditAnywhere, Category = Events, meta = (IsBindableEvent = "True"))
-	FOnEdgeMouseHoveredEvent OnEdgeMouseUnhoveredEvent;
-
-public:
 	explicit UEdgeSlider(const FObjectInitializer& initializer);
 
 public:
-	//~ Begin UObject Interface
-	virtual void PostLoad() override;
-	//~ End UObject Interface
 
-public:
+	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
-	UFUNCTION()
-	void OnMouseHover();
-
-	UFUNCTION()
-	void OnMouseUnhover();
-
-	UFUNCTION()
-	void OnMousePress();
-
-	UFUNCTION()
-	void OnMouseRelease();
+private:
+	bool m_isPressed;
 };
