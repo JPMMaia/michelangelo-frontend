@@ -103,12 +103,12 @@ void UResizableBorder::ResizeAccordingToMousePosition(const FGeometry& geometry,
 	auto desiredSize = parent->GetSize();
 	if (!anchors.IsStretchedHorizontal())
 	{
-		desiredSize.X = geometryPosition.X + geometrySize.X + mousePosition.X - parentPosition.X;
+		desiredSize.X = geometryPosition.X + geometrySize.X + mousePosition.X;
 	}
 
 	if (!anchors.IsStretchedVertical())
 	{
-		desiredSize.Y = geometryPosition.Y + geometrySize.Y + mousePosition.Y - parentPosition.Y;
+		desiredSize.Y = geometryPosition.Y + geometrySize.Y + mousePosition.Y;
 	}
 
 	parent->SetSize(desiredSize);
