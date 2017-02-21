@@ -55,30 +55,6 @@ void FCodeMarkupWriter::Write(const TArray<FRichTextLine>& InLines, FString& Out
 	}
 }
 
-TArray<IRichTextMarkupWriter::FRichTextLine> FCodeMarkupWriter::BuildRuns(const TArray<FRichTextLine>& InLines)
-{
-	TArray<IRichTextMarkupWriter::FRichTextLine> Output;
-	Output.AddDefaulted(InLines.Num());
-
-	for (int32 LineIndex = 0; LineIndex < Output.Num(); ++LineIndex)
-	{
-		auto& Line = Output[LineIndex];
-
-		auto Text = InLines[LineIndex].Runs[0].Text;
-		
-		FRunInfo RunInfo;
-		if(Text.StartsWith("//"))
-		{
-			RunInfo.Name = TEXT("Span");
-			RunInfo.MetaData.Add(TEXT("Color"), TEXT("#ff00ff"));
-		}
-
-		Line.Runs.Add(FRichTextRun(RunInfo, Text));
-	}
-
-	return Output;
-}
-
 void FCodeMarkupWriter::EscapeText(FString& TextToEscape)
 {
 	// List of characters that we have to escape to avoid accidental rich-text formatting
@@ -125,4 +101,28 @@ void FCodeMarkupWriter::EscapeText(FString& TextToEscape)
 			}
 		}
 	}
+}
+
+TArray<IRichTextMarkupWriter::FRichTextLine> FCodeMarkupWriter::BuildRuns(const TArray<FRichTextLine>& InLines)
+{
+	TArray<IRichTextMarkupWriter::FRichTextLine> Output;
+	Output.AddDefaulted(InLines.Num());
+
+	for (int32 LineIndex = 0; LineIndex < Output.Num(); ++LineIndex)
+	{
+		auto& Line = Output[LineIndex];
+
+		auto Text = InLines[LineIndex].Runs[0].Text;
+		
+		FRunInfo RunInfo;
+		if(Text.StartsWith("//"))
+		{
+			RunInfo.Name = TEXT("Span");
+			RunInfo.MetaData.Add(TEXT("Color"), TEXT("#ff00ff"));
+		}
+
+		Line.Runs.Add(FRichTextRun(RunInfo, Text));
+	}
+
+	return Output;
 }

@@ -97,7 +97,7 @@ void UResizableBorder::ResizeAccordingToMousePosition(const FGeometry& geometry,
 	auto geometryPosition = geometry.Position;
 	auto geometrySize = geometry.Size;
 	auto mousePosition = geometry.AbsoluteToLocal(mouseEvent.GetScreenSpacePosition());
-	GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Mouse Position, %d, %d"), static_cast<int>(mousePosition.X), static_cast<int>(mousePosition.Y)));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0F, FColor::Red, FString::Printf(TEXT("Mouse Position, %d, %d"), static_cast<int>(mousePosition.X), static_cast<int>(mousePosition.Y)));
 
 	auto anchors = parent->LayoutData.Anchors;
 	auto desiredSize = parent->GetSize();

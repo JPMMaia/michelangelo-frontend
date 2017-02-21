@@ -2,6 +2,7 @@
 
 #include "IRichTextMarkupWriter.h"
 #include "Regex.h"
+#include "CodeHighlighter.h"
 
 class FCodeMarkupWriter : public IRichTextMarkupWriter
 {
@@ -12,9 +13,14 @@ public:
 	virtual void Write(const TArray<FRichTextLine>& InLines, FString& Output) override;
 
 private:
-	TArray<FRichTextLine> BuildRuns(const TArray<FRichTextLine>& InLines);
+	static void EscapeText(FString& TextToEscape);
 
 private:
 	FCodeMarkupWriter() {}
-	static void EscapeText(FString& TextToEscape);
+
+private:
+	TArray<FRichTextLine> BuildRuns(const TArray<FRichTextLine>& InLines);
+
+private:
+	//UCodeHighlighter CodeHighlighter;
 };
