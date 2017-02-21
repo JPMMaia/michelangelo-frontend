@@ -42,6 +42,10 @@ public:
 		, _ModiferKeyForNewLine(EModifierKey::None)
 		, _TextShapingMethod()
 		, _TextFlowDirection()
+		, _Decorators()
+		, _Parser()
+		, _DecoratorStyleSet(&FCoreStyle::Get())
+		, _Writer()
 	{}
 	/** The initial text that will appear in the widget. */
 	SLATE_ATTRIBUTE(FText, Text)
@@ -50,7 +54,7 @@ public:
 		SLATE_ATTRIBUTE(FText, HintText)
 
 		/** The marshaller used to get/set the raw text to/from the text layout. */
-		SLATE_ARGUMENT(TSharedPtr< ITextLayoutMarshaller >, Marshaller)
+		SLATE_ARGUMENT(TSharedPtr<class FRichTextLayoutMarshaller>, Marshaller)
 
 		/** Whether text wraps onto a new line when it's length exceeds this width; if this value is zero or negative, no wrapping occurs. */
 		SLATE_ATTRIBUTE(float, WrapTextAt)
@@ -137,6 +141,26 @@ public:
 
 		/** Which text flow direction should we use? (unset to use the default returned by GetDefaultTextFlowDirection) */
 		SLATE_ARGUMENT(TOptional<ETextFlowDirection>, TextFlowDirection)
+
+		/** Any decorators that should be used while parsing the text. */
+		SLATE_ARGUMENT(TArray< TSharedRef< class ITextDecorator > >, Decorators)
+
+		/** The parser used to resolve any markup used in the provided string. */
+		SLATE_ARGUMENT(TSharedPtr< class IRichTextMarkupParser >, Parser)
+
+		/** */
+		SLATE_ARGUMENT(TSharedPtr< class IRichTextMarkupWriter >, Writer)
+
+		/** The style set used for looking up styles used by decorators*/
+		SLATE_ARGUMENT(const ISlateStyle*, DecoratorStyleSet)
+
+		/** Additional decorators can be append to the widget inline. Inline decorators get precedence over decorators not specified inline. */
+		TArray< TSharedRef< ITextDecorator > > InlineDecorators;
+		SMultiLineEditableRichText::FArguments& operator + (const TSharedRef< ITextDecorator >& DecoratorToAdd)
+		{
+			InlineDecorators.Add(DecoratorToAdd);
+			return *this;
+		}
 
 		SLATE_END_ARGS()
 

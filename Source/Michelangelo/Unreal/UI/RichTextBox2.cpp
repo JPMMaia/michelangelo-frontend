@@ -1,11 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
+/* Replace this with your project.h */
 #include "Michelangelo.h"
-#include "RichTextBox.h"
+#include "RichTextBox2.h"
 #include "Runtime/UMG/Public/Components/RichTextBlockDecorator.h"
 
 #define LOCTEXT_NAMESPACE "UMG"
 
-URichTextBox::URichTextBox(const FObjectInitializer& ObjectInitializer)
+URichTextBox2::URichTextBox2(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	static ConstructorHelpers::FObjectFinder<UFont> RobotoFontObj(TEXT("/Engine/EngineFonts/Roboto"));
@@ -19,17 +20,14 @@ URichTextBox::URichTextBox(const FObjectInitializer& ObjectInitializer)
 	Decorators.Add(ObjectInitializer.CreateOptionalDefaultSubobject<URichTextBlockDecorator>(this, FName("DefaultDecorator")));
 }
 
-FText URichTextBox::GetText() const
+void URichTextBox2::ReleaseSlateResources(bool bReleaseChildren)
 {
-	if (MyRichTextBlock.IsValid())
-	{
-		return MyRichTextBlock->GetText();
-	}
+	Super::ReleaseSlateResources(bReleaseChildren);
 
-	return Text;
+	MyRichTextBlock.Reset();
 }
 
-void URichTextBox::SetText(FText InText)
+void URichTextBox2::SetText(FText InText)
 {
 	Text = InText;
 	if (MyRichTextBlock.IsValid())
@@ -37,12 +35,18 @@ void URichTextBox::SetText(FText InText)
 		MyRichTextBlock->SetText(Text);
 	}
 }
-void URichTextBox::SetError(FText InError)
+
+FText URichTextBox2::GetText()
 {
+	return Text;
 }
 
-TSharedRef<SWidget> URichTextBox::RebuildWidget()
+TSharedRef<SWidget> URichTextBox2::RebuildWidget()
 {
+	//+ OnHyperlinkClicked = FSlateHyperlinkRun::FOnClick::CreateStatic(&RichTextHelper::OnBrowserLinkClicked, AsShared());
+	//+ FHyperlinkDecorator::Create(TEXT("browser"), OnHyperlinkClicked))
+	//+MakeShareable(new FDefaultRichTextDecorator(Font, Color));
+
 	DefaultStyle.SetFont(Font);
 	DefaultStyle.SetColorAndOpacity(ColorAndOpacity);
 	DefaultStyle.SetShadowColorAndOpacity(ShadowColorAndOpacity);
@@ -59,7 +63,7 @@ TSharedRef<SWidget> URichTextBox::RebuildWidget()
 	}
 
 	MyRichTextBlock =
-		SNew(SMultiLineEditableRichText)
+		SNew(SRichTextBlock)
 		.Justification(Justification)
 		.AutoWrapText(AutoWrapText)
 		.WrapTextAt(WrapTextAt)
@@ -71,7 +75,7 @@ TSharedRef<SWidget> URichTextBox::RebuildWidget()
 	return MyRichTextBlock.ToSharedRef();
 }
 
-void URichTextBox::SynchronizeProperties()
+void URichTextBox2::SynchronizeProperties()
 {
 	Super::SynchronizeProperties();
 
@@ -86,25 +90,18 @@ void URichTextBox::SynchronizeProperties()
 
 	MyRichTextBlock->SetText(TextBinding);
 
-	Super::SynchronizeTextLayoutProperties(*MyRichTextBlock);
-}
-void URichTextBox::ReleaseSlateResources(bool bReleaseChildren)
-{
-	Super::ReleaseSlateResources(bReleaseChildren);
-
-	MyRichTextBlock.Reset();
 }
 
 #if WITH_EDITOR
 
-// const FSlateBrush* URichTextBox::GetEditorIcon()
+// const FSlateBrush* URichTextBox2::GetEditorIcon()
 // {
 // 	return FUMGStyle::Get().GetBrush("Widget.RichTextBlock");
 // }
 
-const FText URichTextBox::GetPaletteCategory()
+const FText URichTextBox2::GetPaletteCategory()
 {
-	return LOCTEXT("Input", "Input");
+	return LOCTEXT("Common", "Common");
 }
 
 #endif

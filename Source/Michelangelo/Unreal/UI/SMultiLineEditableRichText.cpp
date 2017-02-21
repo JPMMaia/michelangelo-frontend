@@ -1,13 +1,16 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
 #include "Michelangelo.h"
-
+#include "SMultiLineEditableRichText.h"
 #include "Runtime/Slate/Private/Framework/Text/TextEditHelper.h"
 #include "PlainTextLayoutMarshaller.h"
 #include "SlateEditableTextLayout.h"
 #include "ReflectionMetadata.h"
 #include "IMenu.h"
-#include "SMultiLineEditableRichText.h"
+#include "IRichTextMarkupParser.h"
+#include "RichTextMarkupProcessing.h"
+#include "RichTextLayoutMarshaller.h"
+#include "CodeMarkupWriter.h"
 
 SMultiLineEditableRichText::SMultiLineEditableRichText()
 	: bSelectAllTextWhenFocused(false)
@@ -60,10 +63,27 @@ void SMultiLineEditableRichText::Construct(const FArguments& InArgs)
 		TextStyle.SetFont(InArgs._Font.Get());
 	}
 
-	TSharedPtr<ITextLayoutMarshaller> Marshaller = InArgs._Marshaller;
+	TSharedPtr<IRichTextMarkupParser> Parser = InArgs._Parser;
+	if (!Parser.IsValid())
+	{
+		Parser = FDefaultRichTextMarkupParser::Create();
+	}
+
+	TSharedPtr<IRichTextMarkupWriter> Writer = InArgs._Writer;
+	if (!Writer.IsValid())
+	{
+		Writer = FCodeMarkupWriter::Create();
+	}
+
+	TSharedPtr<FRichTextLayoutMarshaller> Marshaller = InArgs._Marshaller;
 	if (!Marshaller.IsValid())
 	{
-		Marshaller = FPlainTextLayoutMarshaller::Create();
+		Marshaller = FRichTextLayoutMarshaller::Create(Parser, Writer, InArgs._Decorators, InArgs._DecoratorStyleSet);
+	}
+
+	for (const TSharedRef< ITextDecorator >& Decorator : InArgs.InlineDecorators)
+	{
+		Marshaller->AppendInlineDecorator(Decorator);
 	}
 
 	EditableTextLayout = MakeUnique<FSlateEditableTextLayout>(*this, InArgs._Text, TextStyle, InArgs._TextShapingMethod, InArgs._TextFlowDirection, InArgs._CreateSlateTextLayout, Marshaller.ToSharedRef(), Marshaller.ToSharedRef());
@@ -73,6 +93,10 @@ void SMultiLineEditableRichText::Construct(const FArguments& InArgs)
 	EditableTextLayout->SetJustification(InArgs._Justification);
 	EditableTextLayout->SetLineHeightPercentage(InArgs._LineHeightPercentage);
 	EditableTextLayout->SetDebugSourceInfo(TAttribute<FString>::Create(TAttribute<FString>::FGetter::CreateLambda([this] { return FReflectionMetaData::GetWidgetDebugInfo(this); })));
+
+	TAttribute<FText> x;
+	x.Set(FText::FromString(TEXT("<span color=\"#ff00ff\">Hello!</>")));
+	EditableTextLayout->SetText(x);
 
 	// build context menu extender
 	MenuExtender = MakeShareable(new FExtender);
@@ -283,6 +307,7 @@ TSharedPtr<SWidget> SMultiLineEditableRichText::BuildContextMenuContent() const
 
 void SMultiLineEditableRichText::OnTextChanged(const FText& InText)
 {
+	Refresh();
 	OnTextChangedCallback.ExecuteIfBound(InText);
 }
 
