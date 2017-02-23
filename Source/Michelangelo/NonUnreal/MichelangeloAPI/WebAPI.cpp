@@ -5,6 +5,7 @@
 #include "NonUnreal/nlohmann/JSON/json.hpp"
 
 #include <regex>
+#include "CameraParameters.h"
 
 using namespace Common;
 using namespace MichelangeloAPI;
@@ -14,6 +15,7 @@ WebAPI::WebAPI()
 {
 	Initialize();
 }
+
 WebAPI::~WebAPI()
 {
 	Shutdown();
@@ -114,12 +116,13 @@ std::vector<GrammarData> WebAPI::GetGrammars(const std::string& url) const
 
 	return grammarsData;
 }
+
 GrammarSpecificData WebAPI::GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const
 {
 	return GrammarSpecificData::FromJson(PerformGETJSONRequest(url + grammarID));
 }
 
-SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data) const
+SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data, const CameraParameters& cameraParameters) const
 {
 	std::string responseHeader;
 	std::string responseBody;
@@ -129,6 +132,14 @@ SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificD
 		requestBody.AddPair("Name", data.Name);
 		requestBody.AddPair("Type", data.Type);
 		requestBody.AddPair("Code", Helpers::WStringToString(data.Code));
+		requestBody.AddPair("OnlyNID", "-1");
+		requestBody.AddPair("CamPos", Helpers::ArrayToString(cameraParameters.GetCameraPosition()));
+		requestBody.AddPair("CamUp", Helpers::ArrayToString(cameraParameters.GetCameraUpDirection()));
+		requestBody.AddPair("CamLook", Helpers::ArrayToString(cameraParameters.GetCameraUpDirection()));
+		requestBody.AddPair("CamFOV", std::to_string(cameraParameters.GetCameraFov()));
+		requestBody.AddPair("Width", std::to_string(cameraParameters.GetWidth()));
+		requestBody.AddPair("Height", std::to_string(cameraParameters.GetHeight()));
+
 		requestBody.Generate(m_curl, true);
 
 		CurlList requestHeader;
@@ -146,6 +157,7 @@ CURL* WebAPI::GetCURL()
 {
 	return m_curl;
 }
+
 const CURL* WebAPI::GetCURL() const
 {
 	return m_curl;
@@ -174,6 +186,7 @@ void WebAPI::Initialize()
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L));
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 1L));
 }
+
 void WebAPI::Shutdown()
 {
 	if (m_curl)
@@ -210,6 +223,7 @@ bool WebAPI::PerformGETRequest(const std::string& url, std::string& responseHead
 
 	return true;
 }
+
 bool WebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const CurlPost& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const
 {
 	// Set URL:
@@ -240,6 +254,7 @@ bool WebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader,
 
 	return true;
 }
+
 nlohmann::json WebAPI::PerformGETJSONRequest(const std::string& url) const
 {
 	std::string header;
@@ -280,6 +295,7 @@ void WebAPI::AddCookie(const std::string& name, const std::string& value)
 			m_cookieString += pair.first + "=" + pair.second + HeaderConstants::Semicolon;
 	}
 }
+
 void WebAPI::SetCookie(CurlList& header) const
 {
 	header.Append(m_cookieString);
@@ -341,6 +357,7 @@ bool WebAPI::ExtractLogInVerificationToken(const std::string& body, std::string&
 
 	return true;
 }
+
 bool WebAPI::ExtractLogOutVerificationToken(const std::string& body, std::string& verificationToken)
 {
 	std::regex tokenRegex("form action=\"\\/Account\\/LogOff\" .*><input name=\"__RequestVerificationToken\" type=\"hidden\" value=\".*\"");
@@ -362,4 +379,3 @@ bool WebAPI::ExtractLogOutVerificationToken(const std::string& body, std::string
 
 	return true;
 }
-

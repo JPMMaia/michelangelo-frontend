@@ -6,6 +6,7 @@
 #include "Unreal/UGameDataSingletonLibrary.h"
 #include "Unreal/UGameDataSingleton.h"
 #include "Unreal/Common/UnrealHelpers.h"
+#include "NonUnreal/MichelangeloAPI/CameraParameters.h"
 
 using namespace Common;
 using namespace MichelangeloAPI;
@@ -138,7 +139,27 @@ void AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 	apiData.Shared = data.Shared;
 	apiData.IsOwner = data.IsOwner;
 
-	auto sceneGeometry = m_webAPI.GetGeometry(Helpers::FStringToString(url), apiData);
+	CameraParameters cameraParameters;
+	{
+		auto* cameraManager = GEngine->GetFirstLocalPlayerController(GetWorld())->PlayerCameraManager;
+
+		auto position = Helpers::TransformPositionFromUnrealToMichelangeloSpace(cameraManager->GetCameraLocation());
+		cameraParameters.SetCameraPosition({ position.X, position.Y, position.Z });
+		
+		auto up = Helpers::TransformVectorFromUnrealToMichelangeloSpace(cameraManager->GetActorUpVector());
+		cameraParameters.SetCameraUpDirection({ up.X, up.Y, up.Z });
+
+		auto forward = Helpers::TransformVectorFromUnrealToMichelangeloSpace(cameraManager->GetActorForwardVector());
+		cameraParameters.SetCameraForwardDirection({ forward.X, forward.Y, forward.Z });
+
+		cameraParameters.SetCameraFov(cameraManager->GetFOVAngle());
+		
+		auto viewportSize = GEngine->GameViewport->Viewport->GetSizeXY();
+		cameraParameters.SetWidth(viewportSize.X);
+		cameraParameters.SetHeight(viewportSize.Y);
+	}
+
+	auto sceneGeometry = m_webAPI.GetGeometry(Helpers::FStringToString(url), apiData, cameraParameters);
 
 	// Spawn actors from objects:
 	auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;

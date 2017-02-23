@@ -54,6 +54,18 @@ FMatrix Helpers::ArrayToMatrix(const std::array<float, 16>& transformArray)
 	);
 }
 
+const FMatrix& Helpers::GetUnrealToMichelangeloMatrix()
+{
+	static FMatrix unrealToMichelangelo(
+		FPlane(0.0f, 1.0f, 0.0f, 0.0f),
+		FPlane(1.0f, 0.0f, 0.0f, 0.0f),
+		FPlane(0.0f, 0.0f, 1.0f, 0.0f),
+		FPlane(0.0f, 0.0f, 0.0f, 1.0f)
+	);
+
+	return unrealToMichelangelo;
+}
+
 FMatrix Helpers::MichelangeloToUnrealGeneralTransform(const FMatrix& transform)
 {
 	/*auto output = transform * FMatrix(
@@ -78,28 +90,29 @@ FMatrix Helpers::MichelangeloToUnrealGeneralTransform(const FMatrix& transform)
 		FPlane(0.0f, 0.0f, 0.0f, 1.0f)
 	);*/
 }
-
 FMatrix Helpers::MichelangeloToUnrealPrimitiveTransform(const FMatrix& transform)
 {
-	FTransform newTransform(transform);
+	const auto& unrealToMichelangelo = GetUnrealToMichelangeloMatrix();
+	auto michelangeloToUnreal = unrealToMichelangelo.Inverse();
+	auto modelMatrix = FRotationMatrix(FRotator(90.0f, 0.0f, 0.0f));
 
-	auto oldTranslation = newTransform.GetTranslation();
-	auto newTranslation = 100.0f * FVector(-oldTranslation.Z, oldTranslation.X, oldTranslation.Y);
-	newTransform.SetTranslation(newTranslation);
-	
-	auto oldRotation = FRotator(newTransform.GetRotation());
-	auto newPitch = -oldRotation.Roll;
-	auto newYaw = -oldRotation.Pitch;
-	auto newRoll = -oldRotation.Yaw;
-	newTransform.SetRotation(FQuat(FRotator(newPitch, newYaw, newRoll)));	
+	auto output = modelMatrix * unrealToMichelangelo * transform * michelangeloToUnreal * modelMatrix;
 
-	auto oldScale = transform.GetScaleVector();
-	auto newScaleX = oldScale.Z;
-	auto newScaleY = oldScale.X;
-	auto newScaleZ = oldScale.Y;
-	newTransform.SetScale3D(FVector(newScaleX, newScaleY, newScaleZ));
+	constexpr auto translationScalar = 100.0f;
+	output.ScaleTranslation(FVector(translationScalar, translationScalar, translationScalar));
 
-	return newTransform.ToMatrixWithScale();
+	return output;
+}
+
+FVector Helpers::TransformPositionFromUnrealToMichelangeloSpace(const FVector& position)
+{
+	const auto& unrealToMichelangelo = GetUnrealToMichelangeloMatrix();
+	return unrealToMichelangelo.TransformPosition(position) / 100.0f;
+}
+FVector Helpers::TransformVectorFromUnrealToMichelangeloSpace(const FVector& vector)
+{
+	const auto& unrealToMichelangelo = GetUnrealToMichelangeloMatrix();
+	return unrealToMichelangelo.TransformVector(vector);
 }
 
 ///

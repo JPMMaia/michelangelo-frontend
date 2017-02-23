@@ -22,6 +22,8 @@ namespace Common
 		std::string WStringToString(const std::wstring& wstr);
 		std::string EscapeString(CURL* curl, const std::string& value);
 
+		std::string ArrayToString(const std::array<float, 3>& value);
+
 		template<typename ContainerType>
 		void ReadData(const std::wstring& filename, ContainerType& buffer)
 		{

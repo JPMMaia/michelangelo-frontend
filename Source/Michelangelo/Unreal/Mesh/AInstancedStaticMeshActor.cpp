@@ -38,7 +38,7 @@ AInstancedStaticMeshActor::AInstancedStaticMeshActor(const FObjectInitializer& o
 	Super(objectInitializer)
 {
 	// Create instanced static mesh component:
-	m_instancedStaticMeshComponent = objectInitializer.CreateDefaultSubobject<UInstancedStaticMeshComponent>(this, TEXT("InstancedStaticMeshComponent"));
+	m_instancedStaticMeshComponent = objectInitializer.CreateDefaultSubobject<UInstancedStaticSkewedMeshComponent>(this, TEXT("InstancedStaticSkewedMeshComponent"));
 	
 	// Set it as root component:
 	RootComponent = m_instancedStaticMeshComponent;
@@ -51,10 +51,9 @@ void AInstancedStaticMeshActor::AddInstance(const MichelangeloAPI::ObjectGeometr
 	// Create world transform:
 	auto matrix = Helpers::ArrayToMatrix(instanceData.GetTransform());
 	matrix = Helpers::MichelangeloToUnrealPrimitiveTransform(matrix);
-	auto worldTransform = FTransform(matrix);
 
 	// Add instance:
-	m_instancedStaticMeshComponent->AddInstanceWorldSpace(worldTransform);
+	m_instancedStaticMeshComponent->AddInstanceWorldSpaceMatrix(matrix);
 }
 UMaterialInstanceDynamic* AInstancedStaticMeshActor::CreateDynamicMaterialInstance()
 {

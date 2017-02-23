@@ -88,6 +88,13 @@ std::string Helpers::EscapeString(CURL* curl, const std::string& value)
 	return escapedString;
 }
 
+std::string Helpers::ArrayToString(const std::array<float, 3>& value)
+{
+	std::stringstream ss;
+	ss << value[0] << "," << value[1] << "," << value[2];
+	return ss.str();
+}
+
 bool Helpers::ParseColor(const nlohmann::json& json, const std::string& name, std::array<float, 4>& output)
 {
 	auto location = json.find(name);

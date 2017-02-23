@@ -2,7 +2,7 @@
 
 #include "AMeshActor.h"
 
-#include <Components/InstancedStaticMeshComponent.h>
+#include "InstancedStaticSkewedMeshComponent.h"
 
 #include "AInstancedStaticMeshActor.generated.h"
 
@@ -24,5 +24,5 @@ private:
 	static size_t s_id;
 
 	UPROPERTY()
-	UInstancedStaticMeshComponent* m_instancedStaticMeshComponent;
+	UInstancedStaticSkewedMeshComponent* m_instancedStaticMeshComponent;
 };
