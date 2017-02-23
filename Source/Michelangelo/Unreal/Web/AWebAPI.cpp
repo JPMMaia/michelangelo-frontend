@@ -150,7 +150,7 @@ void AAWebAPI::GenerateGeometryByType(EGrammarType grammarType, const FGrammarSp
 	switch (grammarType)
 	{
 	case EGrammarType::Own:
-	case EGrammarType::Shared: // TODO check with martin
+	case EGrammarType::Shared:
 		GenerateGeometry(Helpers::StringToFString(URLConstants::OwnGrammarAPI), data);
 		break;
 

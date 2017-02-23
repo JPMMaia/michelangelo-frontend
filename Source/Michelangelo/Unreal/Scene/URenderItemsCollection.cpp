@@ -2,12 +2,17 @@
 #include "URenderItemsCollection.h"
 #include "NonUnreal/MichelangeloAPI/SceneGeometry.h"
 #include "Unreal/Common/UnrealHelpers.h"
+#include "Unreal/UGameDataSingleton.h"
 
 using namespace Common;
 using namespace MichelangeloAPI;
 
 void URenderItemsCollection::Clear()
 {
+	for (auto pRenderItem : m_renderItems)
+		Helpers::DestroyObject(pRenderItem);
+	UGameDataSingleton::Get()->GetSpawner()->GetWorld()->ForceGarbageCollection(true);
+
 	m_renderItems.clear();
 }
 

@@ -4,6 +4,24 @@
 
 using namespace Common;
 
+void Helpers::DestroyObject(UObject* objectToDestroy)
+{
+	if (!objectToDestroy || !objectToDestroy->IsValidLowLevel())
+		return;
+
+	// Destroy object:
+	{
+		if (objectToDestroy->IsRooted())
+			objectToDestroy->RemoveFromRoot();
+
+		auto pActor = Cast<AActor>(objectToDestroy);
+		if (pActor)
+			pActor->K2_DestroyActor();
+		else
+			objectToDestroy->ConditionalBeginDestroy();
+	}
+}
+
 std::string Helpers::FStringToString(const FString& fstr)
 {
 	return std::string(TCHAR_TO_UTF8(*fstr));
@@ -82,4 +100,25 @@ FMatrix Helpers::MichelangeloToUnrealPrimitiveTransform(const FMatrix& transform
 	newTransform.SetScale3D(FVector(newScaleX, newScaleY, newScaleZ));
 
 	return newTransform.ToMatrixWithScale();
+}
+
+///
+/// Author: Rama, https://wiki.unrealengine.com/Garbage_Collection_~_Count_References_To_Any_Object#Code
+///
+int32 Helpers::GetObjectReferenceCount(UObject* Obj, TArray<UObject*>* OutReferredToObjects)
+{
+	if (!Obj || !Obj->IsValidLowLevelFast())
+	{
+		return -1;
+	}
+
+	TArray<UObject*> ReferredToObjects; //req outer, ignore archetype, recursive, ignore transient
+	FReferenceFinder ObjectReferenceCollector(ReferredToObjects, Obj, false, true, true, false);
+	ObjectReferenceCollector.FindReferences(Obj);
+
+	if (OutReferredToObjects)
+	{
+		OutReferredToObjects->Append(ReferredToObjects);
+	}
+	return OutReferredToObjects->Num();
 }

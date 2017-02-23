@@ -18,16 +18,13 @@ void CurlPost::Generate(CURL* curl, bool urlEncode)
 	auto pairCount = m_pairs.size();
 	for (const auto& pair : m_pairs)
 	{
-		stringStream << pair.first << "=" << pair.second;
+		stringStream << (urlEncode ? Helpers::EscapeString(curl, pair.first) : pair.first) << "=" << (urlEncode ? Helpers::EscapeString(curl, pair.second) : pair.second);
 		if (--pairCount != 0)
 			stringStream << "&";
 	}
 
 	// Convert to string:
 	m_data = stringStream.str();
-	
-	if(urlEncode)
-		m_data = Helpers::EscapeString(curl, m_data);
 }
 const std::string& CurlPost::GetData() const
 {

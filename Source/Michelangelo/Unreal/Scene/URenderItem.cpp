@@ -9,12 +9,13 @@
 #include <Materials/MaterialInstance.h>
 #include "Unreal/Common/UnrealHelpers.h"
 
-
+using namespace Common;
 using namespace MichelangeloAPI;
 
 URenderItem* URenderItem::Create(const SceneGeometry& sceneGeometry, const ObjectGeometry& objectGeometry)
 {
 	auto output = NewObject<URenderItem>();
+	output->AddToRoot();
 
 	if (objectGeometry.GetType() == ObjectGeometry::Type::StaticMesh)
 	{
@@ -31,7 +32,7 @@ URenderItem* URenderItem::Create(const SceneGeometry& sceneGeometry, const Objec
 	output->m_meshActor->AddInstance(objectGeometry);
 
 	// Set mesh name:
-	output->m_meshName = Common::Helpers::StringToFString(objectGeometry.GetName());
+	output->m_meshName = Helpers::StringToFString(objectGeometry.GetName());
 
 	{
 		// Create material instance:
@@ -61,6 +62,14 @@ URenderItem* URenderItem::Create(const SceneGeometry& sceneGeometry, const Objec
 	}
 
 	return output;
+}
+
+void URenderItem::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	Helpers::DestroyObject(m_meshActor);
+	Helpers::DestroyObject(m_material);
 }
 
 AMeshActor* URenderItem::GetMeshActor() const

@@ -17,7 +17,7 @@ AInstancedStaticMeshActor* AInstancedStaticMeshActor::CreateFromGeometry(const M
 	auto spawner = gameDataSingleton->GetSpawner();
 
 	// Get name of geometry:
-	auto staticMeshName = Common::Helpers::StringToFString(geometry.GetName());
+	auto staticMeshName = Helpers::StringToFString(geometry.GetName());
 
 	// Instantiate actor:
 	FActorSpawnParameters parameters;
