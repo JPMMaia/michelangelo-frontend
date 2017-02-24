@@ -122,9 +122,9 @@ GrammarSpecificData WebAPI::GetGrammarSpecificData(const std::string& url, const
 	return GrammarSpecificData::FromJson(PerformGETJSONRequest(url + grammarID));
 }
 
-SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data, const CameraParameters& cameraParameters) const
+bool WebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const
 {
-	std::string responseHeader;
+	// Perform request:
 	std::string responseBody;
 	{
 		CurlPost requestBody;
@@ -143,14 +143,33 @@ SceneGeometry WebAPI::GetGeometry(const std::string& url, const GrammarSpecificD
 		requestBody.Generate(m_curl, true);
 
 		CurlList requestHeader;
+		std::string responseHeader;
 		if (!PerformPOSTRequest(url, requestHeader, requestBody, responseHeader, responseBody, true))
 			ThrowEngineException(L"Failed to perform request.");
 	}
 
-	Helpers::WriteData(L"Test.txt", responseBody); // TODO remove
+	// Parse response json:
 	auto dataJson = nlohmann::json::parse(responseBody.c_str());
 
-	return SceneGeometry::CreateFromJson(dataJson);
+	// Find if any unexpected error occurred:
+	{
+		auto location = dataJson.find("message");
+		if (location != dataJson.end())
+		{
+			errorMessage = location->get<std::string>();
+			return false;
+		}
+	}
+
+	// Find if gramatical errors occurred:
+	{
+		errorMessage = dataJson.at("e").get<std::string>();
+		if (!errorMessage.empty())
+			return false;
+	}
+
+	sceneGeometry = SceneGeometry::CreateFromJson(dataJson);
+	return true;
 }
 
 CURL* WebAPI::GetCURL()

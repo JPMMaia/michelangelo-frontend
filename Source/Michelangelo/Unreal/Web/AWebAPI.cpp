@@ -129,15 +129,17 @@ FGrammarSpecificData AAWebAPI::GetGrammarSpecificDataByType(EGrammarType grammar
 	return output;
 }
 
-void AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& data)
+bool AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& data, FString& errorMessage)
 {
 	GrammarSpecificData apiData;
-	apiData.ID = Helpers::FStringToString(data.ID);
-	apiData.Name = Helpers::FStringToString(data.Name);
-	apiData.Type = Helpers::FStringToString(data.Type);
-	apiData.Code = Helpers::FStringToWString(data.Code);
-	apiData.Shared = data.Shared;
-	apiData.IsOwner = data.IsOwner;
+	{
+		apiData.ID = Helpers::FStringToString(data.ID);
+		apiData.Name = Helpers::FStringToString(data.Name);
+		apiData.Type = Helpers::FStringToString(data.Type);
+		apiData.Code = Helpers::FStringToWString(data.Code);
+		apiData.Shared = data.Shared;
+		apiData.IsOwner = data.IsOwner;
+	}
 
 	CameraParameters cameraParameters;
 	{
@@ -159,33 +161,27 @@ void AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 		cameraParameters.SetHeight(viewportSize.Y);
 	}
 
-	auto sceneGeometry = m_webAPI.GetGeometry(Helpers::FStringToString(url), apiData, cameraParameters);
+	SceneGeometry sceneGeometry;
+	std::string errorMessageStr;
+	if(!m_webAPI.GetGeometry(Helpers::FStringToString(url), apiData, cameraParameters, sceneGeometry, errorMessageStr))
+	{
+		errorMessage = Helpers::StringToFString(errorMessageStr);
+		return false;
+	}
 
 	// Spawn actors from objects:
 	auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
 	renderItems->Clear();
 	renderItems->AddGeometry(sceneGeometry);
+
+	return true;
 }
-void AAWebAPI::GenerateGeometryByType(EGrammarType grammarType, const FGrammarSpecificData& data)
+bool AAWebAPI::GenerateGeometryByType(EGrammarType grammarType, const FGrammarSpecificData& data, FString& errorMessage)
 {
-	switch (grammarType)
-	{
-	case EGrammarType::Own:
-	case EGrammarType::Shared:
-		GenerateGeometry(Helpers::StringToFString(URLConstants::OwnGrammarAPI), data);
-		break;
+	if(grammarType == EGrammarType::Tutorial)
+		return GenerateGeometry(Helpers::StringToFString(URLConstants::TutorialAPI), data, errorMessage);
 
-	//case EGrammarType::Shared:
-	//	GenerateGeometry(Helpers::StringToFString(URLConstants::SharedGrammarAPI), data);
-	//	break;
-
-	case EGrammarType::Tutorial:
-		GenerateGeometry(Helpers::StringToFString(URLConstants::TutorialAPI), data);
-		break;
-
-	default:
-		break;
-	}
+	return GenerateGeometry(Helpers::StringToFString(URLConstants::OwnGrammarAPI), data, errorMessage);
 }
 
 bool AAWebAPI::IsAuthenticated() const

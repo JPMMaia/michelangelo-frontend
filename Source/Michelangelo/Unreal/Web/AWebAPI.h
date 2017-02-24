@@ -38,10 +38,10 @@ public:
 	FGrammarSpecificData GetGrammarSpecificDataByType(EGrammarType grammarType, const FString& id) const;
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
-	void GenerateGeometry(const FString& url, const FGrammarSpecificData& data);
+	bool GenerateGeometry(const FString& url, const FGrammarSpecificData& data, FString& errorMessage);
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
-	void GenerateGeometryByType(EGrammarType grammarType, const FGrammarSpecificData& data);
+	bool GenerateGeometryByType(EGrammarType grammarType, const FGrammarSpecificData& data, FString& errorMessage);
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
 	bool IsAuthenticated() const;

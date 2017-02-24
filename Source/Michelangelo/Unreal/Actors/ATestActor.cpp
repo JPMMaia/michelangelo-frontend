@@ -19,11 +19,11 @@ ATestActor::ATestActor(const FObjectInitializer& objectInitializer) :
 
 void ATestActor::BeginPlay()
 {
-	//{
+	/*{
 	FActorSpawnParameters parameters;
 	parameters.Name = FName(TEXT("GeneratedProceduralMesh"));
 	parameters.Owner = this;
-	auto actor = GetWorld()->SpawnActor<AAWebAPI>(AAWebAPI::StaticClass(), parameters);
+	auto actor = GetWorld()->SpawnActor<AAWebAPI>(AAWebAPI::StaticClass(), parameters);*/
 
 	// Read geometry from file:
 	/*MichelangeloAPI::SceneGeometry sceneGeometry;
@@ -37,7 +37,7 @@ void ATestActor::BeginPlay()
 	}*/
 
 	// TODO add authentication
-	actor->Authenticate("jpmmaia@gmail.com", "LijOZ5nCDHSs6adrI3fSfKPYQrlf8V6yZCcih4WUAEqQeCsCLfWgGCTCDVDXmCxj", false);
+	//actor->Authenticate("jpmmaia@gmail.com", "LijOZ5nCDHSs6adrI3fSfKPYQrlf8V6yZCcih4WUAEqQeCsCLfWgGCTCDVDXmCxj", false);
 	//auto grammars = actor->GetGrammarsByType(EGrammarType::Tutorial);
 	//auto grammarData = actor->GetGrammarSpecificDataByType(EGrammarType::Tutorial, grammars[0].ID);
 	//actor->GenerateGeometryByType(EGrammarType::Tutorial, grammarData);
