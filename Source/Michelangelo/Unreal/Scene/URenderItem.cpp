@@ -21,18 +21,21 @@ URenderItem* URenderItem::Create(const SceneGeometry& sceneGeometry, const Objec
 	{
 		// Create static mesh actor:
 		output->m_meshActor = AInstancedStaticMeshActor::CreateFromGeometry(objectGeometry);
+
+		// Set mesh name:
+		output->m_meshName = Helpers::StringToFString(objectGeometry.GetName());
 	}
 	else if(objectGeometry.GetType() == ObjectGeometry::Type::ProceduralMesh)
 	{
 		// Create procedural mesh actor:
 		output->m_meshActor = AInstancedProceduralMeshActor::CreateFromGeometry(objectGeometry);
+		
+		// Set mesh name:
+		output->m_meshName = output->m_meshActor->GetName();
 	}
 
 	// Add instance:
 	output->m_meshActor->AddInstance(objectGeometry);
-
-	// Set mesh name:
-	output->m_meshName = Helpers::StringToFString(objectGeometry.GetName());
 
 	{
 		// Create material instance:

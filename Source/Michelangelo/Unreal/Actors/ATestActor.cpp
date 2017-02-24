@@ -19,32 +19,29 @@ ATestActor::ATestActor(const FObjectInitializer& objectInitializer) :
 
 void ATestActor::BeginPlay()
 {
-	/*{
-	FActorSpawnParameters parameters;
+	/*FActorSpawnParameters parameters;
 	parameters.Name = FName(TEXT("GeneratedProceduralMesh"));
 	parameters.Owner = this;
 	auto actor = GetWorld()->SpawnActor<AAWebAPI>(AAWebAPI::StaticClass(), parameters);*/
 
 	// Read geometry from file:
-	/*MichelangeloAPI::SceneGeometry sceneGeometry;
 	{
 		ifstream fileStream(L"TestClock.json", ios::in);
 
 		nlohmann::json json;
 		fileStream >> json;
 
-		sceneGeometry = MichelangeloAPI::SceneGeometry::CreateFromJson(json);
-	}*/
+		auto sceneGeometry = MichelangeloAPI::SceneGeometry::CreateFromJson(json);
+		auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
+		renderItems->Clear();
+		renderItems->AddGeometry(sceneGeometry);
+	}
 
 	// TODO add authentication
 	//actor->Authenticate("jpmmaia@gmail.com", "LijOZ5nCDHSs6adrI3fSfKPYQrlf8V6yZCcih4WUAEqQeCsCLfWgGCTCDVDXmCxj", false);
 	//auto grammars = actor->GetGrammarsByType(EGrammarType::Tutorial);
 	//auto grammarData = actor->GetGrammarSpecificDataByType(EGrammarType::Tutorial, grammars[0].ID);
 	//actor->GenerateGeometryByType(EGrammarType::Tutorial, grammarData);
-
-	/*		auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
-			renderItems->Clear();
-			renderItems->AddGeometry(sceneGeometry);*/
 
 	{
 		DrawDebugLine(

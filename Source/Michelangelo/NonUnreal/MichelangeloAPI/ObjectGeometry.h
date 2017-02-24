@@ -30,7 +30,7 @@ namespace MichelangeloAPI
 		const std::string& GetName() const;
 		size_t GetMaterialIndex() const;
 		const std::vector<float>& GetVertices() const;
-		const std::vector<float>& GetIndices() const;
+		const std::vector<int32>& GetIndices() const;
 		const std::array<float, 16>& GetTransform() const;
 
 	private:
@@ -38,7 +38,7 @@ namespace MichelangeloAPI
 		std::string m_name;
 		size_t m_materialIndex = 0;
 		std::vector<float> m_vertices;
-		std::vector<float> m_indices;
+		std::vector<int32> m_indices;
 		std::array<float, 16> m_transform;
 	};
 }

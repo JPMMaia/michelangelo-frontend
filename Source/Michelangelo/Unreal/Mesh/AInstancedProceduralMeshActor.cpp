@@ -48,9 +48,11 @@ AInstancedProceduralMeshActor::AInstancedProceduralMeshActor(const FObjectInitia
 void AInstancedProceduralMeshActor::AddInstance(const MichelangeloAPI::ObjectGeometry& instanceData)
 {
 	// Set world transform:
-	auto matrix = Helpers::ArrayToMatrix(instanceData.GetTransform());
-	matrix = Helpers::MichelangeloToUnrealPrimitiveTransform(matrix);
-	auto worldTransform = FTransform(matrix);
+	//auto matrix = Helpers::ArrayToMatrix(instanceData.GetTransform());
+	//matrix = Helpers::MichelangeloToUnrealGeneralTransform(matrix);
+	
+	//auto worldTransform = FTransform(matrix);
+	auto worldTransform = FTransform::Identity;
 	this->SetActorTransform(worldTransform);
 }
 UMaterialInstanceDynamic* AInstancedProceduralMeshActor::CreateDynamicMaterialInstance()

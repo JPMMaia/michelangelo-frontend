@@ -2,6 +2,7 @@
 #include "ObjectGeometry.h"
 
 #include <algorithm>
+#include "Unreal/Common/UnrealHelpers.h"
 
 using namespace MichelangeloAPI;
 
@@ -43,6 +44,28 @@ ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json& jsonObject)
 		const auto& coordinates = verticesJSON.at("points");
 		geometry.m_vertices.resize(coordinates.size());
 		std::copy(coordinates.cbegin(), coordinates.cend(), geometry.m_vertices.begin());
+		
+		// Transform to unreal engine coordinates:
+		std::transform(geometry.m_vertices.begin(), geometry.m_vertices.end(), geometry.m_vertices.begin(),
+			[](float value) { return value * 100.0f; });
+
+		{
+			auto iterator = geometry.m_vertices.begin();
+			while (iterator != geometry.m_vertices.end())
+			{
+				auto& x = *iterator++;
+				auto& y = *iterator++;
+				auto& z = *iterator++;
+				FVector vertex(x, y, z);
+
+				auto transform = Common::Helpers::ArrayToMatrix(geometry.m_transform);
+				transform = Common::Helpers::MichelangeloToUnrealGeneralTransform(transform);
+				vertex = transform.TransformPosition(vertex);
+				x = vertex.X;
+				y = vertex.Y;
+				z = vertex.Z;
+			}
+		}
 
 		// If the mesh is indexed:
 		if (verticesJSON.at("indexed").get<bool>())
@@ -102,7 +125,7 @@ const std::vector<float>& ObjectGeometry::GetVertices() const
 {
 	return m_vertices;
 }
-const std::vector<float>& ObjectGeometry::GetIndices() const
+const std::vector<int32>& ObjectGeometry::GetIndices() const
 {
 	return m_indices;
 }

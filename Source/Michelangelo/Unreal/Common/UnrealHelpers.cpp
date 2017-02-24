@@ -68,27 +68,15 @@ const FMatrix& Helpers::GetUnrealToMichelangeloMatrix()
 
 FMatrix Helpers::MichelangeloToUnrealGeneralTransform(const FMatrix& transform)
 {
-	/*auto output = transform * FMatrix(
-		FPlane(0.0f, 0.0f, -1.0f, 0.0f),
-		FPlane(1.0f, 0.0f, 0.0f, 0.0f),
-		FPlane(0.0f, 1.0f, 0.0f, 0.0f),
-		FPlane(0.0f, 0.0f, 0.0f, 1.0f)
-		);*/
-	auto output = transform * FMatrix(
-		FPlane(0.0f, 1.0f, 0.0f, 0.0f),
-		FPlane(0.0f, 0.0f, 1.0f, 0.0f),
-		FPlane(-1.0f, 0.0f, 0.0f, 0.0f),
-		FPlane(0.0f, 0.0f, 0.0f, 1.0f)
-	);
-	output.ScaleTranslation(FVector(100.0f, 100.0f, 100.0f));
-	return output;
+	const auto& unrealToMichelangelo = GetUnrealToMichelangeloMatrix();
+	auto michelangeloToUnreal = unrealToMichelangelo.Inverse();
 
-	/*return transform * FMatrix(
-		FPlane(0.0f, 100.0f, 0.0f, 0.0f),
-		FPlane(0.0f, 0.0f, 100.0f, 0.0f),
-		FPlane(-100.0f, 0.0f, 0.0f, 0.0f),
-		FPlane(0.0f, 0.0f, 0.0f, 1.0f)
-	);*/
+	auto output = unrealToMichelangelo * transform * michelangeloToUnreal;
+
+	constexpr auto translationScalar = 100.0f;
+	output.ScaleTranslation(FVector(translationScalar, translationScalar, translationScalar));
+
+	return output;
 }
 FMatrix Helpers::MichelangeloToUnrealPrimitiveTransform(const FMatrix& transform)
 {
