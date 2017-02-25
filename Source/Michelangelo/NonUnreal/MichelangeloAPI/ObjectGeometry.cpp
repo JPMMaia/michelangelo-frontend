@@ -53,14 +53,15 @@ ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json& jsonObject)
 			auto iterator = geometry.m_vertices.begin();
 			while (iterator != geometry.m_vertices.end())
 			{
-				auto& x = *iterator++;
 				auto& y = *iterator++;
+				auto& x = *iterator++;
 				auto& z = *iterator++;
 				FVector vertex(x, y, z);
 
 				auto transform = Common::Helpers::ArrayToMatrix(geometry.m_transform);
 				transform = Common::Helpers::MichelangeloToUnrealGeneralTransform(transform);
 				vertex = transform.TransformPosition(vertex);
+				
 				x = vertex.X;
 				y = vertex.Y;
 				z = vertex.Z;
@@ -83,6 +84,18 @@ ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json& jsonObject)
 			geometry.m_indices.resize(geometry.m_vertices.size());
 			std::iota(geometry.m_indices.begin(), geometry.m_indices.end(), 0);
 		}
+
+		// Invert orientation of faces:
+		/*{
+			auto iterator = geometry.m_indices.begin();
+			while (iterator != geometry.m_indices.end())
+			{
+				++iterator;
+				auto& index1 = *iterator++;
+				auto& index2 = *iterator++;
+				std::swap(index1, index2);
+			}
+		}*/
 
 		return geometry;
 	}

@@ -71,7 +71,8 @@ FMatrix Helpers::MichelangeloToUnrealGeneralTransform(const FMatrix& transform)
 	const auto& unrealToMichelangelo = GetUnrealToMichelangeloMatrix();
 	auto michelangeloToUnreal = unrealToMichelangelo.Inverse();
 
-	auto output = unrealToMichelangelo * transform * michelangeloToUnreal;
+	auto modelMatrix = FRotationMatrix(FRotator(180.0f, 0.0f, 0.0f)) * FRotationMatrix(FRotator(0.0f, -90.0f, 0.0f));
+	auto output = unrealToMichelangelo * modelMatrix * transform * michelangeloToUnreal;
 
 	constexpr auto translationScalar = 100.0f;
 	output.ScaleTranslation(FVector(translationScalar, translationScalar, translationScalar));
