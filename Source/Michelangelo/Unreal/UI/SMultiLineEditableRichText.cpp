@@ -596,6 +596,7 @@ FReply SMultiLineEditableRichText::OnMouseWheel(const FGeometry& MyGeometry, con
 {
 	if (VScrollBar.IsValid() && VScrollBar->IsNeeded())
 	{
+		constexpr auto WheelScrollAmount = 1.0f;
 		const float ScrollAmount = -MouseEvent.GetWheelDelta() * WheelScrollAmount;
 
 		const FVector2D PreviousScrollOffset = EditableTextLayout->GetScrollOffset();

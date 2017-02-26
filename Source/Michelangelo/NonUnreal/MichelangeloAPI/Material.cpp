@@ -20,8 +20,8 @@ Material Material::CreateFromJSON(const nlohmann::json& materialJson)
 Material::Material() :
 	m_diffuseAlbedo({ 0.0f, 0.0f, 0.0f, 1.0f }),
 	m_ambientIntensity({ 0.0f, 0.0f, 0.0f, 1.0f }),
-	m_specularIntensity({ 0.0f, 0.0f, 0.0f, 1.0f }),
-	m_shininess(1.0f)
+	m_specularIntensity({ 0.5f, 0.5f, 0.5f, 0.5f }),
+	m_shininess(128.0f)
 {
 }
 

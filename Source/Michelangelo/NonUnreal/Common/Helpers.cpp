@@ -2,18 +2,6 @@
 #include "Helpers.h"
 #include "EngineException.h"
 
-#ifndef NATIVE_CPP
-// ReSharper disable once CppUnusedIncludeDirective
-#include <AllowWindowsPlatformTypes.h>
-#endif
-
-#include <comdef.h>
-
-#ifndef NATIVE_CPP
-// ReSharper disable once CppUnusedIncludeDirective
-#include <HideWindowsPlatformTypes.h>
-#endif
-
 using namespace Common;
 
 bool Helpers::FileExists(const std::wstring& filename)

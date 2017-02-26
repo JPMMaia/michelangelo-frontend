@@ -1,14 +1,16 @@
 #include "Michelangelo.h"
 #include "InstancedStaticSkewedMeshComponent.h"
 #include "PhysXIncludes.h"
-#include "Private/InstancedStaticMesh.h"
+#include "PhysicsPublic.h"
+#include "PhysXPublic.h"
 #include "Runtime/Engine/Classes/PhysicsEngine/BodySetup.h"
+#include "Runtime/Engine/Private/PhysicsEngine/PhysXSupport.h"
 
 int32 UInstancedStaticSkewedMeshComponent::AddInstanceMatrix(const FMatrix& InInstanceTransform)
 {
-	auto InstanceIdx = PerInstanceSMData.Num();
+	int InstanceIdx = PerInstanceSMData.Num();
 
-	auto NewInstanceData = new (PerInstanceSMData) FInstancedStaticMeshInstanceData();
+	FInstancedStaticMeshInstanceData* NewInstanceData = new(PerInstanceSMData) FInstancedStaticMeshInstanceData();
 	SetupNewInstanceDataMatrix(*NewInstanceData, InstanceIdx, InInstanceTransform);
 
 #if WITH_EDITOR
@@ -35,8 +37,8 @@ int32 UInstancedStaticSkewedMeshComponent::AddInstanceWorldSpaceMatrix(const FMa
 void UInstancedStaticSkewedMeshComponent::SetupNewInstanceDataMatrix(FInstancedStaticMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FMatrix& InInstanceTransform)
 {
 	InOutNewInstanceData.Transform = InInstanceTransform;
-	InOutNewInstanceData.LightmapUVBias = FVector2D(-1.0f, -1.0f);
-	InOutNewInstanceData.ShadowmapUVBias = FVector2D(-1.0f, -1.0f);
+	InOutNewInstanceData.LightmapUVBias_DEPRECATED = FVector2D(-1.0f, -1.0f);
+	InOutNewInstanceData.ShadowmapUVBias_DEPRECATED = FVector2D(-1.0f, -1.0f);
 
 	if (bPhysicsStateCreated)
 	{
