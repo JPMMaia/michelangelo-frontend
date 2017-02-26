@@ -19,12 +19,16 @@ class UEdgeSlider : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behaviour", meta = (DisplayName = "Slide Position"))
-	ESlidePosition SlidePosition;
-
-public:
 	explicit UEdgeSlider(const FObjectInitializer& initializer);
 
 public:
-	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	void NativeConstruct() override;
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
+	void OnDragReleased();
+
+private:
+	bool m_focus;
+	FVector2D m_lastMousePosition;
 };
