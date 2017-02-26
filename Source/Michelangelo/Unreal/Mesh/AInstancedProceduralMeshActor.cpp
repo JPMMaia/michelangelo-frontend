@@ -79,5 +79,5 @@ void AInstancedProceduralMeshActor::CreateMeshSection(const MichelangeloAPI::Obj
 	triangles.AddUninitialized(geometryIndices.size());
 	FMemory::Memcpy(triangles.GetData(), geometryIndices.data(), geometryIndices.size() * sizeof(int32));
 
-	m_proceduralMeshComponent->CreateMeshSection(++m_sectionCount, vertices, triangles, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), false);
+	m_proceduralMeshComponent->CreateMeshSection(m_sectionCount++, vertices, triangles, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), false);
 }
