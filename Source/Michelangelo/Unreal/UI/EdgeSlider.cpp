@@ -3,7 +3,6 @@
 #include <Runtime/UMG/Public/Blueprint/WidgetBlueprintLibrary.h>
 #include <Runtime/UMG/Public/Blueprint/SlateBlueprintLibrary.h>
 #include <Runtime/Engine/Classes/Kismet/GameplayStatics.h>
-#include "ResizableBorder.h"
 #include "WidgetLayoutLibrary.h"
 
 UEdgeSlider::UEdgeSlider(const FObjectInitializer& ObjectInitializer) :

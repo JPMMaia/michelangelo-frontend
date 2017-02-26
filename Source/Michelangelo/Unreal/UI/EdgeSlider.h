@@ -7,8 +7,6 @@
 #include <Runtime/UMG/Public/Blueprint/UserWidget.h>
 #include <Runtime/Core/Public/Delegates/Delegate.h>
 #include <Runtime/Core/Public/Delegates/DelegateCombinations.h>
-#include "SlidePosition.h"
-#include "ResizableBorder.h"
 #include "EdgeSlider.generated.h"
 
 class UDragDropOperation;
