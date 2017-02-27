@@ -9,10 +9,12 @@
 #include "OneLineCommentPiece.hpp"
 #include "KeywordPiece.hpp"
 #include "CSharpCodeHighlighter.hpp"
+#include "State/None.hpp"
+#include "StringPiece.h"
 
 namespace TextHighlight
 {
-	class MixTextPiece : public BaseTextPiece
+	class MixTextPiece : public BaseTextPiece, public State::IStateObserver
 	{
 	public:
 		MixTextPiece() = default;
@@ -23,7 +25,7 @@ namespace TextHighlight
 
 		void Parse()
 		{
-			ParseMultiLineComments();
+			ParseStringsAndComments();
 		}
 
 		std::string ToString() const override
@@ -34,72 +36,58 @@ namespace TextHighlight
 			return ss.str();
 		}
 
+		void FoundNormalText(const std::string::const_iterator& begin, const std::string::const_iterator& end) override
+		{
+			if (begin != end)
+			{
+				ParseKeywords(std::string(begin, end));
+			}
+		}
+		void FoundString(const std::string::const_iterator& begin, const std::string::const_iterator& end) override
+		{
+			if (begin != end)
+				m_children.push_back(std::make_unique<StringPiece>(std::string(begin, end)));
+		}
+		void FoundOneLineComment(const std::string::const_iterator& begin, const std::string::const_iterator& end) override
+		{
+			if (begin != end)
+				m_children.push_back(std::make_unique<OneLineCommentPiece>(std::string(begin, end)));
+		}
+		void FoundMultiLineComment(const std::string::const_iterator& begin, const std::string::const_iterator& end) override
+		{
+			if (begin != end)
+				m_children.push_back(std::make_unique<MultiLineCommentPiece>(std::string(begin, end)));
+		}
+
 	private:
 
-		void ParseMultiLineComments()
+		void ParseStringsAndComments()
 		{
-			std::regex regex("\\/\\*+((([^\\*])+)|([\\*]+(?!\\/)))[*]+\\/");
-
-			auto expression = m_text;
-			std::smatch match;
-			do
+			auto iterator = m_text.cbegin();
+			std::shared_ptr<State::ParserState> currentState(std::make_shared<State::None>(*this, iterator));
+			while(iterator != m_text.cend())
 			{
-				
+				auto nextState = currentState;
+				currentState->Parse(iterator, nextState);
+				currentState = nextState;
+				++iterator;
 			}
-
-			while(std::regex_search(expression, match, regex))
-			{
-				// Parse prefix and add it to children:
-				{
-					auto prefix = std::make_unique<MixTextPiece>(match.prefix().str());
-					prefix->ParseOneLineComments();
-					m_children.push_back(std::move(prefix));
-				}
-
-				// Add multi-line piece to children:
-				m_children.push_back(std::make_unique<MultiLineCommentPiece>(match[0].str()));
-
-				// Continue parsing the suffix:
-				expression = match.suffix().str();
-			}
+			currentState->FoundText(iterator);
 		}
 
-		void ParseOneLineComments()
-		{
-			std::regex regex("\\/\\/.*");
-
-			auto expression = m_text;
-			std::smatch match;
-			while (std::regex_search(expression, match, regex))
-			{
-				// Parse prefix and add it to children:
-				{
-					auto prefix = std::make_unique<MixTextPiece>(match.prefix().str());
-					prefix->ParseKeywords();
-					m_children.push_back(std::move(prefix));
-				}
-
-				// Add one-line piece to children:
-				m_children.push_back(std::make_unique<OneLineCommentPiece>(match[0].str()));
-
-				// Continue parsing the suffix:
-				expression = match.suffix().str();
-			}
-		}
-
-		void ParseKeywords()
+		void ParseKeywords(const std::string& text)
 		{
 			auto regex = CSharpCodeHighlighter::Get()->GetKeywordsRegex();;
 
-			auto expression = m_text;
+			auto expression = text;
 			std::smatch match;
 			while (std::regex_search(expression, match, regex))
 			{
-				// Parse prefix and add it to children:
+				// Add prefix as normal text:
 				{
-					auto prefix = std::make_unique<MixTextPiece>(match.prefix().str());
-					prefix->ParseNormals();
-					m_children.push_back(std::move(prefix));
+					auto prefix = match.prefix().str();
+					if(!prefix.empty())
+						m_children.push_back(std::make_unique<NormalTextPiece>(match.prefix().str()));
 				}
 
 				// Add keyword piece to children:
@@ -108,14 +96,10 @@ namespace TextHighlight
 				// Continue parsing the suffix:
 				expression = match.suffix().str();
 			}
+
+			if(!expression.empty())
+				m_children.push_back(std::make_unique<NormalTextPiece>(expression));
 		}
-
-		void ParseNormals()
-		{
-			m_children.push_back(std::make_unique<NormalTextPiece>(m_text));
-		}
-
-
 
 	private:
 		std::string m_text;

@@ -29,5 +29,8 @@
     <ClCompile Include="TextHighlightTestSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CSharpCodeHighlighterTestSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

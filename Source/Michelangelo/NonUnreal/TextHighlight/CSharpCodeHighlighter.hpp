@@ -31,6 +31,7 @@ namespace TextHighlight
 			return m_keywordsRegex;
 		}
 
+
 	private:
 		explicit CSharpCodeHighlighter(const std::wstring& jsonFilename)
 		{
@@ -74,24 +75,10 @@ namespace TextHighlight
 
 				m_keywordsRegex = std::regex(keywordsRegexSS.str());
 			}
-
-			// One-line comments:
-			{
-				//m_oneLineCommentsRegex = std::regex("\/\/.*");
-			}
-
-			// Multi-line comments:
-			{
-				//m_multiLineCommentsRegex = std::regex("\/\*+((([^\*])+)|([\*]+(?!\/)))[*]+\/");
-			}
 		}
 
 	private:
 		std::unordered_set<std::string> m_keywords;
 		std::regex m_keywordsRegex;
-		std::regex m_oneLineCommentsRegex;
-		std::regex m_multiLineCommentsRegex;
 	};
-
-	CSharpCodeHighlighter* CSharpCodeHighlighter::s_instance;
 }

@@ -26,9 +26,13 @@ namespace TextHighlight
 				ss << "<span color=\"#48A433\">";
 				while (iterator != endLineLocation)
 					ss << *iterator++;
-				ss << "</>\n";
+				ss << "</>";
 
-				++iterator;
+				if(iterator != m_text.end())
+				{
+					ss << std::endl;
+					++iterator;
+				}
 			}
 
 			return ss.str();
