@@ -3,9 +3,10 @@
 #include "HeaderConstants.h"
 #include "URLConstants.h"
 #include "NonUnreal/nlohmann/JSON/json.hpp"
+#include "CameraParameters.h"
 
 #include <regex>
-#include "CameraParameters.h"
+#include <limits>
 
 using namespace Common;
 using namespace MichelangeloAPI;
@@ -132,7 +133,7 @@ bool WebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data
 		requestBody.AddPair("Name", data.Name);
 		requestBody.AddPair("Type", data.Type);
 		requestBody.AddPair("Code", Helpers::WStringToString(data.Code));
-		requestBody.AddPair("OnlyNID", "-1");
+		requestBody.AddPair("OnlyNID", std::to_string(std::numeric_limits<unsigned int>::max()));
 		requestBody.AddPair("CamPos", Helpers::ArrayToString(cameraParameters.GetCameraPosition()));
 		requestBody.AddPair("CamUp", Helpers::ArrayToString(cameraParameters.GetCameraUpDirection()));
 		requestBody.AddPair("CamLook", Helpers::ArrayToString(cameraParameters.GetCameraUpDirection()));

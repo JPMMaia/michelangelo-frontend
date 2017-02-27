@@ -108,7 +108,13 @@ TArray<IRichTextMarkupWriter::FRichTextLine> FCodeMarkupWriter::BuildRuns(const 
 	TArray<IRichTextMarkupWriter::FRichTextLine> Output;
 	Output.AddDefaulted(InLines.Num());
 
+	
 	for (int32 LineIndex = 0; LineIndex < Output.Num(); ++LineIndex)
+	{
+		InLines[LineIndex];
+	}
+
+	/*for (int32 LineIndex = 0; LineIndex < Output.Num(); ++LineIndex)
 	{
 		auto& Line = Output[LineIndex];
 
@@ -122,7 +128,7 @@ TArray<IRichTextMarkupWriter::FRichTextLine> FCodeMarkupWriter::BuildRuns(const 
 		}
 
 		Line.Runs.Add(FRichTextRun(RunInfo, Text));
-	}
+	}*/
 
 	return Output;
 }
