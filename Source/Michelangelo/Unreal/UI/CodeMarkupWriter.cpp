@@ -1,58 +1,34 @@
 #include "Michelangelo.h"
 #include "CodeMarkupWriter.h"
+#include "Unreal/Common/UnrealHelpers.h"
+#include "NonUnreal/TextHighlight/CSharpHighlighter.hpp"
 
-TSharedRef< FCodeMarkupWriter > FCodeMarkupWriter::Create()
+TSharedRef<FCodeMarkupWriter> FCodeMarkupWriter::Create()
 {
 	return MakeShareable(new FCodeMarkupWriter());
 }
 
 void FCodeMarkupWriter::Write(const TArray<FRichTextLine>& InLines, FString& Output)
 {
-	auto Lines = BuildRuns(InLines);
+	FString fullText;
 
-	for (int32 LineIndex = 0; LineIndex < Lines.Num(); ++LineIndex)
+	// Concatenate every line into a single string:
+	for (int32 LineIndex = 0; LineIndex < InLines.Num(); ++LineIndex)
 	{
-		const FRichTextLine& Line = Lines[LineIndex];
-
-		// Append \n to the end of the previous line
-		if (LineIndex > 0)
+		const auto& Runs = InLines[LineIndex].Runs;
+		for (int32 RunIndex = 0; RunIndex < Runs.Num(); ++RunIndex)
 		{
-			Output.AppendChar('\n');
+			fullText.Append(Runs[RunIndex].Text);
 		}
-
-		for (const FRichTextRun& Run : Line.Runs)
-		{
-			// Our rich-text format takes the form of <Name metakey1="metavalue1" metakey2="metavalue2">The Text</>
-			const bool bHasTag = !Run.Info.Name.IsEmpty();
-			if (bHasTag)
-			{
-				Output.AppendChar('<');
-
-				Output.Append(Run.Info.Name);
-
-				for (const TPair<FString, FString>& MetaDataEntry : Run.Info.MetaData)
-				{
-					Output.AppendChar(' ');
-					Output.Append(MetaDataEntry.Key);
-					Output.AppendChar('=');
-					Output.AppendChar('"');
-					Output.Append(MetaDataEntry.Value);
-					Output.AppendChar('"');
-				}
-
-				Output.AppendChar('>');
-			}
-
-			FString RunText = Run.Text;
-			EscapeText(RunText);
-			Output.Append(RunText);
-
-			if (bHasTag)
-			{
-				Output.Append(TEXT("</>"));
-			}
-		}
+		if(LineIndex != InLines.Num() - 1)
+			fullText.Append("\n");
 	}
+
+	// Parse and highlight code:
+	TextHighlight::CSharpHighlighter highlighter(Common::Helpers::FStringToString(fullText));
+	highlighter.Parse();
+	
+	Output = Common::Helpers::StringToFString(highlighter.ToString());
 }
 
 void FCodeMarkupWriter::EscapeText(FString& TextToEscape)
@@ -101,34 +77,4 @@ void FCodeMarkupWriter::EscapeText(FString& TextToEscape)
 			}
 		}
 	}
-}
-
-TArray<IRichTextMarkupWriter::FRichTextLine> FCodeMarkupWriter::BuildRuns(const TArray<FRichTextLine>& InLines)
-{
-	TArray<IRichTextMarkupWriter::FRichTextLine> Output;
-	Output.AddDefaulted(InLines.Num());
-
-	
-	for (int32 LineIndex = 0; LineIndex < Output.Num(); ++LineIndex)
-	{
-		InLines[LineIndex];
-	}
-
-	/*for (int32 LineIndex = 0; LineIndex < Output.Num(); ++LineIndex)
-	{
-		auto& Line = Output[LineIndex];
-
-		auto Text = InLines[LineIndex].Runs[0].Text;
-		
-		FRunInfo RunInfo;
-		if(Text.StartsWith("//"))
-		{
-			RunInfo.Name = TEXT("Span");
-			RunInfo.MetaData.Add(TEXT("Color"), TEXT("#ff00ff"));
-		}
-
-		Line.Runs.Add(FRichTextRun(RunInfo, Text));
-	}*/
-
-	return Output;
 }

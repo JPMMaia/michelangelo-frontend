@@ -15,7 +15,7 @@ namespace TextHighlight
 
 		std::string ToString() const override
 		{
-			return m_text;
+			return EscapeText(m_text);
 		}
 
 	private:

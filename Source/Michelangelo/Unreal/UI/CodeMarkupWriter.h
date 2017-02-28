@@ -2,7 +2,6 @@
 
 #include "IRichTextMarkupWriter.h"
 #include "Regex.h"
-#include "CodeHighlighter.h"
 
 class FCodeMarkupWriter : public IRichTextMarkupWriter
 {

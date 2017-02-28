@@ -45,10 +45,20 @@ namespace UnitTest
 			Assert::AreEqual(expectedOutput, parser.ToString());
 		}
 
-		TEST_METHOD(TextHighlightTestString)
+		TEST_METHOD(TextHighlightTestString1)
 		{
-			std::string input("\"A Quote \\\"Bip\\\"\"");
-			std::string expectedOutput("<span color=\"#" + m_stringsColor + "\">\"A Quote \\\"Bip\\\"\"</>");
+			std::string input("\"A Quote Bip\"");
+			std::string expectedOutput("<span color=\"#" + m_stringsColor + "\">&quot;A Quote Bip&quot;</>");
+
+			CSharpHighlighter parser(input);
+			parser.Parse();
+			Assert::AreEqual(expectedOutput, parser.ToString());
+		}
+
+		TEST_METHOD(TextHighlightTestString2)
+		{
+			std::string input("\"\n");
+			std::string expectedOutput("<span color=\"#" + m_stringsColor + "\">&quot;\\n</>");
 
 			CSharpHighlighter parser(input);
 			parser.Parse();

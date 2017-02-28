@@ -20,18 +20,19 @@ namespace TextHighlight
 
 			std::stringstream ss;
 
-			auto iterator = m_text.begin();
+			auto escapedText = EscapeText(m_text);
+			auto iterator = escapedText.begin();
 
-			while (iterator != m_text.end())
+			while (iterator != escapedText.end())
 			{
-				auto endLineLocation = std::find(iterator, m_text.end(), '\n');
+				auto endLineLocation = std::find(iterator, escapedText.end(), '\n');
 
 				ss << "<span color=\"#" + color + "\">";
 				while (iterator != endLineLocation)
 					ss << *iterator++;
 				ss << "</>";
 
-				if(iterator != m_text.end())
+				if(iterator != escapedText.end())
 				{
 					ss << std::endl;
 					++iterator;

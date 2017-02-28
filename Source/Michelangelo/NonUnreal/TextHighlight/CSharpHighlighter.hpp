@@ -10,7 +10,7 @@
 #include "KeywordPiece.hpp"
 #include "CSharpHighlightSettings.hpp"
 #include "State/Normal.hpp"
-#include "StringPiece.h"
+#include "StringPiece.hpp"
 
 namespace TextHighlight
 {
