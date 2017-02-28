@@ -1,6 +1,6 @@
 #pragma once
 
-#include "None.h"
+#include "Normal.h"
 #include "ParserState.hpp"
 #include "InsideString.hpp"
 #include "OneLineComment.hpp"
@@ -11,13 +11,13 @@ namespace TextHighlight
 {
 	namespace State
 	{
-		inline None::None(IStateObserver& observer, const std::string::const_iterator& beginText) :
+		inline Normal::Normal(IStateObserver& observer, const std::string::const_iterator& beginText) :
 			ParserState(observer, beginText),
 			m_thisState(ThisState::None)
 		{
 		}
 
-		inline void None::Parse(const std::string::const_iterator& textIterator, std::shared_ptr<ParserState>& nextState)
+		inline void Normal::Parse(const std::string::const_iterator& textIterator, std::shared_ptr<ParserState>& nextState)
 		{
 			if(m_thisState == ThisState::None)
 			{
@@ -49,7 +49,7 @@ namespace TextHighlight
 				}
 			}
 		}
-		inline void None::FoundText(const std::string::const_iterator& endText)
+		inline void Normal::FoundText(const std::string::const_iterator& endText)
 		{
 			m_observer.FoundNormalText(m_beginText, endText);
 		}

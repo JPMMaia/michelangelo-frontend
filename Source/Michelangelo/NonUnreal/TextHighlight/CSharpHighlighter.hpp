@@ -8,24 +8,33 @@
 #include "MultiLineCommentPiece.h"
 #include "OneLineCommentPiece.hpp"
 #include "KeywordPiece.hpp"
-#include "CSharpCodeHighlighter.hpp"
-#include "State/None.hpp"
+#include "CSharpHighlightSettings.hpp"
+#include "State/Normal.hpp"
 #include "StringPiece.h"
 
 namespace TextHighlight
 {
-	class MixTextPiece : public BaseTextPiece, public State::IStateObserver
+	class CSharpHighlighter : public BaseTextPiece, public State::IStateObserver
 	{
 	public:
-		MixTextPiece() = default;
-		explicit MixTextPiece(const std::string& text) :
+		CSharpHighlighter() = default;
+		explicit CSharpHighlighter(const std::string& text) :
 			m_text(text)
 		{
 		}
 
 		void Parse()
 		{
-			ParseStringsAndComments();
+			auto iterator = m_text.cbegin();
+			std::shared_ptr<State::ParserState> currentState(std::make_shared<State::Normal>(*this, iterator));
+			while (iterator != m_text.cend())
+			{
+				auto nextState = currentState;
+				currentState->Parse(iterator, nextState);
+				currentState = nextState;
+				++iterator;
+			}
+			currentState->FoundText(iterator);
 		}
 
 		std::string ToString() const override
@@ -39,9 +48,7 @@ namespace TextHighlight
 		void FoundNormalText(const std::string::const_iterator& begin, const std::string::const_iterator& end) override
 		{
 			if (begin != end)
-			{
-				ParseKeywords(std::string(begin, end));
-			}
+				ParseNormalText(std::string(begin, end));
 		}
 		void FoundString(const std::string::const_iterator& begin, const std::string::const_iterator& end) override
 		{
@@ -61,23 +68,9 @@ namespace TextHighlight
 
 	private:
 
-		void ParseStringsAndComments()
+		void ParseNormalText(const std::string& text)
 		{
-			auto iterator = m_text.cbegin();
-			std::shared_ptr<State::ParserState> currentState(std::make_shared<State::None>(*this, iterator));
-			while(iterator != m_text.cend())
-			{
-				auto nextState = currentState;
-				currentState->Parse(iterator, nextState);
-				currentState = nextState;
-				++iterator;
-			}
-			currentState->FoundText(iterator);
-		}
-
-		void ParseKeywords(const std::string& text)
-		{
-			auto regex = CSharpCodeHighlighter::Get()->GetKeywordsRegex();;
+			auto regex = CSharpHighlightSettings::Get()->GetKeywordsRegex();;
 
 			auto expression = text;
 			std::smatch match;

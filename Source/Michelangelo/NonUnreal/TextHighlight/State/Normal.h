@@ -9,10 +9,10 @@ namespace TextHighlight
 {
 	namespace State
 	{
-		class None : public ParserState
+		class Normal : public ParserState
 		{
 		public:
-			explicit None(IStateObserver& observer, const std::string::const_iterator& beginText);
+			explicit Normal(IStateObserver& observer, const std::string::const_iterator& beginText);
 
 			void Parse(const std::string::const_iterator& textIterator, std::shared_ptr<ParserState>& nextState) override;
 			void FoundText(const std::string::const_iterator& endText) override;

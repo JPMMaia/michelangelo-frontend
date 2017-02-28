@@ -29,7 +29,7 @@
     <ClCompile Include="TextHighlightTestSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CSharpCodeHighlighterTestSet.cpp">
+    <ClCompile Include="CSharpHighlightSettingsTestSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

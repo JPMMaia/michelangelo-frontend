@@ -16,8 +16,10 @@ namespace TextHighlight
 
 		std::string ToString() const override
 		{
+			auto color = CSharpHighlightSettings::Get()->GetColor("comments");
+
 			std::stringstream ss;
-			ss << "<span color=\"#48A433\">" << m_text << "</>";
+			ss << "<span color=\"#" + color + "\">" << m_text << "</>";
 			return ss.str();
 		}
 

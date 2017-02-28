@@ -11,5 +11,5 @@
 #include "CppUnitTest.h"
 
 // TODO: reference additional headers your program requires here
-#include "NonUnreal/TextHighlight/MixTextPiece.hpp"
+#include "NonUnreal/TextHighlight/CSharpHighlighter.hpp"
 

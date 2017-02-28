@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ParserState.hpp"
-#include "None.h"
+#include "Normal.h"
 
 namespace TextHighlight
 {
@@ -19,8 +19,8 @@ namespace TextHighlight
 			{
 				if (*textIterator == '\n')
 				{
-					nextState = std::make_shared<State::None>(m_observer, textIterator + 1);
-					FoundText(textIterator + 1);
+					nextState = std::make_shared<State::Normal>(m_observer, textIterator);
+					FoundText(textIterator);
 				}
 			}
 			void FoundText(const std::string::const_iterator& endText) override

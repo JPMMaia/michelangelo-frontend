@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ParserState.hpp"
-#include "None.h"
+#include "Normal.h"
 
 namespace TextHighlight
 {
@@ -22,7 +22,7 @@ namespace TextHighlight
 				{
 					if(*textIterator == '"')
 					{
-						nextState = std::make_shared<State::None>(m_observer, textIterator + 1);
+						nextState = std::make_shared<State::Normal>(m_observer, textIterator + 1);
 						m_observer.FoundString(m_beginText, textIterator + 1);
 					}
 					else if(*textIterator == '\\')

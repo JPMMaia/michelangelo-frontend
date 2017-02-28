@@ -7,4 +7,4 @@
 // TODO: reference any additional headers you need in STDAFX.H
 // and not in this file
 
-TextHighlight::CSharpCodeHighlighter* TextHighlight::CSharpCodeHighlighter::s_instance;
+TextHighlight::CSharpHighlightSettings* TextHighlight::CSharpHighlightSettings::s_instance;

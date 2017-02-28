@@ -5,21 +5,22 @@
 #include <string>
 #include <regex>
 #include <unordered_set>
+#include <unordered_map>
 
 #include "NonUnreal/nlohmann/JSON/json.hpp"
 
 namespace TextHighlight
 {
-	class CSharpCodeHighlighter
+	class CSharpHighlightSettings
 	{
 	private:
-		static CSharpCodeHighlighter* s_instance;
+		static CSharpHighlightSettings* s_instance;
 
 	public:
-		static CSharpCodeHighlighter* Get()
+		static CSharpHighlightSettings* Get()
 		{
 			if (!s_instance)
-				s_instance = new CSharpCodeHighlighter(L"Highlighting.json");
+				s_instance = new CSharpHighlightSettings(L"Highlighting.json");
 
 			return s_instance;
 		}
@@ -31,9 +32,14 @@ namespace TextHighlight
 			return m_keywordsRegex;
 		}
 
+		const std::string& GetColor(const std::string& key) const
+		{
+			return m_colors.at(key);
+		}
+
 
 	private:
-		explicit CSharpCodeHighlighter(const std::wstring& jsonFilename)
+		explicit CSharpHighlightSettings(const std::wstring& jsonFilename)
 		{
 			using namespace std;
 
@@ -44,13 +50,24 @@ namespace TextHighlight
 			nlohmann::json highlightingJson;
 			fileStream >> highlightingJson;
 
-			auto keywordsArray = highlightingJson.at("keywords");
-			for (const auto& keyword : keywordsArray)
+			// Keywords:
 			{
-				m_keywords.insert(keyword.get<std::string>());
+				auto keywordsArray = highlightingJson.at("keywords");
+				for (const auto& keyword : keywordsArray)
+				{
+					m_keywords.insert(keyword.get<std::string>());
+				}
+				BuildRegex();
 			}
 
-			BuildRegex();
+			// Colors:
+			{
+				auto colorsJson = highlightingJson.at("colors");
+				for(auto iterator = colorsJson.begin(); iterator != colorsJson.end(); ++iterator)
+				{
+					m_colors.emplace(iterator.key(), iterator.value().get<std::string>());
+				}
+			} 
 		}
 
 		void BuildRegex()
@@ -80,5 +97,6 @@ namespace TextHighlight
 	private:
 		std::unordered_set<std::string> m_keywords;
 		std::regex m_keywordsRegex;
+		std::unordered_map<std::string, std::string> m_colors;
 	};
 }

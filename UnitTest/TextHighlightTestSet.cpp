@@ -8,24 +8,39 @@ namespace UnitTest
 {
 	TEST_CLASS(TextHighlightTestSet)
 	{
+	private:
+		std::string m_commentsColor;
+		std::string m_stringsColor;
+		std::string m_keywordsColor;
+
 	public:
+
+		TEST_METHOD_INITIALIZE(TextHighlightTestSetInitialize)
+		{
+			auto settings = CSharpHighlightSettings::Get();
+			m_commentsColor = settings->GetColor("comments");
+			m_stringsColor = settings->GetColor("strings");
+			m_keywordsColor = settings->GetColor("keywords");
+		}
 
 		TEST_METHOD(TextHighlightTestOneLineComment)
 		{
 			std::string input("// A comment");
-			std::string expectedOutput("<span color=\"#48A433\">// A comment</>");
+			std::string expectedOutput("<span color=\"#" + m_commentsColor + "\">// A comment</>");
 
-			MixTextPiece parser(input);
+			CSharpHighlighter parser(input);
 			parser.Parse();
 			Assert::AreEqual(expectedOutput, parser.ToString());
 		}
 
 		TEST_METHOD(TextHighlightTestMultiLine)
 		{
-			std::string input("/* Multi\nLine\nComment\n*/\n");
-			std::string expectedOutput("<span color=\"#48A433\">/* Multi</>\n<span color=\"#48A433\">Line</>\n<span color=\"#48A433\">Comment</>\n<span color=\"#48A433\">*/</>\n");
+			auto settings = CSharpHighlightSettings::Get();
 
-			MixTextPiece parser(input);
+			std::string input("/* Multi\nLine\nComment\n*/\n");
+			std::string expectedOutput("<span color=\"#" + m_commentsColor + "\">/* Multi</>\n<span color=\"#" + m_commentsColor + "\">Line</>\n<span color=\"#" + m_commentsColor + "\">Comment</>\n<span color=\"#" + m_commentsColor + "\">*/</>\n");
+
+			CSharpHighlighter parser(input);
 			parser.Parse();
 			Assert::AreEqual(expectedOutput, parser.ToString());
 		}
@@ -33,9 +48,9 @@ namespace UnitTest
 		TEST_METHOD(TextHighlightTestString)
 		{
 			std::string input("\"A Quote \\\"Bip\\\"\"");
-			std::string expectedOutput("<span color=\"#D4713F\">\"A Quote \\\"Bip\\\"\"</>");
+			std::string expectedOutput("<span color=\"#" + m_stringsColor + "\">\"A Quote \\\"Bip\\\"\"</>");
 
-			MixTextPiece parser(input);
+			CSharpHighlighter parser(input);
 			parser.Parse();
 			Assert::AreEqual(expectedOutput, parser.ToString());
 		}
@@ -43,9 +58,9 @@ namespace UnitTest
 		TEST_METHOD(TextHighlightTestKeywords)
 		{
 			std::string input("public void Add(float value1, float value2)");
-			std::string expectedOutput("<span color=\"#4A9A9B\">public</> <span color=\"#4A9A9B\">void</> Add(<span color=\"#4A9A9B\">float</> value1, <span color=\"#4A9A9B\">float</> value2)");
+			std::string expectedOutput("<span color=\"#" + m_keywordsColor + "\">public</> <span color=\"#" + m_keywordsColor + "\">void</> Add(<span color=\"#" + m_keywordsColor + "\">float</> value1, <span color=\"#" + m_keywordsColor + "\">float</> value2)");
 
-			MixTextPiece parser(input);
+			CSharpHighlighter parser(input);
 			parser.Parse();
 			Assert::AreEqual(expectedOutput, parser.ToString());
 		}
@@ -53,9 +68,9 @@ namespace UnitTest
 		TEST_METHOD(TextHighlightTestMix1)
 		{
 			std::string input("var value = 0.0f; // Declaring var");
-			std::string expectedOutput("<span color=\"#4A9A9B\">var</> value = 0.0f; <span color=\"#48A433\">// Declaring var</>");
+			std::string expectedOutput("<span color=\"#" + m_keywordsColor + "\">var</> value = 0.0f; <span color=\"#" + m_commentsColor + "\">// Declaring var</>");
 
-			MixTextPiece parser(input);
+			CSharpHighlighter parser(input);
 			parser.Parse();
 			Assert::AreEqual(expectedOutput, parser.ToString());
 		}
@@ -63,9 +78,9 @@ namespace UnitTest
 		TEST_METHOD(TextHighlightTestMix2)
 		{
 			std::string input("var value1 = 0.0f; /* Declaring\nvar\n*/\nvar value2 = 0.0f;\n");
-			std::string expectedOutput("<span color=\"#4A9A9B\">var</> value1 = 0.0f; <span color=\"#48A433\">/* Declaring</>\n<span color=\"#48A433\">var</>\n<span color=\"#48A433\">*/</>\n<span color=\"#4A9A9B\">var</> value2 = 0.0f;\n");
+			std::string expectedOutput("<span color=\"#" + m_keywordsColor + "\">var</> value1 = 0.0f; <span color=\"#" + m_commentsColor + "\">/* Declaring</>\n<span color=\"#" + m_commentsColor + "\">var</>\n<span color=\"#" + m_commentsColor + "\">*/</>\n<span color=\"#" + m_keywordsColor + "\">var</> value2 = 0.0f;\n");
 
-			MixTextPiece parser(input);
+			CSharpHighlighter parser(input);
 			parser.Parse();
 			Assert::AreEqual(expectedOutput, parser.ToString());
 		}
@@ -83,17 +98,17 @@ namespace UnitTest
 				}
 			)text");
 			std::string expectedOutput(R"text(
-				<span color="#48A433">/*</>
-<span color="#48A433">				 * Add two numbers.</>
-<span color="#48A433">				 */</>
-<span color="#4A9A9B">				public</> <span color="#4A9A9B">void</> Add(<span color="#4A9A9B">float</> value1, <span color="#4A9A9B">float</> value2)
+				<span color="#)text" + m_commentsColor + R"t(">/*</>
+<span color="#)t" + m_commentsColor + R"t(">				 * Add two numbers.</>
+<span color="#)t" + m_commentsColor + R"t(">				 */</>
+				<span color="#)t" + m_keywordsColor + R"t(">public</> <span color="#)t" + m_keywordsColor + R"t(">void</> Add(<span color="#)t" + m_keywordsColor + R"t(">float</> value1, <span color="#)t" + m_keywordsColor + R"t(">float</> value2)
 				{
-<span color="#48A433">					// Adding values:</>
-<span color="#4A9A9B">					return</> value1 + value2;	
+					<span color="#)t" + m_commentsColor + R"t(">// Adding values:</>
+					<span color="#)t" + m_keywordsColor + R"t(">return</> value1 + value2;	
 				}
-			)text");
+			)t");
 
-			MixTextPiece parser(input);
+			CSharpHighlighter parser(input);
 			parser.Parse();
 			Assert::AreEqual(expectedOutput, parser.ToString());
 		}

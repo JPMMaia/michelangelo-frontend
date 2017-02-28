@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseTextPiece.hpp"
+#include "CSharpHighlightSettings.hpp"
 
 namespace TextHighlight
 {
@@ -15,6 +16,8 @@ namespace TextHighlight
 
 		std::string ToString() const override
 		{
+			auto color = CSharpHighlightSettings::Get()->GetColor("comments");
+
 			std::stringstream ss;
 
 			auto iterator = m_text.begin();
@@ -23,7 +26,7 @@ namespace TextHighlight
 			{
 				auto endLineLocation = std::find(iterator, m_text.end(), '\n');
 
-				ss << "<span color=\"#48A433\">";
+				ss << "<span color=\"#" + color + "\">";
 				while (iterator != endLineLocation)
 					ss << *iterator++;
 				ss << "</>";

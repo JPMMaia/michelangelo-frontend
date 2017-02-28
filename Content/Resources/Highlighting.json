@@ -6,5 +6,10 @@
 	 "string", "struct", "switch", "this", "throw", "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "void",
 	 "volatile", "while", "add", "alias", "ascending", "async", "await", "descending", "dynamic", "from", "get", "global", "group", "into", "join", "let", "orderby",
 	 "partial", "partial", "remove", "select", "set", "var", "where", "yield"
-	]
+	],
+	"colors" : {
+		"comments" : "48A433",
+		"keywords" : "4A9A9B",
+		"strings" : "D4713F"
+	}
 }
