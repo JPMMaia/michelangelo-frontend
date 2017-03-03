@@ -26,7 +26,7 @@ void ATestActor::BeginPlay()
 
 	// Read geometry from file:
 	{
-		ifstream fileStream(L"TestClock.json", ios::in);
+		/*ifstream fileStream(L"TestClock.json", ios::in);
 
 		nlohmann::json json;
 		fileStream >> json;
@@ -34,7 +34,7 @@ void ATestActor::BeginPlay()
 		auto sceneGeometry = MichelangeloAPI::SceneGeometry::CreateFromJson(json);
 		auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
 		renderItems->Clear();
-		renderItems->AddGeometry(sceneGeometry);
+		renderItems->AddGeometry(sceneGeometry);*/
 	}
 
 	// TODO add authentication

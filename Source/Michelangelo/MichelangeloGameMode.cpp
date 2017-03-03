@@ -3,7 +3,6 @@
 #include "Michelangelo.h"
 #include "MichelangeloGameMode.h"
 #include "Unreal/UGameDataSingleton.h"
-#include "Unreal/UI/StandardHUD.h"
 
 AMichelangeloGameMode::AMichelangeloGameMode()
 {
