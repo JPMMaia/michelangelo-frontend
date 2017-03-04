@@ -12,9 +12,6 @@ public:
 	virtual void Write(const TArray<FRichTextLine>& InLines, FString& Output) override;
 
 private:
-	static void EscapeText(FString& TextToEscape);
-
-private:
 	FCodeMarkupWriter() {}
 
 private:

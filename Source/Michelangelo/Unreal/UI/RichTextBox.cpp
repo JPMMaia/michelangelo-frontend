@@ -2,6 +2,8 @@
 #include "Michelangelo.h"
 #include "RichTextBox.h"
 #include "Runtime/UMG/Public/Components/RichTextBlockDecorator.h"
+#include "Unreal/Common/UnrealHelpers.h"
+#include "NonUnreal/TextHighlight/CSharpHighlighter.hpp"
 
 #define LOCTEXT_NAMESPACE "UMG"
 
@@ -28,10 +30,20 @@ FText URichTextBox::GetText() const
 
 	return Text;
 }
+FText URichTextBox::GetRawText() const 
+{
+	return RawText;
+}
 
 void URichTextBox::SetText(FText InText)
 {
-	Text = InText;
+	RawText = InText;
+
+	// Parse and highlight code:
+	TextHighlight::CSharpHighlighter highlighter(Common::Helpers::FStringToString(InText.ToString()));
+	highlighter.Parse();
+
+	Text = FText::FromString(Common::Helpers::StringToFString(highlighter.ToString()));
 	if (MyRichTextBlock.IsValid())
 	{
 		MyRichTextBlock->SetText(Text);

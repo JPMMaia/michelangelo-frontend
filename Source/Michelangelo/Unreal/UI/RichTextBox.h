@@ -24,6 +24,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Widget", meta = (DisplayName = "GetText (Multi-Line Text Box)"))
 		FText GetText() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Widget", meta = (DisplayName = "GetRawText (Multi-Line Text Box)"))
+		FText GetRawText() const;
+
 	/**  */
 	UFUNCTION(BlueprintCallable, Category = "Widget", meta = (DisplayName = "SetText (Multi-Line Text Box)"))
 		void SetText(FText InText);
@@ -83,4 +86,6 @@ protected:
 
 	/** Native Slate Widget */
 	TSharedPtr<SMultiLineEditableRichText> MyRichTextBlock;
+
+	FText RawText;
 };
