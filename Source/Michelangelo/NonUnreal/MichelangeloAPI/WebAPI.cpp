@@ -162,14 +162,16 @@ bool WebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data
 		}
 	}
 
-	// Find if gramatical errors occurred:
-	{
-		errorMessage = dataJson.at("e").get<std::string>();
-		if (!errorMessage.empty())
-			return false;
-	}
+	// Find if gramatical errors occurred (including warnings):
+	errorMessage = dataJson.at("e").get<std::string>();
 
+	// Create geometry from json:
 	sceneGeometry = SceneGeometry::CreateFromJson(dataJson);
+
+	// If there is an error message and no geometry was created, then it was a critical error (not only warnings):
+	if (!errorMessage.empty() && sceneGeometry.GetObjects().empty())
+		return false;
+
 	return true;
 }
 

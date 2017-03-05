@@ -18,6 +18,8 @@ public:
 
 	UStaticMeshLoader* GetStaticMeshLoader();
 	UMaterialLoader* GetMaterialLoader();
+
+	UFUNCTION(BlueprintCallable, Category = "Game Data Singleton")
 	URenderItemsCollection* GetRenderItemsCollection();
 	
 	AActor* GetSpawner() const;

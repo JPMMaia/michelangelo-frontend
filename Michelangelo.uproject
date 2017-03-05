@@ -30,5 +30,11 @@
 			"Name": "EditorModeExample",
 			"Enabled": false
 		}
+	],
+	"TargetPlatforms": [
+		"AllDesktop",
+		"WindowsNoEditor",
+		"MacNoEditor",
+		"LinuxNoEditor"
 	]
 }
