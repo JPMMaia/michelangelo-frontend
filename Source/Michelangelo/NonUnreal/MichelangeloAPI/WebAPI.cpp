@@ -99,21 +99,45 @@ void WebAPI::LogOut()
 	m_isAuthenticated = false;
 }
 
-std::vector<GrammarData> WebAPI::GetGrammars(const std::string& url) const
+GrammarSpecificData MichelangeloAPI::WebAPI::CreateNewGrammar() const
+{
+	CurlList requestHeader;
+	CurlPost requestBody;
+	std::string responseHeader, responseBody;
+	if (!PerformPUTRequest(URLConstants::OwnGrammarAPI, requestHeader, requestBody, responseHeader, responseBody, true))
+		ThrowEngineException(L"Couldn't perform PUT request");
+
+	return GrammarSpecificData::FromJson(nlohmann::json::parse(responseBody.c_str()));
+}
+void MichelangeloAPI::WebAPI::DeleteGrammar(const std::string & id) const
+{
+	auto url = URLConstants::OwnGrammarAPI + id;
+	std::string responseHeader, responseBody;
+	if (!PerformDELETERequest(url, responseHeader, responseBody, true))
+		ThrowEngineException(L"Couldn't perform DELETE request");
+}
+void MichelangeloAPI::WebAPI::ShareGrammar(const std::string& id, bool share) const
+{
+	auto url = URLConstants::OwnGrammarAPI + "share/" + (share ? "true" : "false") + "/" + id;
+	CurlList requestHeader;
+	CurlPost requestBody;
+	{
+		requestBody.AddPair("share", (share ? "true" : "false"));
+		requestBody.Generate(m_curl, true);
+	}
+	std::string responseHeader, responseBody;
+	if (!PerformPUTRequest(url, requestHeader, requestBody, responseHeader, responseBody, true))
+		ThrowEngineException(L"Couldn't perform PUT request");
+}
+
+std::vector<GrammarSpecificData> WebAPI::GetGrammars(const std::string& url) const
 {
 	auto grammarJson = PerformGETJSONRequest(url);
 
-	std::vector<GrammarData> grammarsData;
+	std::vector<GrammarSpecificData> grammarsData;
 	grammarsData.reserve(grammarJson.size());
-	for (auto& element : grammarJson)
-	{
-		GrammarData data;
-		data.ID = element.at("id").get<string>();
-		data.Name = element.at("name").get<string>();
-		data.Type = element.at("type").get<string>();
-
-		grammarsData.push_back(std::move(data));
-	}
+	for (const auto& element : grammarJson)
+		grammarsData.push_back(GrammarSpecificData::FromJson(element));
 
 	return grammarsData;
 }
@@ -225,10 +249,6 @@ bool WebAPI::PerformGETRequest(const std::string& url, std::string& responseHead
 	// Set URL:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
 
-	// Clear post flags:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 0L));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
-
 	// Set output for header and body:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
@@ -271,12 +291,84 @@ bool WebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader,
 
 	// Perform request:
 	auto error = curl_easy_perform(m_curl);
+
+	// Clear post flags:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 0L));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
+
 	if (error != CURLE_OK)
 		return false;
 
 	return true;
 }
+bool MichelangeloAPI::WebAPI::PerformPUTRequest(const std::string & url, CurlList& requestHeader, const CurlPost& requestBody, std::string & responseHeader, std::string & responseBody, bool setCookie) const
+{
+	// Set URL:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
 
+	// Set output for header and body:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
+
+	// Set cookie if flag is set:
+	if (setCookie)
+		SetCookie(requestHeader);
+	requestHeader.Append("Content-Type: application/x-www-form-urlencoded");
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, requestHeader.Get()));
+
+	// Set PUT method:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, "PUT"));
+	
+	// Set data:
+	{
+		auto requestBodyContent = requestBody.GetData();
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, requestBodyContent.size()));
+		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, requestBodyContent.c_str()));
+	}
+
+	// Perform request:
+	auto error = curl_easy_perform(m_curl);
+
+	// Restore state to default:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, 0L));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPGET, 1L));
+
+	if (error != CURLE_OK)
+		return false;
+
+	return true;
+}
+bool MichelangeloAPI::WebAPI::PerformDELETERequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const
+{
+	// Set URL:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
+
+	// Set output for header and body:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
+
+	// Set cookie if flag is set:
+	CurlList requestHeader;
+	if (setCookie)
+		SetCookie(requestHeader);
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, requestHeader.Get()));
+
+	// Set DELETE method:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, "DELETE"));
+
+	// Perform request:
+	auto error = curl_easy_perform(m_curl);
+
+	// Restore method to default:
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, 0L));
+	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPGET, 1L));
+
+	if (error != CURLE_OK)
+		return false;
+
+	return true;
+}
 nlohmann::json WebAPI::PerformGETJSONRequest(const std::string& url) const
 {
 	std::string header;
@@ -359,7 +451,7 @@ bool WebAPI::ExtractCookieValue(const std::string& header, const std::string& co
 
 bool WebAPI::ExtractLogInVerificationToken(const std::string& body, std::string& verificationToken)
 {
-	//	TODO now it works only for direct registrations on the site, it would be good to extend it to external logins (Google, Facebook) if possible. They have a different token and possibly the login sequence is different as well.
+	// TODO now it works only for direct registrations on the site, it would be good to extend it to external logins (Google, Facebook) if possible. They have a different token and possibly the login sequence is different as well.
 	std::regex tokenRegex("form action=\"\\/Account\\/Login\" .*><input name=\"__RequestVerificationToken\" type=\"hidden\" value=\".*\"");
 	std::smatch match;
 	std::string tag;

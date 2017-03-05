@@ -31,5 +31,7 @@ struct MICHELANGELO_API FGrammarSpecificData
 
 	FGrammarSpecificData();
 
-	static FGrammarSpecificData FromGrammarSpecificData(const MichelangeloAPI::GrammarSpecificData& object);
+	MichelangeloAPI::GrammarSpecificData ToApiData() const;
+
+	static FGrammarSpecificData FromApiData(const MichelangeloAPI::GrammarSpecificData& object);
 };

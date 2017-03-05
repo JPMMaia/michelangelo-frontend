@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "GameFramework/Actor.h"
@@ -26,10 +24,19 @@ public:
 	void LogOut();
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
-	TArray<FGrammarData> GetGrammars(const FString& url) const;
+	FGrammarSpecificData CreateNewGrammar();
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
-	TArray<FGrammarData> GetGrammarsByType(EGrammarType grammarType) const;
+	void DeleteGrammar(const FString& id);
+
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	void ShareGrammar(const FString& id, bool share);
+
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	TArray<FGrammarSpecificData> GetGrammars(const FString& url) const;
+
+	UFUNCTION(BlueprintCallable, Category = "WebAPI")
+	TArray<FGrammarSpecificData> GetGrammarsByType(EGrammarType grammarType) const;
 
 	UFUNCTION(BlueprintCallable, Category = "WebAPI")
 	FGrammarSpecificData GetGrammarSpecificData(const FString& url, const FString& id) const;

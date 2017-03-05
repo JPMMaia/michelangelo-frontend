@@ -32,7 +32,11 @@ namespace MichelangeloAPI
 		LoginError Authenticate(const std::string& email, const std::string& password, bool rememberMe);
 		void LogOut();
 
-		std::vector<GrammarData> GetGrammars(const std::string& url) const;
+		GrammarSpecificData CreateNewGrammar() const;
+		void DeleteGrammar(const std::string& id) const;
+		void ShareGrammar(const std::string& id, bool share) const;
+
+		std::vector<GrammarSpecificData> GetGrammars(const std::string& url) const;
 		GrammarSpecificData GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const;
 		bool GetGeometry(const std::string& url, const GrammarSpecificData& data, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const;
 
@@ -47,6 +51,8 @@ namespace MichelangeloAPI
 
 		bool PerformGETRequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
 		bool PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const CurlPost& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
+		bool PerformPUTRequest(const std::string& url, CurlList& requestHeader, const CurlPost& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
+		bool PerformDELETERequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const;
 		nlohmann::json PerformGETJSONRequest(const std::string& url) const;
 
 		void AddCookie(const std::string& name, const std::string& value);

@@ -4,6 +4,7 @@
 #include "NonUnreal/MichelangeloAPI/GrammarSpecificData.h"
 
 using namespace Common;
+using namespace MichelangeloAPI;
 
 FGrammarSpecificData::FGrammarSpecificData() :
 	ID("Unknown"),
@@ -15,7 +16,19 @@ FGrammarSpecificData::FGrammarSpecificData() :
 {
 }
 
-FGrammarSpecificData FGrammarSpecificData::FromGrammarSpecificData(const MichelangeloAPI::GrammarSpecificData& other)
+MichelangeloAPI::GrammarSpecificData FGrammarSpecificData::ToApiData() const
+{
+	GrammarSpecificData apiData;
+	apiData.ID = Helpers::FStringToString(ID);
+	apiData.Name = Helpers::FStringToString(Name);
+	apiData.Type = Helpers::FStringToString(Type);
+	apiData.Code = Helpers::FStringToWString(Code);
+	apiData.Shared = Shared;
+	apiData.IsOwner = IsOwner;
+	return apiData;
+}
+
+FGrammarSpecificData FGrammarSpecificData::FromApiData(const MichelangeloAPI::GrammarSpecificData& other)
 {
 	FGrammarSpecificData object;
 	object.ID = Helpers::StringToFString(other.ID);

@@ -51,28 +51,37 @@ void AAWebAPI::LogOut()
 	m_webAPI.LogOut();
 }
 
-TArray<FGrammarData> AAWebAPI::GetGrammars(const FString& url) const
+FGrammarSpecificData AAWebAPI::CreateNewGrammar()
+{
+	return FGrammarSpecificData::FromApiData(m_webAPI.CreateNewGrammar());
+}
+void AAWebAPI::DeleteGrammar(const FString& id)
+{
+	m_webAPI.DeleteGrammar(Helpers::FStringToString(id));
+}
+void AAWebAPI::ShareGrammar(const FString& id, bool share)
+{
+	m_webAPI.ShareGrammar(Helpers::FStringToString(id), share);
+}
+
+TArray<FGrammarSpecificData> AAWebAPI::GetGrammars(const FString& url) const
 {
 	if (!IsAuthenticated())
-		return TArray<FGrammarData>();
+		return TArray<FGrammarSpecificData>();
 
 	auto grammarsData = m_webAPI.GetGrammars(Helpers::FStringToString(url));
 
-	TArray<FGrammarData> output;
+	TArray<FGrammarSpecificData> output;
 	for (auto& grammarData : grammarsData)
 	{
-		FGrammarData fGrammarData;
-		fGrammarData.ID = Helpers::StringToFString(grammarData.ID);
-		fGrammarData.Name = Helpers::StringToFString(grammarData.Name);
-		fGrammarData.Type = Helpers::StringToFString(grammarData.Type);
-		output.Add(fGrammarData);
+		output.Add(FGrammarSpecificData::FromApiData(grammarData));
 	}
 
 	return output;
 }
-TArray<FGrammarData> AAWebAPI::GetGrammarsByType(EGrammarType grammarType) const
+TArray<FGrammarSpecificData> AAWebAPI::GetGrammarsByType(EGrammarType grammarType) const
 {
-	TArray<FGrammarData> output;
+	TArray<FGrammarSpecificData> output;
 
 	switch (grammarType)
 	{
@@ -100,7 +109,7 @@ FGrammarSpecificData AAWebAPI::GetGrammarSpecificData(const FString& url, const 
 	if (!IsAuthenticated())
 		return FGrammarSpecificData();
 
-	return FGrammarSpecificData::FromGrammarSpecificData(m_webAPI.GetGrammarSpecificData(Helpers::FStringToString(url), Helpers::FStringToString(id)));
+	return FGrammarSpecificData::FromApiData(m_webAPI.GetGrammarSpecificData(Helpers::FStringToString(url), Helpers::FStringToString(id)));
 }
 
 FGrammarSpecificData AAWebAPI::GetGrammarSpecificDataByType(EGrammarType grammarType, const FString& id) const
@@ -127,16 +136,6 @@ FGrammarSpecificData AAWebAPI::GetGrammarSpecificDataByType(EGrammarType grammar
 
 bool AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& data, FString& errorMessage)
 {
-	GrammarSpecificData apiData;
-	{
-		apiData.ID = Helpers::FStringToString(data.ID);
-		apiData.Name = Helpers::FStringToString(data.Name);
-		apiData.Type = Helpers::FStringToString(data.Type);
-		apiData.Code = Helpers::FStringToWString(data.Code);
-		apiData.Shared = data.Shared;
-		apiData.IsOwner = data.IsOwner;
-	}
-
 	CameraParameters cameraParameters;
 	{
 		auto* cameraManager = GEngine->GetFirstLocalPlayerController(GetWorld())->PlayerCameraManager;
@@ -162,7 +161,7 @@ bool AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 	std::string errorMessageStr;
 	{
 		// Perform request:
-		bool sucess = m_webAPI.GetGeometry(Helpers::FStringToString(url), apiData, cameraParameters, sceneGeometry, errorMessageStr);
+		bool sucess = m_webAPI.GetGeometry(Helpers::FStringToString(url), data.ToApiData(), cameraParameters, sceneGeometry, errorMessageStr);
 		
 		// Set output error message:
 		errorMessage = Helpers::StringToFString(errorMessageStr);
