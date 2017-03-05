@@ -1,6 +1,6 @@
 #pragma once
 
-#include <UObject.h>
+#include <Object.h>
 #include "UMaterialLoader.generated.h"
 
 UCLASS()
