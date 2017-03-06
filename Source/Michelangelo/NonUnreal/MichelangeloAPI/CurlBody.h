@@ -7,7 +7,7 @@
 
 namespace MichelangeloAPI
 {
-	class CurlPost
+	class CurlBody
 	{
 	public:
 		void AddPair(const std::string& name, const std::string& value);

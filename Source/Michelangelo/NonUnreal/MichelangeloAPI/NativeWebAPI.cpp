@@ -1,9 +1,11 @@
 ﻿#include "Michelangelo.h"
-#include "WebAPI.h"
+#include "NativeWebAPI.h"
 #include "HeaderConstants.h"
 #include "URLConstants.h"
 #include "NonUnreal/nlohmann/JSON/json.hpp"
+#include "NonUnreal/Common/EngineException.h"
 #include "CameraParameters.h"
+#include "CurlException.h"
 
 #include <regex>
 #include <limits>
@@ -12,17 +14,17 @@ using namespace Common;
 using namespace MichelangeloAPI;
 using namespace std;
 
-WebAPI::WebAPI()
+NativeWebAPI::NativeWebAPI()
 {
-	Initialize();
+	// Initialize windows sockets:
+	ThrowIfCURLFailed(curl_global_init(CURL_GLOBAL_DEFAULT));
+}
+NativeWebAPI::~NativeWebAPI()
+{
+	curl_global_cleanup();
 }
 
-WebAPI::~WebAPI()
-{
-	Shutdown();
-}
-
-WebAPI::LoginError WebAPI::Authenticate(const std::string& email, const std::string& password, bool rememberMe)
+NativeWebAPI::LoginError NativeWebAPI::Authenticate(const std::string& email, const std::string& password, bool rememberMe)
 {
 	// TODO in case of timeout retry
 	std::string loginPageBody;
@@ -68,7 +70,7 @@ WebAPI::LoginError WebAPI::Authenticate(const std::string& email, const std::str
 	return LoginError::None;
 }
 
-void WebAPI::LogOut()
+void NativeWebAPI::LogOut()
 {
 	if (!m_isAuthenticated)
 		return;
@@ -99,7 +101,7 @@ void WebAPI::LogOut()
 	m_isAuthenticated = false;
 }
 
-GrammarSpecificData MichelangeloAPI::WebAPI::CreateNewGrammar() const
+GrammarSpecificData MichelangeloAPI::NativeWebAPI::CreateNewGrammar() const
 {
 	CurlList requestHeader;
 	CurlPost requestBody;
@@ -109,14 +111,14 @@ GrammarSpecificData MichelangeloAPI::WebAPI::CreateNewGrammar() const
 
 	return GrammarSpecificData::FromJson(nlohmann::json::parse(responseBody.c_str()));
 }
-void MichelangeloAPI::WebAPI::DeleteGrammar(const std::string & id) const
+void MichelangeloAPI::NativeWebAPI::DeleteGrammar(const std::string & id) const
 {
 	auto url = URLConstants::OwnGrammarAPI + id;
 	std::string responseHeader, responseBody;
 	if (!PerformDELETERequest(url, responseHeader, responseBody, true))
 		ThrowEngineException(L"Couldn't perform DELETE request");
 }
-void MichelangeloAPI::WebAPI::ShareGrammar(const std::string& id, bool share) const
+void MichelangeloAPI::NativeWebAPI::ShareGrammar(const std::string& id, bool share) const
 {
 	auto url = URLConstants::OwnGrammarAPI + "share/" + (share ? "true" : "false") + "/" + id;
 	CurlList requestHeader;
@@ -130,7 +132,7 @@ void MichelangeloAPI::WebAPI::ShareGrammar(const std::string& id, bool share) co
 		ThrowEngineException(L"Couldn't perform PUT request");
 }
 
-std::vector<GrammarSpecificData> WebAPI::GetGrammars(const std::string& url) const
+std::vector<GrammarSpecificData> NativeWebAPI::GetGrammars(const std::string& url) const
 {
 	auto grammarJson = PerformGETJSONRequest(url);
 
@@ -142,12 +144,12 @@ std::vector<GrammarSpecificData> WebAPI::GetGrammars(const std::string& url) con
 	return grammarsData;
 }
 
-GrammarSpecificData WebAPI::GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const
+GrammarSpecificData NativeWebAPI::GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const
 {
 	return GrammarSpecificData::FromJson(PerformGETJSONRequest(url + grammarID));
 }
 
-bool WebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const
+bool NativeWebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const
 {
 	// Perform request:
 	std::string responseBody;
@@ -199,52 +201,22 @@ bool WebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data
 	return true;
 }
 
-CURL* WebAPI::GetCURL()
+CURL* NativeWebAPI::GetCURL()
 {
 	return m_curl;
 }
 
-const CURL* WebAPI::GetCURL() const
+const CURL* NativeWebAPI::GetCURL() const
 {
 	return m_curl;
 }
 
-bool WebAPI::IsAuthenticated() const
+bool NativeWebAPI::IsAuthenticated() const
 {
 	return m_isAuthenticated;
 }
 
-void WebAPI::Initialize()
-{
-	// Initialize windows sockets:
-	ThrowIfCURLFailed(curl_global_init(CURL_GLOBAL_DEFAULT));
-
-	m_curl = curl_easy_init();
-	if (!m_curl)
-		ThrowEngineException(L"Failed to initialize CURL.");
-
-	// Set call back functions:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, WebAPI::WriteCallback));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, WebAPI::WriteCallback));
-
-	// Set parameters:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 1L));
-}
-
-void WebAPI::Shutdown()
-{
-	if (m_curl)
-	{
-		curl_easy_cleanup(m_curl);
-		m_curl = nullptr;
-	}
-
-	curl_global_cleanup();
-}
-
-bool WebAPI::PerformGETRequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const
+bool NativeWebAPI::PerformGETRequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const
 {
 	// Set URL:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
@@ -266,7 +238,7 @@ bool WebAPI::PerformGETRequest(const std::string& url, std::string& responseHead
 	return true;
 }
 
-bool WebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const CurlPost& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const
+bool NativeWebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const CurlPost& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const
 {
 	// Set URL:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
@@ -301,7 +273,7 @@ bool WebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader,
 
 	return true;
 }
-bool MichelangeloAPI::WebAPI::PerformPUTRequest(const std::string & url, CurlList& requestHeader, const CurlPost& requestBody, std::string & responseHeader, std::string & responseBody, bool setCookie) const
+bool MichelangeloAPI::NativeWebAPI::PerformPUTRequest(const std::string & url, CurlList& requestHeader, const CurlPost& requestBody, std::string & responseHeader, std::string & responseBody, bool setCookie) const
 {
 	// Set URL:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
@@ -339,7 +311,7 @@ bool MichelangeloAPI::WebAPI::PerformPUTRequest(const std::string & url, CurlLis
 
 	return true;
 }
-bool MichelangeloAPI::WebAPI::PerformDELETERequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const
+bool MichelangeloAPI::NativeWebAPI::PerformDELETERequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const
 {
 	// Set URL:
 	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
@@ -369,7 +341,7 @@ bool MichelangeloAPI::WebAPI::PerformDELETERequest(const std::string& url, std::
 
 	return true;
 }
-nlohmann::json WebAPI::PerformGETJSONRequest(const std::string& url) const
+nlohmann::json NativeWebAPI::PerformGETJSONRequest(const std::string& url) const
 {
 	std::string header;
 	std::string body;
@@ -380,7 +352,7 @@ nlohmann::json WebAPI::PerformGETJSONRequest(const std::string& url) const
 	return nlohmann::json::parse(body.c_str());
 }
 
-void WebAPI::AddCookie(const std::string& name, const std::string& value)
+void NativeWebAPI::AddCookie(const std::string& name, const std::string& value)
 {
 	auto location = m_cookies.find(name);
 
@@ -410,23 +382,12 @@ void WebAPI::AddCookie(const std::string& name, const std::string& value)
 	}
 }
 
-void WebAPI::SetCookie(CurlList& header) const
+void NativeWebAPI::SetCookie(CurlList& header) const
 {
 	header.Append(m_cookieString);
 }
 
-int WebAPI::WriteCallback(char* data, size_t size, size_t count, std::string* userData)
-{
-	if (!userData)
-		return 0;
-
-	auto dataSize = size * count;
-	userData->append(data, dataSize);
-
-	return static_cast<int>(dataSize);
-}
-
-bool WebAPI::ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookieValue)
+bool NativeWebAPI::ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookieValue)
 {
 	// Check if there's a set-cookie in the response:
 	if (header.find(HeaderConstants::SetCookie) == std::string::npos)
@@ -449,7 +410,7 @@ bool WebAPI::ExtractCookieValue(const std::string& header, const std::string& co
 	return true;
 }
 
-bool WebAPI::ExtractLogInVerificationToken(const std::string& body, std::string& verificationToken)
+bool NativeWebAPI::ExtractLogInVerificationToken(const std::string& body, std::string& verificationToken)
 {
 	// TODO now it works only for direct registrations on the site, it would be good to extend it to external logins (Google, Facebook) if possible. They have a different token and possibly the login sequence is different as well.
 	std::regex tokenRegex("form action=\"\\/Account\\/Login\" .*><input name=\"__RequestVerificationToken\" type=\"hidden\" value=\".*\"");
@@ -472,7 +433,7 @@ bool WebAPI::ExtractLogInVerificationToken(const std::string& body, std::string&
 	return true;
 }
 
-bool WebAPI::ExtractLogOutVerificationToken(const std::string& body, std::string& verificationToken)
+bool NativeWebAPI::ExtractLogOutVerificationToken(const std::string& body, std::string& verificationToken)
 {
 	std::regex tokenRegex("form action=\"\\/Account\\/LogOff\" .*><input name=\"__RequestVerificationToken\" type=\"hidden\" value=\".*\"");
 	std::smatch match;

@@ -2,6 +2,7 @@
 #include "CoreMisc.h"
 #include "UGameDataSingleton.h"
 #include "UGameDataSingletonLibrary.h"
+#include "Unreal/Web/UWebAPI.h"
 
 UGameDataSingleton* UGameDataSingleton::Get()
 {
@@ -35,6 +36,13 @@ UMaterialLoader* UGameDataSingleton::GetMaterialLoader()
 		this->MaterialManager = NewObject<UMaterialLoader>();
 
 	return this->MaterialManager;
+}
+UWebAPI * UGameDataSingleton::GetWebAPI()
+{
+	if (!this->WebAPI)
+		this->WebAPI = NewObject<UWebAPI>();
+
+	return this->WebAPI;
 }
 URenderItemsCollection* UGameDataSingleton::GetRenderItemsCollection()
 {

@@ -1,18 +1,6 @@
 #include "Michelangelo.h"
 #include "CurlList.h"
-
-#ifndef NATIVE_CPP
-// ReSharper disable once CppUnusedIncludeDirective
-#include <AllowWindowsPlatformTypes.h>
-#endif
-
-#include <curl/curl.h>
-#undef PF_MAX
-
-#ifndef NATIVE_CPP
-// ReSharper disable once CppUnusedIncludeDirective
-#include <HideWindowsPlatformTypes.h>
-#endif
+#include "IncludeCurl.h"
 
 using namespace MichelangeloAPI;
 

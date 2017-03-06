@@ -1,16 +1,21 @@
 #pragma once
 
-#include "FGrammarSpecificData.generated.h"
+#include <Object.h>
+#include <string>
+
+#include "EGrammarType.h"
+#include "GrammarSpecificData.generated.h"
 
 namespace MichelangeloAPI {
 	struct GrammarSpecificData;
 }
 
-USTRUCT(BlueprintType)
-struct MICHELANGELO_API FGrammarSpecificData
+UCLASS(BlueprintType)
+class MICHELANGELO_API UGrammarSpecificData : public UObject
 {
 	GENERATED_BODY()
 
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grammar Specific Data")
 	FString ID;
 
@@ -29,9 +34,14 @@ struct MICHELANGELO_API FGrammarSpecificData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grammar Specific Data")
 	bool IsOwner;
 
-	FGrammarSpecificData();
+public:
+	static UGrammarSpecificData* FromApiData(const MichelangeloAPI::GrammarSpecificData& object);
+
+public:
+	UGrammarSpecificData();
 
 	MichelangeloAPI::GrammarSpecificData ToApiData() const;
 
-	static FGrammarSpecificData FromApiData(const MichelangeloAPI::GrammarSpecificData& object);
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	EGrammarType GetGrammarType() const;
 };

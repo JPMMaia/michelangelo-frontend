@@ -1,5 +1,5 @@
 #include "Michelangelo.h"
-#include "CurlPost.h"
+#include "CurlBody.h"
 #include "NonUnreal/Common/EngineException.h"
 
 #include <sstream>
@@ -7,11 +7,11 @@
 using namespace Common;
 using namespace MichelangeloAPI;
 
-void CurlPost::AddPair(const std::string& name, const std::string& value)
+void CurlBody::AddPair(const std::string& name, const std::string& value)
 {
 	m_pairs[name] = value;
 }
-void CurlPost::Generate(CURL* curl, bool urlEncode)
+void CurlBody::Generate(CURL* curl, bool urlEncode)
 {
 	std::stringstream stringStream;
 
@@ -26,7 +26,7 @@ void CurlPost::Generate(CURL* curl, bool urlEncode)
 	// Convert to string:
 	m_data = stringStream.str();
 }
-const std::string& CurlPost::GetData() const
+const std::string& CurlBody::GetData() const
 {
 	return m_data;
 }

@@ -5,6 +5,8 @@
 #include "Unreal/Scene/URenderItemsCollection.h"
 #include "UGameDataSingleton.generated.h"
 
+class UWebAPI;
+
 UCLASS(Blueprintable, BlueprintType)
 class UGameDataSingleton : public UObject
 {
@@ -18,6 +20,9 @@ public:
 
 	UStaticMeshLoader* GetStaticMeshLoader();
 	UMaterialLoader* GetMaterialLoader();
+
+	UFUNCTION(BlueprintCallable, Category = "Game Data Singleton")
+	UWebAPI* GetWebAPI();
 
 	UFUNCTION(BlueprintCallable, Category = "Game Data Singleton")
 	URenderItemsCollection* GetRenderItemsCollection();
@@ -45,6 +50,9 @@ public:
 
 private:
 	FString m_savedEmail;
+
+	UPROPERTY()
+	UWebAPI* WebAPI = nullptr;
 
 	static constexpr TCHAR* s_loginCredentialsFilename = L"LoginCredentials.data";
 };

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Michelangelo.h"
-#include "AWebAPI.h"
+#include "UWebAPI.h"
 #include "NonUnreal/MichelangeloAPI/URLConstants.h"
 #include "Unreal/UGameDataSingletonLibrary.h"
 #include "Unreal/UGameDataSingleton.h"
@@ -11,12 +11,14 @@
 using namespace Common;
 using namespace MichelangeloAPI;
 
-AAWebAPI::AAWebAPI()
+UWebAPI::UWebAPI()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	m_getGrammarsURLs.Add(EGrammarType::Own, Helpers::StringToFString(URLConstants::OwnGrammarAPI));
+	m_getGrammarsURLs.Add(EGrammarType::Shared, Helpers::StringToFString(URLConstants::SharedGrammarAPI));
+	m_getGrammarsURLs.Add(EGrammarType::Tutorial, Helpers::StringToFString(URLConstants::TutorialAPI));
 }
 
-FStatus AAWebAPI::Authenticate(const FString& email, const FString& password, bool rememberMe)
+FStatus UWebAPI::Authenticate(const FString& email, const FString& password, bool rememberMe)
 {
 	if (email.IsEmpty())
 		return FStatus(false, TEXT("Email field must not be empty!"));
@@ -35,10 +37,10 @@ FStatus AAWebAPI::Authenticate(const FString& email, const FString& password, bo
 
 	switch (error)
 	{
-	case WebAPI::LoginError::None:
+	case NativeWebAPI::LoginError::None:
 		return FStatus(true, TEXT("Success!"));
 
-	case WebAPI::LoginError::WrongCredentials:
+	case NativeWebAPI::LoginError::WrongCredentials:
 		return FStatus(false, TEXT("Wrong credentials!"));
 
 	default:
@@ -46,42 +48,42 @@ FStatus AAWebAPI::Authenticate(const FString& email, const FString& password, bo
 	}
 }
 
-void AAWebAPI::LogOut()
+void UWebAPI::LogOut()
 {
 	m_webAPI.LogOut();
 }
 
-FGrammarSpecificData AAWebAPI::CreateNewGrammar()
+UGrammarSpecificData* UWebAPI::CreateNewGrammar()
 {
-	return FGrammarSpecificData::FromApiData(m_webAPI.CreateNewGrammar());
+	return UGrammarSpecificData::FromApiData(m_webAPI.CreateNewGrammar());
 }
-void AAWebAPI::DeleteGrammar(const FString& id)
+void UWebAPI::DeleteGrammar(const FString& id)
 {
 	m_webAPI.DeleteGrammar(Helpers::FStringToString(id));
 }
-void AAWebAPI::ShareGrammar(const FString& id, bool share)
+void UWebAPI::ShareGrammar(const FString& id, bool share)
 {
 	m_webAPI.ShareGrammar(Helpers::FStringToString(id), share);
 }
 
-TArray<FGrammarSpecificData> AAWebAPI::GetGrammars(const FString& url) const
+TArray<UGrammarSpecificData*> UWebAPI::GetGrammars(const FString& url) const
 {
 	if (!IsAuthenticated())
-		return TArray<FGrammarSpecificData>();
+		return TArray<UGrammarSpecificData*>();
 
 	auto grammarsData = m_webAPI.GetGrammars(Helpers::FStringToString(url));
 
-	TArray<FGrammarSpecificData> output;
+	TArray<UGrammarSpecificData*> output;
 	for (auto& grammarData : grammarsData)
 	{
-		output.Add(FGrammarSpecificData::FromApiData(grammarData));
+		output.Add(UGrammarSpecificData::FromApiData(grammarData));
 	}
 
 	return output;
 }
-TArray<FGrammarSpecificData> AAWebAPI::GetGrammarsByType(EGrammarType grammarType) const
+TArray<UGrammarSpecificData*> UWebAPI::GetGrammarsByType(EGrammarType grammarType) const
 {
-	TArray<FGrammarSpecificData> output;
+	TArray<UGrammarSpecificData*> output;
 
 	switch (grammarType)
 	{
@@ -104,17 +106,17 @@ TArray<FGrammarSpecificData> AAWebAPI::GetGrammarsByType(EGrammarType grammarTyp
 	return output;
 }
 
-FGrammarSpecificData AAWebAPI::GetGrammarSpecificData(const FString& url, const FString& id) const
+UGrammarSpecificData* UWebAPI::GetGrammarSpecificData(const FString& url, const FString& id) const
 {
 	if (!IsAuthenticated())
-		return FGrammarSpecificData();
+		return NewObject<UGrammarSpecificData>();
 
-	return FGrammarSpecificData::FromApiData(m_webAPI.GetGrammarSpecificData(Helpers::FStringToString(url), Helpers::FStringToString(id)));
+	return UGrammarSpecificData::FromApiData(m_webAPI.GetGrammarSpecificData(Helpers::FStringToString(url), Helpers::FStringToString(id)));
 }
 
-FGrammarSpecificData AAWebAPI::GetGrammarSpecificDataByType(EGrammarType grammarType, const FString& id) const
+UGrammarSpecificData* UWebAPI::GetGrammarSpecificDataByType(EGrammarType grammarType, const FString& id) const
 {
-	FGrammarSpecificData output;
+	UGrammarSpecificData* output;
 
 	switch (grammarType)
 	{
@@ -128,13 +130,14 @@ FGrammarSpecificData AAWebAPI::GetGrammarSpecificDataByType(EGrammarType grammar
 		break;
 
 	default:
+		output = NewObject<UGrammarSpecificData>();
 		break;
 	}
 
 	return output;
 }
 
-bool AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& data, FString& errorMessage)
+bool UWebAPI::GenerateGeometry(const FString& url, const UGrammarSpecificData* data, FString& errorMessage)
 {
 	CameraParameters cameraParameters;
 	{
@@ -161,7 +164,7 @@ bool AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 	std::string errorMessageStr;
 	{
 		// Perform request:
-		bool sucess = m_webAPI.GetGeometry(Helpers::FStringToString(url), data.ToApiData(), cameraParameters, sceneGeometry, errorMessageStr);
+		bool sucess = m_webAPI.GetGeometry(Helpers::FStringToString(url), data->ToApiData(), cameraParameters, sceneGeometry, errorMessageStr);
 		
 		// Set output error message:
 		errorMessage = Helpers::StringToFString(errorMessageStr);
@@ -178,7 +181,7 @@ bool AAWebAPI::GenerateGeometry(const FString& url, const FGrammarSpecificData& 
 
 	return true;
 }
-bool AAWebAPI::GenerateGeometryByType(EGrammarType grammarType, const FGrammarSpecificData& data, FString& errorMessage)
+bool UWebAPI::GenerateGeometryByType(EGrammarType grammarType, const UGrammarSpecificData* data, FString& errorMessage)
 {
 	if (grammarType == EGrammarType::Tutorial)
 		return GenerateGeometry(Helpers::StringToFString(URLConstants::TutorialAPI), data, errorMessage);
@@ -186,7 +189,17 @@ bool AAWebAPI::GenerateGeometryByType(EGrammarType grammarType, const FGrammarSp
 	return GenerateGeometry(Helpers::StringToFString(URLConstants::OwnGrammarAPI), data, errorMessage);
 }
 
-bool AAWebAPI::IsAuthenticated() const
+bool UWebAPI::IsAuthenticated() const
 {
 	return m_webAPI.IsAuthenticated();
+}
+
+MichelangeloAPI::NativeWebAPI& UWebAPI::GetNativeWebAPI()
+{
+	return m_webAPI;
+}
+
+const FString& UWebAPI::SelectGetGrammarsURL(EGrammarType type) const
+{
+	return m_getGrammarsURLs[type];
 }
