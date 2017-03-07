@@ -14,6 +14,15 @@
 using namespace Common;
 using namespace MichelangeloAPI;
 
+class OnGrammarCreatedInternalEvent : public Common::Event<UMainMenu>
+{
+public:
+	void Handle(UMainMenu& sender) override
+	{
+		sender.OnGrammarCreatedEvent.Broadcast();
+	}
+};
+
 UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer) :
 	UUserWidget(ObjectInitializer),
 	ListItemWidgetTemplate(ConstructorHelpers::FClassFinder<UGrammarListItem>(TEXT("/Game/UI/W_GrammarListItem")).Class)
@@ -42,6 +51,9 @@ void UMainMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	// Call parent function:
 	UUserWidget::NativeTick(MyGeometry, InDeltaTime);
+
+	// Handle events:
+	m_eventsComponent.HandleEvents(*this);
 
 	// Handle pending grammars:
 	HandlePendingGrammars();
@@ -75,6 +87,9 @@ void UMainMenu::CreateNewGrammar()
 	// Lock mutex and add the new grammar to the pending grammars list:
 	std::lock_guard<std::mutex> lock(m_pendingGrammarsMutex);
 	m_pendingGrammars.push_back(grammar);
+
+	// Notify that grammar was created:
+	m_eventsComponent.AddEvent(std::make_unique<OnGrammarCreatedInternalEvent>());
 }
 void UMainMenu::CreateNewGrammarAsync()
 {

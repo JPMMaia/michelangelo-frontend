@@ -11,7 +11,11 @@
 #include "Blueprint/UserWidget.h"
 #include "GrammarListItem.h"
 #include "NonUnreal/MichelangeloAPI/GrammarSpecificData.h"
+#include "NonUnreal/Common/Event.h"
+#include "NonUnreal/Common/EventsComponent.h"
 #include "MainMenu.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGrammarCreatedEvent);
 
 /**
  * 
@@ -20,6 +24,11 @@ UCLASS()
 class MICHELANGELO_API UMainMenu : public UUserWidget
 {
 	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGrammarCreatedEvent OnGrammarCreatedEvent;
 
 public:
 	explicit UMainMenu(const FObjectInitializer& ObjectInitializer);
@@ -59,4 +68,6 @@ private:
 
 	std::mutex m_pendingGrammarsMutex;
 	std::deque<MichelangeloAPI::GrammarSpecificData> m_pendingGrammars;
+
+	Common::EventsComponent<UMainMenu> m_eventsComponent;
 };
