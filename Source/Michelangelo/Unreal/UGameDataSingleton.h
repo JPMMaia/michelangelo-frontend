@@ -3,6 +3,7 @@
 #include "Unreal/Mesh/UStaticMeshLoader.h"
 #include "Unreal/Materials/UMaterialLoader.h"
 #include "Unreal/Scene/URenderItemsCollection.h"
+#include "NonUnreal/MichelangeloAPI/NativeWebAPI.h"
 #include "UGameDataSingleton.generated.h"
 
 class UWebAPI;
@@ -20,9 +21,7 @@ public:
 
 	UStaticMeshLoader* GetStaticMeshLoader();
 	UMaterialLoader* GetMaterialLoader();
-
-	UFUNCTION(BlueprintCallable, Category = "Game Data Singleton")
-	UWebAPI* GetWebAPI();
+	MichelangeloAPI::NativeWebAPI& GetWebAPI();
 
 	UFUNCTION(BlueprintCallable, Category = "Game Data Singleton")
 	URenderItemsCollection* GetRenderItemsCollection();
@@ -51,8 +50,7 @@ public:
 private:
 	FString m_savedEmail;
 
-	UPROPERTY()
-	UWebAPI* WebAPI = nullptr;
+	MichelangeloAPI::NativeWebAPI m_webAPI;
 
 	static constexpr TCHAR* s_loginCredentialsFilename = L"LoginCredentials.data";
 };

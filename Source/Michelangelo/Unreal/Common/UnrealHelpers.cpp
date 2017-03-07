@@ -124,3 +124,24 @@ int32 Helpers::GetObjectReferenceCount(UObject* Obj, TArray<UObject*>* OutReferr
 	}
 	return OutReferredToObjects->Num();
 }
+
+MichelangeloAPI::GrammarType Helpers::UnrealToNativeGrammarType(EGrammarType unrealGrammarType)
+{
+	switch(unrealGrammarType)
+	{
+	case EGrammarType::Own: return MichelangeloAPI::GrammarType::Own;
+	case EGrammarType::Shared: return MichelangeloAPI::GrammarType::Shared;
+	case EGrammarType::Tutorial: return MichelangeloAPI::GrammarType::Tutorial;
+	default: return MichelangeloAPI::GrammarType::Unknown;
+	}
+}
+EGrammarType Helpers::NativeToUnrealGrammarType(MichelangeloAPI::GrammarType nativeGrammarType)
+{
+	switch (nativeGrammarType)
+	{
+	case MichelangeloAPI::GrammarType::Own: return EGrammarType::Own;
+	case MichelangeloAPI::GrammarType::Shared: return EGrammarType::Shared;
+	case MichelangeloAPI::GrammarType::Tutorial: return EGrammarType::Tutorial;
+	default: return EGrammarType::Unknown;
+	}
+}

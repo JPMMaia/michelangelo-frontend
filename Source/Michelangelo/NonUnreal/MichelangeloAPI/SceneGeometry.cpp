@@ -40,3 +40,8 @@ const std::vector<ObjectGeometry>& SceneGeometry::GetObjects() const
 {
 	return m_objects;
 }
+
+bool SceneGeometry::IsEmpty() const
+{
+	return m_objects.empty();
+}

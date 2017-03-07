@@ -3,7 +3,6 @@
 #include "Michelangelo.h"
 #include "GrammarListItem.h"
 #include "Unreal/UGameDataSingleton.h"
-#include "Unreal/Web/UWebAPI.h"
 #include "NonUnreal/MichelangeloAPI/NativeWebAPI.h"
 
 #include <thread>
@@ -17,7 +16,7 @@ void UGrammarListItem::ShareGrammar()
 	std::lock_guard<std::mutex> lock(m_dataMutex);
 
 	// Get native web api:
-	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI()->GetNativeWebAPI();
+	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI();
 
 	// Invert share value:
 	GrammarSpecificData->Shared = !GrammarSpecificData->Shared;
@@ -36,7 +35,7 @@ void UGrammarListItem::DeleteGrammar()
 	// Lock data mutex:
 	std::lock_guard<std::mutex> lock(m_dataMutex);
 
-	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI()->GetNativeWebAPI();
+	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI();
 	nativeWebAPI.DeleteGrammar(Helpers::FStringToString(GrammarSpecificData->ID));
 }
 void UGrammarListItem::DeleteGrammarAsync()

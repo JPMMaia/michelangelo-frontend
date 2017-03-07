@@ -2,6 +2,8 @@
 
 #include <array>
 #include <string>
+#include "Unreal/Web/EGrammarType.h"
+#include "NonUnreal/MichelangeloAPI/GrammarType.h"
 
 namespace Common
 {
@@ -19,5 +21,7 @@ namespace Common
 		FVector TransformPositionFromUnrealToMichelangeloSpace(const FVector& position);
 		FVector TransformVectorFromUnrealToMichelangeloSpace(const FVector& vector);
 		int32 GetObjectReferenceCount(UObject* Obj, TArray<UObject*>* OutReferredToObjects = nullptr);
+		MichelangeloAPI::GrammarType UnrealToNativeGrammarType(EGrammarType unrealGrammarType);
+		EGrammarType NativeToUnrealGrammarType(MichelangeloAPI::GrammarType nativeGrammarType);
 	}
 }

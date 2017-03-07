@@ -3,13 +3,13 @@
 #include "Michelangelo.h"
 #include "MainMenu.h"
 #include "Unreal/UGameDataSingleton.h"
-#include "Unreal/Web/UWebAPI.h"
 #include "PanelWidget.h"
 #include "NonUnreal/MichelangeloAPI/NativeWebAPI.h"
 #include "Unreal/Common/UnrealHelpers.h"
 
 #include <functional>
 #include <future>
+#include "NonUnreal/MichelangeloAPI/URLConstants.h"
 
 using namespace Common;
 using namespace MichelangeloAPI;
@@ -59,7 +59,7 @@ void UMainMenu::AddGrammars(const TArray<UGrammarSpecificData*>& grammars)
 		listItemWidget->SetData(grammar);
 		
 		// Add it to the respective container:
-		auto* container = m_grammarContainers.at(grammar->GetGrammarType());
+		auto* container = m_grammarContainers.at(grammar->GrammarType);
 		container->AddChild(listItemWidget);
 	}
 }
@@ -67,7 +67,7 @@ void UMainMenu::AddGrammars(const TArray<UGrammarSpecificData*>& grammars)
 void UMainMenu::CreateNewGrammar()
 {
 	// Get native web api:
-	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI()->GetNativeWebAPI();
+	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI();
 
 	// Make web request to create new grammar:
 	auto grammar = nativeWebAPI.CreateNewGrammar();
@@ -85,7 +85,7 @@ void UMainMenu::CreateNewGrammarAsync()
 void UMainMenu::LogOut()
 {
 	// Get native web api:
-	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI()->GetNativeWebAPI();
+	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI();
 
 	try
 	{
@@ -115,7 +115,7 @@ void UMainMenu::HandlePendingGrammars()
 		// Convert native to unreal grammars:
 		while(!m_pendingGrammars.empty())
 		{
-			unrealGrammars.Add(UGrammarSpecificData::FromApiData(m_pendingGrammars.front()));
+			unrealGrammars.Add(UGrammarSpecificData::FromNativeData(m_pendingGrammars.front()));
 			m_pendingGrammars.pop_front();
 		}
 	}
@@ -125,15 +125,11 @@ void UMainMenu::HandlePendingGrammars()
 }
 void UMainMenu::GetGrammars(EGrammarType type)
 {
-	// Get web apis:
-	auto* webAPI = UGameDataSingleton::Get()->GetWebAPI();
-	auto& nativeWebAPI = webAPI->GetNativeWebAPI();
-
-	// Select url according to the type of grammar:
-	auto url = Helpers::FStringToString(webAPI->SelectGetGrammarsURL(type));
+	// Get native web api:
+	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI();
 
 	// Make web request to get list of grammars of the desired type:
-	auto grammars = nativeWebAPI.GetGrammars(url);
+	auto grammars = nativeWebAPI.GetGrammarsList(Helpers::UnrealToNativeGrammarType(type));
 
 	// Lock mutex and add the fetched grammars to the pending grammars list:
 	std::lock_guard<std::mutex> lock(m_pendingGrammarsMutex);

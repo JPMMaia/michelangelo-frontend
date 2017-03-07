@@ -2,6 +2,7 @@
 
 #include "NonUnreal/MichelangeloAPI/GrammarSpecificData.h"
 #include "NonUnreal/MichelangeloAPI/SceneGeometry.h"
+#include "NonUnreal/MichelangeloAPI/GrammarType.h"
 #include "NonUnreal/nlohmann/JSON/json.hpp"
 
 #include "SessionData.h"
@@ -24,9 +25,9 @@ namespace MichelangeloAPI
 		void DeleteGrammar(const std::string& id) const;
 		void ShareGrammar(const std::string& id, bool share) const;
 
-		std::vector<GrammarSpecificData> GetGrammars(const std::string& url) const;
-		GrammarSpecificData GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const;
-		bool GetGeometry(const std::string& url, const GrammarSpecificData& data, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const;
+		std::vector<GrammarSpecificData> GetGrammarsList(GrammarType grammarType) const;
+		GrammarSpecificData GetGrammarData(GrammarType grammarType, const std::string& grammarID) const;
+		void EvaluateGrammar(const GrammarSpecificData& data, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const;
 
 		const SessionData& GetSessionData() const;
 

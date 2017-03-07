@@ -16,6 +16,8 @@ namespace MichelangeloAPI
 		const std::vector<Material>& GetMaterials() const;
 		const std::vector<ObjectGeometry>& GetObjects() const;
 
+		bool IsEmpty() const;
+
 	private:
 		std::vector<Material> m_materials;
 		std::vector<ObjectGeometry> m_objects;

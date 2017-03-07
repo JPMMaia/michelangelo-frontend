@@ -12,11 +12,12 @@ UGrammarSpecificData::UGrammarSpecificData() :
 	Type("Unknown"),
 	Code("Unknown"),
 	Shared(false),
-	IsOwner(false)
+	IsOwner(false),
+	GrammarType(EGrammarType::Unknown)
 {
 }
 
-MichelangeloAPI::GrammarSpecificData UGrammarSpecificData::ToApiData() const
+MichelangeloAPI::GrammarSpecificData UGrammarSpecificData::ToNativeData() const
 {
 	GrammarSpecificData apiData;
 	apiData.ID = Helpers::FStringToString(ID);
@@ -25,10 +26,11 @@ MichelangeloAPI::GrammarSpecificData UGrammarSpecificData::ToApiData() const
 	apiData.Code = Helpers::FStringToWString(Code);
 	apiData.Shared = Shared;
 	apiData.IsOwner = IsOwner;
+	apiData.GrammarType = Helpers::UnrealToNativeGrammarType(GrammarType);
 	return apiData;
 }
 
-UGrammarSpecificData* UGrammarSpecificData::FromApiData(const MichelangeloAPI::GrammarSpecificData& other)
+UGrammarSpecificData* UGrammarSpecificData::FromNativeData(const MichelangeloAPI::GrammarSpecificData& other)
 {
 	UGrammarSpecificData* object = NewObject<UGrammarSpecificData>();
 	object->ID = Helpers::StringToFString(other.ID);
@@ -37,16 +39,6 @@ UGrammarSpecificData* UGrammarSpecificData::FromApiData(const MichelangeloAPI::G
 	object->Code = Helpers::WStringToFString(other.Code);
 	object->Shared = other.Shared;
 	object->IsOwner = other.IsOwner;
+	object->GrammarType = Helpers::NativeToUnrealGrammarType(other.GrammarType);
 	return object;
-}
-
-EGrammarType UGrammarSpecificData::GetGrammarType() const
-{
-	if (IsOwner)
-		return EGrammarType::Own;
-
-	if (Shared)
-		return EGrammarType::Shared;
-
-	return EGrammarType::Tutorial;
 }

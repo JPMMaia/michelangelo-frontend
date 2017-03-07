@@ -38,6 +38,6 @@ public:
 
 	std::mutex m_dataMutex;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Michelangelo)
+	UPROPERTY(BlueprintReadOnly, Category = Michelangelo)
 	UGrammarSpecificData* GrammarSpecificData;
 };

@@ -34,14 +34,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grammar Specific Data")
 	bool IsOwner;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grammar Specific Data")
+	EGrammarType GrammarType;
+
 public:
-	static UGrammarSpecificData* FromApiData(const MichelangeloAPI::GrammarSpecificData& object);
+	static UGrammarSpecificData* FromNativeData(const MichelangeloAPI::GrammarSpecificData& object);
 
 public:
 	UGrammarSpecificData();
 
-	MichelangeloAPI::GrammarSpecificData ToApiData() const;
-
-	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
-	EGrammarType GetGrammarType() const;
+	MichelangeloAPI::GrammarSpecificData ToNativeData() const;
 };

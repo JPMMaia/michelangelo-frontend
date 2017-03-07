@@ -2,6 +2,7 @@
 
 #include "NonUnreal/nlohmann/JSON/json.hpp"
 #include "NonUnreal/Common/Helpers.h"
+#include "NonUnreal/MichelangeloAPI/GrammarType.h"
 
 namespace MichelangeloAPI
 {
@@ -13,8 +14,9 @@ namespace MichelangeloAPI
 		std::wstring Code;
 		bool Shared;
 		bool IsOwner;
+		MichelangeloAPI::GrammarType GrammarType;
 
-		static GrammarSpecificData FromJson(const nlohmann::json& objectJson)
+		static GrammarSpecificData FromJson(const nlohmann::json& objectJson, MichelangeloAPI::GrammarType grammarType)
 		{
 			GrammarSpecificData object;
 			object.ID = objectJson.at("id").get<std::string>();
@@ -23,6 +25,7 @@ namespace MichelangeloAPI
 			object.Code = Common::Helpers::StringToWString(objectJson.at("code").get<std::string>());
 			object.Shared = objectJson.at("shared").get<bool>();
 			object.IsOwner = objectJson.at("isOwner").get<bool>();
+			object.GrammarType = grammarType;
 			return object;
 		}
 	};

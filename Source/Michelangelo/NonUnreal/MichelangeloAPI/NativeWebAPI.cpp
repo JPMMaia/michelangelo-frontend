@@ -119,7 +119,7 @@ GrammarSpecificData NativeWebAPI::CreateNewGrammar() const
 	std::string responseHeader, responseBody;
 	curlHandle.PerformPUTRequest(URLConstants::OwnGrammarAPI, requestHeader, requestBody, responseHeader, responseBody);
 	
-	return GrammarSpecificData::FromJson(nlohmann::json::parse(responseBody.c_str()));
+	return GrammarSpecificData::FromJson(nlohmann::json::parse(responseBody.c_str()), GrammarType::Own);
 }
 void NativeWebAPI::DeleteGrammar(const std::string& id) const
 {
@@ -145,26 +145,28 @@ void NativeWebAPI::ShareGrammar(const std::string& id, bool share) const
 	curlHandle.PerformPUTRequest(url, requestHeader, requestBody, responseHeader, responseBody);
 }
 
-std::vector<GrammarSpecificData> NativeWebAPI::GetGrammars(const std::string& url) const
+std::vector<GrammarSpecificData> NativeWebAPI::GetGrammarsList(GrammarType grammarType) const
 {
 	// Perform web request to fetch list of grammars:
 	CurlHandle curlHandle;
-	auto grammarsJson = PerformGetJsonRequest(curlHandle, url);
-	
+	auto grammarsJson = PerformGetJsonRequest(curlHandle, URLConstants::GetGrammarsListURL.at(grammarType));
+
 	std::vector<GrammarSpecificData> grammarsData;
 	grammarsData.reserve(grammarsJson.size());
 	for (const auto& element : grammarsJson)
-		grammarsData.push_back(GrammarSpecificData::FromJson(element));
+		grammarsData.push_back(GrammarSpecificData::FromJson(element, grammarType));
 
 	return grammarsData;
 }
-GrammarSpecificData NativeWebAPI::GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const
+
+GrammarSpecificData NativeWebAPI::GetGrammarData(GrammarType grammarType, const std::string& grammarID) const
 {
 	CurlHandle curlHandle;
-	auto grammarsJson = PerformGetJsonRequest(curlHandle, url + grammarID);
-	return GrammarSpecificData::FromJson(grammarsJson);
+	auto grammarsJson = PerformGetJsonRequest(curlHandle, URLConstants::GetGrammarDataURL.at(grammarType) + grammarID);
+	return GrammarSpecificData::FromJson(grammarsJson, grammarType);
 }
-bool NativeWebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const
+
+void NativeWebAPI::EvaluateGrammar(const GrammarSpecificData& data, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const
 {
 	CurlHandle curlHandle;
 
@@ -187,7 +189,7 @@ bool NativeWebAPI::GetGeometry(const std::string& url, const GrammarSpecificData
 
 		auto requestHeader = m_sessionData.GenerateHeaderWithCookies();
 		std::string responseHeader;
-		curlHandle.PerformPOSTRequest(url, requestHeader, requestBody, responseHeader, responseBody);
+		curlHandle.PerformPOSTRequest(URLConstants::EvaluateGrammarURL.at(data.GrammarType), requestHeader, requestBody, responseHeader, responseBody);
 	}
 
 	// Parse response json:
@@ -199,7 +201,7 @@ bool NativeWebAPI::GetGeometry(const std::string& url, const GrammarSpecificData
 		if (location != dataJson.end())
 		{
 			errorMessage = location->get<std::string>();
-			return false;
+			return;
 		}
 	}
 
@@ -208,12 +210,6 @@ bool NativeWebAPI::GetGeometry(const std::string& url, const GrammarSpecificData
 
 	// Create geometry from json:
 	sceneGeometry = SceneGeometry::CreateFromJson(dataJson);
-
-	// If there is an error message and no geometry was created, then it was a critical error (not only warnings):
-	if (!errorMessage.empty() && sceneGeometry.GetObjects().empty())
-		return false;
-
-	return true;
 }
 
 const SessionData& NativeWebAPI::GetSessionData() const

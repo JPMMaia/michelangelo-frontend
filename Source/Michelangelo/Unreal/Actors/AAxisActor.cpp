@@ -1,10 +1,6 @@
 #include "Michelangelo.h"
 #include "Unreal/Actors/AAxisActor.h"
-#include "Unreal/Web/UWebAPI.h"
-
-#include <fstream>
 #include "Unreal/UGameDataSingletonLibrary.h"
-#include "Unreal/Common/UnrealHelpers.h"
 
 using namespace std;
 

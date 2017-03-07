@@ -4,7 +4,6 @@
 #include "LoginMenu.h"
 #include "Unreal/UGameDataSingleton.h"
 #include "Unreal/Common/UnrealHelpers.h"
-#include "Unreal/Web/UWebAPI.h"
 #include "NonUnreal/MichelangeloAPI/NativeWebAPI.h"
 #include "NonUnreal/MichelangeloAPI/AuthenticationError.h"
 
@@ -52,7 +51,7 @@ void ULoginMenu::Authenticate(const FString& email, const FString& password, boo
 		gameDataSingleton->SetSavedEmail(email);
 	}
 
-	auto& nativeWebAPI = gameData->GetWebAPI()->GetNativeWebAPI();
+	auto& nativeWebAPI = gameData->GetWebAPI();
 
 	try
 	{
@@ -84,6 +83,6 @@ void ULoginMenu::AddEventToQueue(InternalEvent&& event)
 	std::lock_guard<std::mutex> lock(m_eventsQueueMutex);
 
 	// Add event to queue:
-	m_eventsQueue.push(event);
+	m_eventsQueue.emplace(event);
 }
 
