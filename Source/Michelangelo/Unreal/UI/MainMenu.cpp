@@ -23,16 +23,19 @@ UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer) :
 void UMainMenu::OnConstruct(UPanelWidget* ownGrammarsContainer, UPanelWidget* sharedGrammarsContainer, UPanelWidget* tutorialsContainer)
 {
 	m_grammarContainers.emplace(EGrammarType::Own, ownGrammarsContainer);
-	m_grammarContainers.emplace(EGrammarType::Shared, sharedGrammarsContainer);
-	m_grammarContainers.emplace(EGrammarType::Tutorial, tutorialsContainer);
+	std::thread(std::bind(&UMainMenu::GetGrammars, this, EGrammarType::Own)).detach();
 
-	auto getGrammarsAsync = [this]()
-	{
-		GetGrammars(EGrammarType::Own);
-		GetGrammars(EGrammarType::Shared);
-		GetGrammars(EGrammarType::Tutorial);
-	};
-	std::thread(getGrammarsAsync).detach();
+	m_grammarContainers.emplace(EGrammarType::Shared, sharedGrammarsContainer);
+	std::thread(std::bind(&UMainMenu::GetGrammars, this, EGrammarType::Shared)).detach();
+
+	m_grammarContainers.emplace(EGrammarType::Tutorial, tutorialsContainer);
+	std::thread(std::bind(&UMainMenu::GetGrammars, this, EGrammarType::Tutorial)).detach();
+}
+void UMainMenu::NativeDestruct()
+{
+	for (const auto& pair : m_grammarContainers)
+		pair.second->ClearChildren();
+	m_grammarContainers.clear();
 }
 
 void UMainMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -77,6 +80,25 @@ void UMainMenu::CreateNewGrammarAsync()
 {
 	auto createNewGrammar = std::bind(&UMainMenu::CreateNewGrammar, this);
 	std::thread(createNewGrammar).detach();
+}
+
+void UMainMenu::LogOut()
+{
+	// Get native web api:
+	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI()->GetNativeWebAPI();
+
+	try
+	{
+		nativeWebAPI.LogOut();
+	}
+	catch (const std::exception&)
+	{
+	}
+}
+void UMainMenu::LogOutAsync()
+{
+	auto logOut = std::bind(&UMainMenu::LogOut, this);
+	std::thread(logOut).detach();
 }
 
 void UMainMenu::HandlePendingGrammars()

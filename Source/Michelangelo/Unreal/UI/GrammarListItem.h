@@ -2,9 +2,10 @@
 
 #pragma once
 
+#include <mutex>
+
 #include "Blueprint/UserWidget.h"
 #include "Unreal/Web/GrammarSpecificData.h"
-#include "Unreal/Web/EGrammarType.h"
 #include "GrammarListItem.generated.h"
 
 /**
@@ -17,9 +18,26 @@ class MICHELANGELO_API UGrammarListItem : public UUserWidget
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Michelangelo)
-	UGrammarSpecificData* GrammarSpecificData;
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void ShareGrammar();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void ShareGrammarAsync();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void DeleteGrammar();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void DeleteGrammarAsync();
 
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
 	void SetData(UGrammarSpecificData* data);
+
+
+public:
+
+	std::mutex m_dataMutex;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Michelangelo)
+	UGrammarSpecificData* GrammarSpecificData;
 };

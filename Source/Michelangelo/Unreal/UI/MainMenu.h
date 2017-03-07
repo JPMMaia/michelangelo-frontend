@@ -10,6 +10,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "GrammarListItem.h"
+#include "NonUnreal/MichelangeloAPI/GrammarSpecificData.h"
 #include "MainMenu.generated.h"
 
 /**
@@ -26,6 +27,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
 	void OnConstruct(UPanelWidget* ownGrammarsContainer, UPanelWidget* sharedGrammarsContainer, UPanelWidget* tutorialsContainer);
 
+	void NativeDestruct() override;
+
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
@@ -36,6 +39,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
 	void CreateNewGrammarAsync();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void LogOut();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void LogOutAsync();
 
 private:
 	void HandlePendingGrammars();

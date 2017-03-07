@@ -75,7 +75,6 @@ void ULoginMenu::Authenticate(const FString& email, const FString& password, boo
 void ULoginMenu::AuthenticateAsync(const FString& email, const FString& password, bool rememberMe)
 {
 	auto async = std::bind(&ULoginMenu::Authenticate, this, email, password, rememberMe);
-
 	std::thread(async).detach();
 }
 
