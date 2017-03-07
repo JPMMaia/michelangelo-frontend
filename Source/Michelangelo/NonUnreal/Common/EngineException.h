@@ -2,28 +2,28 @@
 
 #include "Helpers.h"
 
+#include <exception>
+
 namespace Common
 {
-	class EngineException
+	class EngineException : public std::exception
 	{
 	public:
 		EngineException() = default;
 		EngineException(const std::wstring& message, const std::wstring& functionName, const std::wstring& filename, int lineNumber);
 
-		std::wstring ToString() const;
+	public:
+		char const* what() const override;
 
 	private:
-		std::wstring m_message;
-		std::wstring m_functionName;
-		std::wstring m_filename;
-		int m_lineNumber = -1;
+		std::string m_message;
 	};
 
 #ifndef ThrowEngineException
 #define ThrowEngineException(message)											\
 {																				\
-	std::wstring __functionName__ = Common::Helpers::StringToWString(__FUNCSIG__);	\
-	std::wstring __filename__ = Common::Helpers::StringToWString(__FILE__);			\
+	auto __functionName__ = Common::Helpers::StringToWString(__FUNCSIG__);	\
+	auto __filename__ = Common::Helpers::StringToWString(__FILE__);			\
 	throw Common::EngineException(message, __functionName__, __filename__, __LINE__);			\
 }
 #endif

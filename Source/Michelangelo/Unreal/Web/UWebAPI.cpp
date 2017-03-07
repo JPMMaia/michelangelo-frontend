@@ -33,7 +33,7 @@ FStatus UWebAPI::Authenticate(const FString& email, const FString& password, boo
 		gameDataSingleton->SetSavedEmail(email);
 	}
 
-	auto error = m_webAPI.Authenticate(Helpers::FStringToString(email), Helpers::FStringToString(password), false);
+/*	auto error = m_webAPI.Authenticate(Helpers::FStringToString(email), Helpers::FStringToString(password), false);
 
 	switch (error)
 	{
@@ -45,7 +45,9 @@ FStatus UWebAPI::Authenticate(const FString& email, const FString& password, boo
 
 	default:
 		return FStatus(false, "Unexpected error.");
-	}
+	}*/
+
+	return FStatus(false, TEXT("Success!"));
 }
 
 void UWebAPI::LogOut()
@@ -191,7 +193,7 @@ bool UWebAPI::GenerateGeometryByType(EGrammarType grammarType, const UGrammarSpe
 
 bool UWebAPI::IsAuthenticated() const
 {
-	return m_webAPI.IsAuthenticated();
+	return m_webAPI.GetSessionData().IsAuthenticated();
 }
 
 MichelangeloAPI::NativeWebAPI& UWebAPI::GetNativeWebAPI()

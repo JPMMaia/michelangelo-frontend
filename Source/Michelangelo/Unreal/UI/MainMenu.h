@@ -5,7 +5,7 @@
 #include <atomic>
 #include <mutex>
 #include <vector>
-#include <list>
+#include <deque>
 #include <map>
 
 #include "Blueprint/UserWidget.h"
@@ -19,10 +19,6 @@ UCLASS()
 class MICHELANGELO_API UMainMenu : public UUserWidget
 {
 	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
-	TSubclassOf<UGrammarListItem> ListItemWidgetTemplate;
 
 public:
 	explicit UMainMenu(const FObjectInitializer& ObjectInitializer);
@@ -44,13 +40,14 @@ public:
 private:
 	void HandlePendingGrammars();
 	void GetGrammars(EGrammarType type);
-
-private:
-	std::atomic<bool> m_busy;
 	
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
+	TSubclassOf<UGrammarListItem> ListItemWidgetTemplate;
+
 private:
 	std::map<EGrammarType, UPanelWidget*> m_grammarContainers;
 
 	std::mutex m_pendingGrammarsMutex;
-	std::list<MichelangeloAPI::GrammarSpecificData> m_pendingGrammars;
+	std::deque<MichelangeloAPI::GrammarSpecificData> m_pendingGrammars;
 };

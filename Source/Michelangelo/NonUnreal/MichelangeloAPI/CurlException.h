@@ -3,8 +3,8 @@
 #include "NonUnreal/Common/Helpers.h"
 #include "NonUnreal/Common/EngineException.h"
 
-namespace MichelangeloAPI
-{
+#include <cassert>
+
 #ifndef ThrowIfCURLFailed
 #define ThrowIfCURLFailed(curlCode)													\
 {																					\
@@ -17,4 +17,12 @@ namespace MichelangeloAPI
 	}																				\
 }
 #endif
+
+#ifndef CurlAssert
+#define CurlAssert(functionCall)	\
+{									\
+	auto curlCode = functionCall;	\
+	assert(curlCode == CURLE_OK);	\
 }
+
+#endif

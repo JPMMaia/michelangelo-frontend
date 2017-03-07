@@ -6,6 +6,10 @@
 #include "NonUnreal/Common/EngineException.h"
 #include "CameraParameters.h"
 #include "CurlException.h"
+#include "CurlHandle.h"
+#include "CurlList.h"
+#include "CurlBody.h"
+#include "AuthenticationError.h"
 
 #include <regex>
 #include <limits>
@@ -17,144 +21,157 @@ using namespace std;
 NativeWebAPI::NativeWebAPI()
 {
 	// Initialize windows sockets:
-	ThrowIfCURLFailed(curl_global_init(CURL_GLOBAL_DEFAULT));
+	CurlAssert(curl_global_init(CURL_GLOBAL_DEFAULT));
 }
 NativeWebAPI::~NativeWebAPI()
 {
 	curl_global_cleanup();
 }
 
-NativeWebAPI::LoginError NativeWebAPI::Authenticate(const std::string& email, const std::string& password, bool rememberMe)
+void NativeWebAPI::Authenticate(const std::string& email, const std::string& password, bool rememberMe)
 {
-	// TODO in case of timeout retry
-	std::string loginPageBody;
-	std::string loginPageHeader;
-	if (!PerformGETRequest(URLConstants::LogInAPI, loginPageHeader, loginPageBody, false))
-		return LoginError::Unknown;
+	CurlHandle curlHandle;
 
-	// Extract the request verification token:
 	std::string requestVerificationToken;
-	if (!ExtractLogInVerificationToken(loginPageBody, requestVerificationToken))
-		return LoginError::Unknown;
-
-	// Extract the request verification token cookie value:
-	std::string requestVerificationTokenCookieValue;
-	if (!ExtractCookieValue(loginPageHeader, HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenCookieValue))
-		return LoginError::Unknown;
-	AddCookie(HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenCookieValue);
-
-	// Perform a post request, sending the login information:
-	std::string responseBody;
-	std::string responseHeader;
+	// Extract request verification token and cookie value:
 	{
-		CurlPost requestBody;
+		CurlList requestHeader;
+		std::string responseHeader;
+		std::string responseBody;
+		curlHandle.PerformGETRequest(URLConstants::LogInAPI, requestHeader, responseHeader, responseBody);
+
+		// Extract the request verification token:
+		if (!ExtractLogInVerificationToken(responseBody, requestVerificationToken))
+			ThrowEngineException(L"Couldn't extract request verification token.");
+
+		// Extract the request verification token cookie value:
+		std::string requestVerificationTokenCookieValue;
+		if (!ExtractCookieValue(responseHeader, HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenCookieValue))
+			ThrowEngineException(L"Couldn't extract request verification cookie value.");
+		m_sessionData.AddCookie(HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenCookieValue);
+	}
+
+	// Perform a post request, sending the login information, and set the corresponding cookies:
+	{
+		auto requestHeader = m_sessionData.GenerateHeaderWithCookies();
+		CurlBody requestBody;
 		requestBody.AddPair("__RequestVerificationToken", requestVerificationToken);
 		requestBody.AddPair("Email", email);
 		requestBody.AddPair("Password", password);
 		requestBody.AddPair("RememberMe", rememberMe ? "true" : "false");
-		requestBody.Generate(m_curl, false);
+		requestBody.Generate(curlHandle.Get(), false);
 
-		CurlList requestHeader;
-		if (!PerformPOSTRequest(URLConstants::LogInAPI, requestHeader, requestBody, responseHeader, responseBody, true))
-			return LoginError::Unknown;
+		std::string responseHeader;
+		std::string responseBody;
+		curlHandle.PerformPOSTRequest(URLConstants::LogInAPI, requestHeader, requestBody, responseHeader, responseBody);
+
+		// Extract the application cookie:
+		std::string applicationCookieValue;
+		if (!ExtractCookieValue(responseHeader, HeaderConstants::ApplicationCookieName, applicationCookieValue))
+			throw AuthenticationError("Wrong Credentials!");
+		m_sessionData.AddCookie(HeaderConstants::ApplicationCookieName, applicationCookieValue);
 	}
 
-	// Extract the application cookie:
-	std::string applicationCookieValue;
-	if (!ExtractCookieValue(responseHeader, HeaderConstants::ApplicationCookieName, applicationCookieValue))
-		return LoginError::WrongCredentials;
-	AddCookie(HeaderConstants::ApplicationCookieName, applicationCookieValue);
-
-	m_isAuthenticated = true;
-
-	return LoginError::None;
+	m_sessionData.IsAuthenticated(true);
 }
-
 void NativeWebAPI::LogOut()
 {
-	if (!m_isAuthenticated)
+	if (!m_sessionData.IsAuthenticated())
 		return;
 
-	// Get body of the main page:
-	std::string mainPageHeader;
-	std::string mainPageBody;
-	if (!PerformGETRequest(URLConstants::MainPage, mainPageHeader, mainPageBody, true))
-		return;
+	CurlHandle curlHandle;
 
-	// Extract the request verification token:
+	// Extract the request verification token from the main page:
 	std::string requestVerificationTokenValue;
-	if (!ExtractLogOutVerificationToken(mainPageBody, requestVerificationTokenValue))
-		return;
+	{
+		auto requestHeader = m_sessionData.GenerateHeaderWithCookies();
+		std::string responseHeader;
+		std::string responseBody;
+		curlHandle.PerformGETRequest(URLConstants::MainPage, requestHeader, responseHeader, responseBody);
 
-	// Generate request body:
-	CurlPost requestBody;
-	requestBody.AddPair(HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenValue);
-	requestBody.Generate(m_curl, true);
+		// Extract the request verification token:
+		if (!ExtractLogOutVerificationToken(responseBody, requestVerificationTokenValue))
+			ThrowEngineException(L"Couldn't extract verification token.");
+	}
 
-	// Perform logout:
-	std::string responseBody;
-	std::string responseHeader;
-	CurlList requestHeader;
-	if (!PerformPOSTRequest(URLConstants::LogOutAPI, requestHeader, requestBody, responseHeader, responseBody, true))
-		return; // TODO internal error?
+	// Perform logout request:
+	{
+		auto requestHeader = m_sessionData.GenerateHeaderWithCookies();
+		CurlBody requestBody;
+		requestBody.AddPair(HeaderConstants::RequestVerificationTokenCookieName, requestVerificationTokenValue);
+		requestBody.Generate(curlHandle.Get(), true);
 
-	m_isAuthenticated = false;
+		std::string responseHeader;
+		std::string responseBody;
+		curlHandle.PerformPOSTRequest(URLConstants::LogOutAPI, requestHeader, requestBody, responseHeader, responseBody);
+	}
+
+	m_sessionData.ClearCookies();
+	m_sessionData.IsAuthenticated(false);
 }
 
-GrammarSpecificData MichelangeloAPI::NativeWebAPI::CreateNewGrammar() const
+GrammarSpecificData NativeWebAPI::CreateNewGrammar() const
 {
-	CurlList requestHeader;
-	CurlPost requestBody;
-	std::string responseHeader, responseBody;
-	if (!PerformPUTRequest(URLConstants::OwnGrammarAPI, requestHeader, requestBody, responseHeader, responseBody, true))
-		ThrowEngineException(L"Couldn't perform PUT request");
+	CurlHandle curlHandle;
 
+	auto requestHeader = m_sessionData.GenerateHeaderWithCookies();
+	CurlBody requestBody;
+	std::string responseHeader, responseBody;
+	curlHandle.PerformPUTRequest(URLConstants::OwnGrammarAPI, requestHeader, requestBody, responseHeader, responseBody);
+	
 	return GrammarSpecificData::FromJson(nlohmann::json::parse(responseBody.c_str()));
 }
-void MichelangeloAPI::NativeWebAPI::DeleteGrammar(const std::string & id) const
+void NativeWebAPI::DeleteGrammar(const std::string& id) const
 {
+	CurlHandle curlHandle;
+
 	auto url = URLConstants::OwnGrammarAPI + id;
+	auto requestHeader = m_sessionData.GenerateHeaderWithCookies();
 	std::string responseHeader, responseBody;
-	if (!PerformDELETERequest(url, responseHeader, responseBody, true))
-		ThrowEngineException(L"Couldn't perform DELETE request");
+	curlHandle.PerformDELETERequest(url, requestHeader, responseHeader, responseBody);
 }
-void MichelangeloAPI::NativeWebAPI::ShareGrammar(const std::string& id, bool share) const
+void NativeWebAPI::ShareGrammar(const std::string& id, bool share) const
 {
+	CurlHandle curlHandle;
+
 	auto url = URLConstants::OwnGrammarAPI + "share/" + (share ? "true" : "false") + "/" + id;
-	CurlList requestHeader;
-	CurlPost requestBody;
+	auto requestHeader = m_sessionData.GenerateHeaderWithCookies();
+	CurlBody requestBody;
 	{
 		requestBody.AddPair("share", (share ? "true" : "false"));
-		requestBody.Generate(m_curl, true);
+		requestBody.Generate(curlHandle.Get(), true);
 	}
 	std::string responseHeader, responseBody;
-	if (!PerformPUTRequest(url, requestHeader, requestBody, responseHeader, responseBody, true))
-		ThrowEngineException(L"Couldn't perform PUT request");
+	curlHandle.PerformPUTRequest(url, requestHeader, requestBody, responseHeader, responseBody);
 }
 
 std::vector<GrammarSpecificData> NativeWebAPI::GetGrammars(const std::string& url) const
 {
-	auto grammarJson = PerformGETJSONRequest(url);
-
+	// Perform web request to fetch list of grammars:
+	CurlHandle curlHandle;
+	auto grammarsJson = PerformGetJsonRequest(curlHandle, url);
+	
 	std::vector<GrammarSpecificData> grammarsData;
-	grammarsData.reserve(grammarJson.size());
-	for (const auto& element : grammarJson)
+	grammarsData.reserve(grammarsJson.size());
+	for (const auto& element : grammarsJson)
 		grammarsData.push_back(GrammarSpecificData::FromJson(element));
 
 	return grammarsData;
 }
-
 GrammarSpecificData NativeWebAPI::GetGrammarSpecificData(const std::string& url, const std::string& grammarID) const
 {
-	return GrammarSpecificData::FromJson(PerformGETJSONRequest(url + grammarID));
+	CurlHandle curlHandle;
+	auto grammarsJson = PerformGetJsonRequest(curlHandle, url + grammarID);
+	return GrammarSpecificData::FromJson(grammarsJson);
 }
-
 bool NativeWebAPI::GetGeometry(const std::string& url, const GrammarSpecificData& data, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const
 {
+	CurlHandle curlHandle;
+
 	// Perform request:
 	std::string responseBody;
 	{
-		CurlPost requestBody;
+		CurlBody requestBody;
 		requestBody.AddPair("ID", data.ID);
 		requestBody.AddPair("Name", data.Name);
 		requestBody.AddPair("Type", data.Type);
@@ -166,13 +183,11 @@ bool NativeWebAPI::GetGeometry(const std::string& url, const GrammarSpecificData
 		requestBody.AddPair("CamFOV", std::to_string(cameraParameters.GetCameraFov()));
 		requestBody.AddPair("Width", std::to_string(cameraParameters.GetWidth()));
 		requestBody.AddPair("Height", std::to_string(cameraParameters.GetHeight()));
+		requestBody.Generate(curlHandle.Get(), true);
 
-		requestBody.Generate(m_curl, true);
-
-		CurlList requestHeader;
+		auto requestHeader = m_sessionData.GenerateHeaderWithCookies();
 		std::string responseHeader;
-		if (!PerformPOSTRequest(url, requestHeader, requestBody, responseHeader, responseBody, true))
-			ThrowEngineException(L"Failed to perform request.");
+		curlHandle.PerformPOSTRequest(url, requestHeader, requestBody, responseHeader, responseBody);
 	}
 
 	// Parse response json:
@@ -201,190 +216,9 @@ bool NativeWebAPI::GetGeometry(const std::string& url, const GrammarSpecificData
 	return true;
 }
 
-CURL* NativeWebAPI::GetCURL()
+const SessionData& NativeWebAPI::GetSessionData() const
 {
-	return m_curl;
-}
-
-const CURL* NativeWebAPI::GetCURL() const
-{
-	return m_curl;
-}
-
-bool NativeWebAPI::IsAuthenticated() const
-{
-	return m_isAuthenticated;
-}
-
-bool NativeWebAPI::PerformGETRequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const
-{
-	// Set URL:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
-
-	// Set output for header and body:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
-
-	// Set cookie if flag is set:
-	CurlList header;
-	if (setCookie)
-		SetCookie(header);
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, header.Get()));
-
-	// Perform request:
-	if (curl_easy_perform(m_curl) != CURLE_OK)
-		return false;
-
-	return true;
-}
-
-bool NativeWebAPI::PerformPOSTRequest(const std::string& url, CurlList& requestHeader, const CurlPost& requestBody, std::string& responseHeader, std::string& responseBody, bool setCookie) const
-{
-	// Set URL:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
-
-	// Set output for header and body:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
-
-	// Set cookie if flag is set:
-	if (setCookie)
-		SetCookie(requestHeader);
-	requestHeader.Append("Content-Type: application/x-www-form-urlencoded");
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, requestHeader.Get()));
-
-	// Set post body:
-	{
-		const auto& postBody = requestBody.GetData();
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 1L));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, postBody.size()));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, postBody.c_str()));
-	}
-
-	// Perform request:
-	auto error = curl_easy_perform(m_curl);
-
-	// Clear post flags:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POST, 0L));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
-
-	if (error != CURLE_OK)
-		return false;
-
-	return true;
-}
-bool MichelangeloAPI::NativeWebAPI::PerformPUTRequest(const std::string & url, CurlList& requestHeader, const CurlPost& requestBody, std::string & responseHeader, std::string & responseBody, bool setCookie) const
-{
-	// Set URL:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
-
-	// Set output for header and body:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
-
-	// Set cookie if flag is set:
-	if (setCookie)
-		SetCookie(requestHeader);
-	requestHeader.Append("Content-Type: application/x-www-form-urlencoded");
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, requestHeader.Get()));
-
-	// Set PUT method:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, "PUT"));
-	
-	// Set data:
-	{
-		auto requestBodyContent = requestBody.GetData();
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, requestBodyContent.size()));
-		ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, requestBodyContent.c_str()));
-	}
-
-	// Perform request:
-	auto error = curl_easy_perform(m_curl);
-
-	// Restore state to default:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, 0L));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, 0L));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPGET, 1L));
-
-	if (error != CURLE_OK)
-		return false;
-
-	return true;
-}
-bool MichelangeloAPI::NativeWebAPI::PerformDELETERequest(const std::string& url, std::string& responseHeader, std::string& responseBody, bool setCookie) const
-{
-	// Set URL:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str()));
-
-	// Set output for header and body:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, &responseHeader));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseBody));
-
-	// Set cookie if flag is set:
-	CurlList requestHeader;
-	if (setCookie)
-		SetCookie(requestHeader);
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, requestHeader.Get()));
-
-	// Set DELETE method:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, "DELETE"));
-
-	// Perform request:
-	auto error = curl_easy_perform(m_curl);
-
-	// Restore method to default:
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, 0L));
-	ThrowIfCURLFailed(curl_easy_setopt(m_curl, CURLOPT_HTTPGET, 1L));
-
-	if (error != CURLE_OK)
-		return false;
-
-	return true;
-}
-nlohmann::json NativeWebAPI::PerformGETJSONRequest(const std::string& url) const
-{
-	std::string header;
-	std::string body;
-	if (!PerformGETRequest(url, header, body, true))
-		ThrowEngineException(L"Couldn't perform request");
-
-	// Create json object:
-	return nlohmann::json::parse(body.c_str());
-}
-
-void NativeWebAPI::AddCookie(const std::string& name, const std::string& value)
-{
-	auto location = m_cookies.find(name);
-
-	if (m_cookieString.empty())
-		m_cookieString += HeaderConstants::Cookie;
-
-	// The cookie doesn't exist. Let's add it:
-	if (location == m_cookies.end())
-	{
-		// Add cookie:
-		m_cookies.emplace(name, value);
-
-		// Update cookie string:
-		m_cookieString += name + "=" + value + HeaderConstants::Semicolon;
-	}
-	// The cookie already exist, therefore let's update it:
-	else
-	{
-		// Update cookie value:
-		m_cookies[name] = value;
-
-		// Rebuild cookie string:
-		m_cookieString.clear();
-		m_cookieString += HeaderConstants::Cookie;
-		for (auto&& pair : m_cookies)
-			m_cookieString += pair.first + "=" + pair.second + HeaderConstants::Semicolon;
-	}
-}
-
-void NativeWebAPI::SetCookie(CurlList& header) const
-{
-	header.Append(m_cookieString);
+	return m_sessionData;
 }
 
 bool NativeWebAPI::ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookieValue)
@@ -409,7 +243,6 @@ bool NativeWebAPI::ExtractCookieValue(const std::string& header, const std::stri
 
 	return true;
 }
-
 bool NativeWebAPI::ExtractLogInVerificationToken(const std::string& body, std::string& verificationToken)
 {
 	// TODO now it works only for direct registrations on the site, it would be good to extend it to external logins (Google, Facebook) if possible. They have a different token and possibly the login sequence is different as well.
@@ -432,7 +265,6 @@ bool NativeWebAPI::ExtractLogInVerificationToken(const std::string& body, std::s
 
 	return true;
 }
-
 bool NativeWebAPI::ExtractLogOutVerificationToken(const std::string& body, std::string& verificationToken)
 {
 	std::regex tokenRegex("form action=\"\\/Account\\/LogOff\" .*><input name=\"__RequestVerificationToken\" type=\"hidden\" value=\".*\"");
@@ -453,4 +285,14 @@ bool NativeWebAPI::ExtractLogOutVerificationToken(const std::string& body, std::
 	verificationToken = tag.substr(7, tag.length() - 8);
 
 	return true;
+}
+
+nlohmann::json NativeWebAPI::PerformGetJsonRequest(const CurlHandle& curlHandle, const std::string& url) const
+{
+	auto requestHeader = m_sessionData.GenerateHeaderWithCookies();
+	std::string responseHeader, responseBody;
+	curlHandle.PerformGETRequest(url, requestHeader, responseHeader, responseBody);
+
+	// Create json object:
+	return nlohmann::json::parse(responseBody.c_str());
 }

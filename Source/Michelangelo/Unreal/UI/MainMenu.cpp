@@ -6,7 +6,6 @@
 #include "Unreal/Web/UWebAPI.h"
 #include "PanelWidget.h"
 #include "NonUnreal/MichelangeloAPI/NativeWebAPI.h"
-#include "NonUnreal/MichelangeloAPI/URLConstants.h"
 #include "Unreal/Common/UnrealHelpers.h"
 
 #include <functional>
@@ -17,8 +16,7 @@ using namespace MichelangeloAPI;
 
 UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer) :
 	UUserWidget(ObjectInitializer),
-	ListItemWidgetTemplate(ConstructorHelpers::FClassFinder<UGrammarListItem>(TEXT("/Game/UI/W_GrammarListItem")).Class),
-	m_busy(false)
+	ListItemWidgetTemplate(ConstructorHelpers::FClassFinder<UGrammarListItem>(TEXT("/Game/UI/W_GrammarListItem")).Class)
 {
 }
 
@@ -93,11 +91,11 @@ void UMainMenu::HandlePendingGrammars()
 			return;
 
 		// Convert native to unreal grammars:
-		for (const auto& nativeGrammar : m_pendingGrammars)
-			unrealGrammars.Add(UGrammarSpecificData::FromApiData(nativeGrammar));
-
-		// Clear pending grammars list:
-		m_pendingGrammars.clear();
+		while(!m_pendingGrammars.empty())
+		{
+			unrealGrammars.Add(UGrammarSpecificData::FromApiData(m_pendingGrammars.front()));
+			m_pendingGrammars.pop_front();
+		}
 	}
 	
 	// Add the grammars to the respective containers:

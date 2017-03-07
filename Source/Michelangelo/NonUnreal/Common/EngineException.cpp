@@ -6,22 +6,20 @@
 using namespace Common;
 using namespace std;
 
-EngineException::EngineException(const std::wstring& message, const std::wstring& functionName, const std::wstring& filename, int lineNumber) :
-	m_message(message),
-	m_functionName(functionName),
-	m_filename(filename),
-	m_lineNumber(lineNumber)
+
+EngineException::EngineException(const std::wstring& message, const std::wstring& functionName, const std::wstring& filename, int lineNumber)
 {
+	stringstream ss;
+
+	ss << L"Message: " << Helpers::WStringToString(message) << endl;
+	ss << L"Function Name: " << Helpers::WStringToString(functionName) << endl;
+	ss << L"Filename: " << Helpers::WStringToString(filename) << endl;
+	ss << L"Line Number: " << lineNumber << endl;
+
+	m_message = ss.str();
 }
 
-wstring EngineException::ToString() const
+char const* EngineException::what() const
 {
-	wstringstream ss;
-
-	ss << L"Message: " << m_message << endl;
-	ss << L"Function Name: " << m_functionName << endl;
-	ss << L"Filename: " << m_filename << endl;
-	ss << L"Line Number: " << m_lineNumber << endl;
-
-	return ss.str();
+	return m_message.c_str();
 }
