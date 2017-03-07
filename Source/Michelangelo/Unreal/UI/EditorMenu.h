@@ -7,25 +7,29 @@
 #include <string>
 
 #include "Blueprint/UserWidget.h"
+#include "NonUnreal/MichelangeloAPI/GrammarSpecificData.h"
+#include "NonUnreal/MichelangeloAPI/SceneGeometry.h"
 #include "EditorMenu.generated.h"
 
 class UGrammarSpecificData;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEditorReadyEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGrammarEvaluatedEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrammarErrorEvent, FString, ErrorMessage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrammarWarningEvent, FString, WarningMessage);
 
 /**
- * 
+ *
  */
 UCLASS()
 class MICHELANGELO_API UEditorMenu : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 private:
 	enum class InternalEventType
 	{
+		EditorReady,
 		GrammarEvaluated,
 		GrammarError,
 		GrammarWarning
@@ -36,11 +40,33 @@ private:
 	public:
 		InternalEventType Type;
 		std::string Message;
+		MichelangeloAPI::GrammarSpecificData GrammarData;
+		MichelangeloAPI::SceneGeometry SceneGeometry;
 
 	public:
-		static InternalEvent OnGrammarEvaluatedEvent()
+		InternalEvent(InternalEventType type, const std::string& message) :
+			Type(type),
+			Message(message)
 		{
-			return { InternalEventType::GrammarEvaluated, "" };
+		}
+		InternalEvent(InternalEventType type, const MichelangeloAPI::GrammarSpecificData& grammarData) :
+			Type(type),
+			GrammarData(grammarData)
+		{
+		}
+		InternalEvent(InternalEventType type, const MichelangeloAPI::SceneGeometry& sceneGeometry) :
+			Type(type),
+			SceneGeometry(sceneGeometry)
+		{
+		}
+
+		static InternalEvent OnEditorReady(const MichelangeloAPI::GrammarSpecificData& grammarData)
+		{
+			return { InternalEventType::EditorReady, grammarData };
+		}
+		static InternalEvent OnGrammarEvaluatedEvent(const MichelangeloAPI::SceneGeometry& sceneGeometry)
+		{
+			return { InternalEventType::GrammarEvaluated, sceneGeometry };
 		}
 		static InternalEvent OnGrammarErrorEvent(const std::string& message)
 		{
@@ -54,6 +80,9 @@ private:
 
 public:
 	UPROPERTY(BlueprintAssignable)
+	FOnEditorReadyEvent OnEditorReadyEvent;
+
+	UPROPERTY(BlueprintAssignable)
 	FOnGrammarEvaluatedEvent OnGrammarEvaluatedEvent;
 
 	UPROPERTY(BlueprintAssignable)
@@ -66,6 +95,8 @@ public:
 	void NativeConstruct() override;
 	void NativeDestruct() override;
 
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
 	void EvaluateGrammar();
 
@@ -73,16 +104,36 @@ public:
 	void EvaluateGrammarAsync();
 
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void RequestGrammarData();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void RequestGrammarDataAsync();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
 	void SetGrammarData(UGrammarSpecificData* value);
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	FString GetName() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	FString GetType() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	FString GetCode() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void SetCode(const FString& value);
 
 private:
 	void AddEventToQueue(InternalEvent&& internalEvent);
-
-public:
-	UPROPERTY(BlueprintReadOnly, Category = Michelangelo)
-	UGrammarSpecificData* GrammarData;
+	static void HandleSceneGeometry(const MichelangeloAPI::SceneGeometry& sceneGeometry);
 
 private:
+	std::mutex m_grammarDataMutex;
+
+	UPROPERTY()
+		UGrammarSpecificData* m_grammarData;
+
 	std::mutex m_eventsQueueMutex;
 	std::deque<InternalEvent> m_eventsQueue;
 };
