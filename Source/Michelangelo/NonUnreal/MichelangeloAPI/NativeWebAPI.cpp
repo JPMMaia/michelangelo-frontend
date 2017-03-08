@@ -32,6 +32,9 @@ void NativeWebAPI::Authenticate(const std::string& email, const std::string& pas
 {
 	CurlHandle curlHandle;
 
+	// Ensure that a new session is used:
+	m_sessionData.Reset();
+
 	std::string requestVerificationToken;
 	// Extract request verification token and cookie value:
 	{
@@ -71,8 +74,6 @@ void NativeWebAPI::Authenticate(const std::string& email, const std::string& pas
 			throw AuthenticationError("Wrong Credentials!");
 		m_sessionData.AddCookie(HeaderConstants::ApplicationCookieName, applicationCookieValue);
 	}
-
-	m_sessionData.IsAuthenticated(true);
 }
 void NativeWebAPI::LogOut()
 {
@@ -106,8 +107,7 @@ void NativeWebAPI::LogOut()
 		curlHandle.PerformPOSTRequest(URLConstants::LogOutAPI, requestHeader, requestBody, responseHeader, responseBody);
 	}
 
-	m_sessionData.ClearCookies();
-	m_sessionData.IsAuthenticated(false);
+	m_sessionData.Reset();
 }
 
 GrammarSpecificData NativeWebAPI::CreateNewGrammar() const

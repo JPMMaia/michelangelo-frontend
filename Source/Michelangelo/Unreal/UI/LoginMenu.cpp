@@ -9,37 +9,46 @@
 
 using namespace Common;
 
-void ULoginMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+namespace Events
 {
-	UUserWidget::NativeTick(MyGeometry, InDeltaTime);
-
-	// Lock events queue mutex:
-	std::lock_guard<std::mutex> lock(m_eventsQueueMutex);
-
-	while(!m_eventsQueue.empty())
+	class OnAuthenticatedEvent : public Common::Event<ULoginMenu>
 	{
-		const auto& event = m_eventsQueue.front();
+	public:
+		void Handle(ULoginMenu& sender) override
+		{
+			sender.OnAuthenticated.Broadcast();
+		}
+	};
 
-		if (event.Type == InternalEventType::Authenticated)
-			OnAuthenticated.Broadcast();
-		else if (event.Type == InternalEventType::Error)
-			OnAuthenticationError.Broadcast(Helpers::StringToFString(event.Message));
+	class OnErrorEvent : public Common::Event<ULoginMenu>
+	{
+	public:
+		explicit OnErrorEvent(const std::string& message) :
+			m_message(message)
+		{
+		}
 
-		m_eventsQueue.pop();
-	}
+		void Handle(ULoginMenu& sender) override
+		{
+			sender.OnAuthenticationError.Broadcast(Helpers::StringToFString(m_message));
+		}
+
+	private:
+		std::string m_message;
+	};
 }
 
-void ULoginMenu::Authenticate(const FString& email, const FString& password, bool rememberMe)
+void ULoginMenu::RequestLogIn(const FString& email, const FString& password, bool rememberMe)
 {
 	if (email.IsEmpty())
 	{
-		AddEventToQueue(InternalEvent::OnErrorEvent("Email field must not be empty!"));
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnErrorEvent>("Email field must not be empty!"));
 		return;
 	}
 
 	if (password.IsEmpty())
 	{
-		AddEventToQueue(InternalEvent::OnErrorEvent("Password field must not be empty!"));
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnErrorEvent>("Password field must not be empty!"));
 		return;
 	}
 
@@ -59,30 +68,29 @@ void ULoginMenu::Authenticate(const FString& email, const FString& password, boo
 	}
 	catch (const MichelangeloAPI::AuthenticationError& error)
 	{
-		AddEventToQueue(InternalEvent::OnErrorEvent(error.what()));
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnErrorEvent>(error.what()));
 		return;
 	}
 	catch (const std::exception&)
 	{
-		AddEventToQueue(InternalEvent::OnErrorEvent("Unexpected error!"));
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnErrorEvent>("Unexpected error!"));
 		return;
 	}
 
 	// Broadcast on authenticated event:
-	AddEventToQueue(InternalEvent::OnAuthenticatedEvent());
+	m_eventsComponent.AddEvent(std::make_unique<Events::OnAuthenticatedEvent>());
 }
-void ULoginMenu::AuthenticateAsync(const FString& email, const FString& password, bool rememberMe)
+void ULoginMenu::RequestLogInAsync(const FString& email, const FString& password, bool rememberMe)
 {
-	auto async = std::bind(&ULoginMenu::Authenticate, this, email, password, rememberMe);
-	std::thread(async).detach();
+	auto async = std::bind(&ULoginMenu::RequestLogIn, this, email, password, rememberMe);
+	m_tasksComponent.Add(Task(async));
 }
 
-void ULoginMenu::AddEventToQueue(InternalEvent&& event)
+void ULoginMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	// Lock events queue mutex:
-	std::lock_guard<std::mutex> lock(m_eventsQueueMutex);
+	UUserWidget::NativeTick(MyGeometry, InDeltaTime);
 
-	// Add event to queue:
-	m_eventsQueue.emplace(event);
+	m_eventsComponent.HandleEvents(*this);
+	
+	m_tasksComponent.Update();
 }
-

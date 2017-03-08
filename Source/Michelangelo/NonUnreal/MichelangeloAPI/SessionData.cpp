@@ -50,6 +50,12 @@ bool SessionData::IsAuthenticated() const
 	return m_isAuthenticated;
 }
 
+void SessionData::Reset()
+{
+	ClearCookies();
+	m_isAuthenticated = false;
+}
+
 CurlList SessionData::GenerateHeaderWithCookies() const
 {
 	CurlList header;

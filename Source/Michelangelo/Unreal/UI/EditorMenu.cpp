@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "Michelangelo.h"
 #include "EditorMenu.h"
 #include "Unreal/UGameDataSingleton.h"
@@ -10,6 +8,79 @@
 
 using namespace Common;
 using namespace MichelangeloAPI;
+
+namespace Events
+{
+	class OnEditorReadyEvent : public Common::Event<UEditorMenu>
+	{
+	public:
+		explicit OnEditorReadyEvent(const GrammarSpecificData& grammarData) :
+			m_grammarData(grammarData)
+		{
+		}
+
+		void Handle(UEditorMenu& sender) override
+		{
+			sender.SetGrammarData(UGrammarSpecificData::FromNativeData(m_grammarData));
+			sender.OnEditorReadyEvent.Broadcast();
+		}
+
+	private:
+		GrammarSpecificData m_grammarData;
+	};
+
+	class OnGrammarEvaluatedEvent : public Common::Event<UEditorMenu>
+	{
+	public:
+		explicit OnGrammarEvaluatedEvent(const SceneGeometry& sceneGeometry) :
+			m_sceneGeometry(sceneGeometry)
+		{
+		}
+
+		void Handle(UEditorMenu& sender) override
+		{
+			sender.HandleSceneGeometry(m_sceneGeometry);
+			sender.OnGrammarEvaluatedEvent.Broadcast();
+		}
+
+	private:
+		SceneGeometry m_sceneGeometry;
+	};
+
+	class OnGrammarErrorEvent : public Common::Event<UEditorMenu>
+	{
+	public:
+		explicit OnGrammarErrorEvent(const std::string& message) :
+			m_message(message)
+		{
+		}
+
+		void Handle(UEditorMenu& sender) override
+		{
+			sender.OnGrammarErrorEvent.Broadcast(Helpers::StringToFString(m_message));
+		}
+
+	private:
+		std::string m_message;
+	};
+
+	class OnGrammarWarningEvent : public Common::Event<UEditorMenu>
+	{
+	public:
+		explicit OnGrammarWarningEvent(const std::string& message) :
+			m_message(message)
+		{
+		}
+
+		void Handle(UEditorMenu& sender) override
+		{
+			sender.OnGrammarWarningEvent.Broadcast(Helpers::StringToFString(m_message));
+		}
+
+	private:
+		std::string m_message;
+	};
+}
 
 void UEditorMenu::NativeConstruct()
 {
@@ -29,32 +100,11 @@ void UEditorMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	UUserWidget::NativeTick(MyGeometry, InDeltaTime);
 
-	std::lock_guard<std::mutex> lock(m_eventsQueueMutex);
-	while (!m_eventsQueue.empty())
-	{
-		const auto& internalEvent = m_eventsQueue.front();
-
-		if (internalEvent.Type == InternalEventType::EditorReady)
-		{
-			std::lock_guard<std::mutex> grammarDataLock(m_grammarDataMutex);
-			m_grammarData = UGrammarSpecificData::FromNativeData(internalEvent.GrammarData);
-			OnEditorReadyEvent.Broadcast();
-		}
-		else if (internalEvent.Type == InternalEventType::GrammarEvaluated)
-		{
-			HandleSceneGeometry(internalEvent.SceneGeometry);
-			OnGrammarEvaluatedEvent.Broadcast();
-		}
-		else if (internalEvent.Type == InternalEventType::GrammarError)
-			OnGrammarErrorEvent.Broadcast(Helpers::StringToFString(internalEvent.Message));
-		else if (internalEvent.Type == InternalEventType::GrammarWarning)
-			OnGrammarWarningEvent.Broadcast(Helpers::StringToFString(internalEvent.Message));
-
-		m_eventsQueue.pop_front();
-	}
+	m_eventsComponent.HandleEvents(*this);
+	m_tasksComponent.Update();
 }
 
-void UEditorMenu::EvaluateGrammar()
+void UEditorMenu::RequestEvaluateGrammar()
 {
 	auto gameData = UGameDataSingleton::Get();
 	auto& nativeWebAPI = gameData->GetWebAPI();
@@ -95,7 +145,7 @@ void UEditorMenu::EvaluateGrammar()
 	}
 	catch (const std::exception&)
 	{
-		AddEventToQueue(InternalEvent::OnGrammarErrorEvent("Internal application error."));
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarErrorEvent>("Internal application error."));
 		return;
 	}
 
@@ -103,12 +153,12 @@ void UEditorMenu::EvaluateGrammar()
 	if (!sceneGeometry.IsEmpty())
 	{
 		// Broadcast that the grammar was evaluated:
-		AddEventToQueue(InternalEvent::OnGrammarEvaluatedEvent(sceneGeometry));
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarEvaluatedEvent>(sceneGeometry));
 
 		// Output warnings:
 		if(!message.empty())
 		{
-			AddEventToQueue(InternalEvent::OnGrammarWarningEvent(message));
+			m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarWarningEvent>(message));
 		}
 	}
 
@@ -116,13 +166,13 @@ void UEditorMenu::EvaluateGrammar()
 	else
 	{
 		// Output errors:
-		AddEventToQueue(InternalEvent::OnGrammarErrorEvent(message));
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarErrorEvent>(message));
 	}	
 }
-void UEditorMenu::EvaluateGrammarAsync()
+void UEditorMenu::RequestEvaluateGrammarAsync()
 {
-	auto async = std::bind(&UEditorMenu::EvaluateGrammar, this);
-	std::thread(async).detach();
+	auto async = std::bind(&UEditorMenu::RequestEvaluateGrammar, this);
+	m_tasksComponent.Add(Task(async));
 }
 
 void UEditorMenu::RequestGrammarData()
@@ -141,12 +191,12 @@ void UEditorMenu::RequestGrammarData()
 	auto grammarData = webAPI.GetGrammarData(grammarType, grammarID);
 
 	// Inform that editor is ready:
-	AddEventToQueue(InternalEvent::OnEditorReady(grammarData));
+	m_eventsComponent.AddEvent(std::make_unique<Events::OnEditorReadyEvent>(grammarData));
 }
 void UEditorMenu::RequestGrammarDataAsync()
 {
 	auto async = std::bind(&UEditorMenu::RequestGrammarData, this);
-	std::thread(async).detach();
+	m_tasksComponent.Add(Task(async));
 }
 
 void UEditorMenu::SetGrammarData(UGrammarSpecificData* value)
@@ -173,11 +223,6 @@ void UEditorMenu::SetCode(const FString& value)
 	m_grammarData->Code = value;
 }
 
-void UEditorMenu::AddEventToQueue(InternalEvent&& internalEvent)
-{
-	std::lock_guard<std::mutex> lock(m_eventsQueueMutex);
-	m_eventsQueue.emplace_back(internalEvent);
-}
 void UEditorMenu::HandleSceneGeometry(const SceneGeometry& sceneGeometry)
 {
 	// Spawn actors from objects:

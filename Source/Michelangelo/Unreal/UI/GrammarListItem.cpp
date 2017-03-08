@@ -10,41 +10,158 @@
 
 using namespace Common;
 
-void UGrammarListItem::ShareGrammar()
+namespace Events
 {
-	// Lock data mutex:
-	std::lock_guard<std::mutex> lock(m_dataMutex);
+	class OnGrammarSharedEvent : public Common::Event<UGrammarListItem>
+	{
+	public:
+		explicit OnGrammarSharedEvent(bool success) :
+			m_success(success)
+		{
+		}
+
+		void Handle(UGrammarListItem& sender) override
+		{
+			sender.OnGrammarSharedEvent.Broadcast(m_success);
+		}
+
+	private:
+		bool m_success;
+	};
+
+	class OnGrammarDeletedEvent : public Common::Event<UGrammarListItem>
+	{
+	public:
+		explicit OnGrammarDeletedEvent(bool success) :
+			m_success(success)
+		{
+		}
+
+		void Handle(UGrammarListItem& sender) override
+		{
+			sender.OnGrammarDeletedEvent.Broadcast(m_success);
+		}
+
+	private:
+		bool m_success;
+	};
+}
+
+void UGrammarListItem::RequestShareGrammar()
+{
+	bool newShareValue;
+	std::string grammarId;
+	{
+		// Lock data mutex:
+		std::lock_guard<std::mutex> lock(m_grammarDataMutex);
+
+		// Invert share value:
+		newShareValue = !m_grammarData->Shared;
+		m_grammarData->Shared = newShareValue;
+
+		// Cache grammar ID in a local variable:
+		grammarId = Helpers::FStringToString(m_grammarData->ID);
+	}
 
 	// Get native web api:
 	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI();
 
-	// Invert share value:
-	GrammarSpecificData->Shared = !GrammarSpecificData->Shared;
-
 	// Make request to inform of the value change:
-	nativeWebAPI.ShareGrammar(Helpers::FStringToString(GrammarSpecificData->ID), GrammarSpecificData->Shared);
+	try
+	{
+		nativeWebAPI.ShareGrammar(grammarId, newShareValue);
+	}
+	catch(const std::exception& error)
+	{
+		SetErrorMessage(error.what());
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarSharedEvent>(false));
+		return;
+	}
+
+	m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarSharedEvent>(true));
 }
-void UGrammarListItem::ShareGrammarAsync()
+void UGrammarListItem::RequestShareGrammarAsync()
 {
-	auto async = std::bind(&UGrammarListItem::ShareGrammar, this);
-	std::thread(async).detach();
+	auto async = std::bind(&UGrammarListItem::RequestShareGrammar, this);
+	m_tasksComponent.Add(Task(async));
 }
 
-void UGrammarListItem::DeleteGrammar()
+void UGrammarListItem::RequestDeleteGrammar()
 {
-	// Lock data mutex:
-	std::lock_guard<std::mutex> lock(m_dataMutex);
-
+	auto grammarId = Helpers::FStringToString(GetGrammarID());
+	
 	auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI();
-	nativeWebAPI.DeleteGrammar(Helpers::FStringToString(GrammarSpecificData->ID));
+
+	try
+	{
+		nativeWebAPI.DeleteGrammar(grammarId);
+	}
+	catch (const std::exception& error)
+	{
+		SetErrorMessage(error.what());
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarSharedEvent>(false));
+		return;
+	}
+
+	m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarDeletedEvent>(true));
 }
-void UGrammarListItem::DeleteGrammarAsync()
+void UGrammarListItem::RequestDeleteGrammarAsync()
 {
-	auto async = std::bind(&UGrammarListItem::DeleteGrammar, this);
-	std::thread(async).detach();
+	auto async = std::bind(&UGrammarListItem::RequestDeleteGrammar, this);
+	m_tasksComponent.Add(Task(async));
 }
 
-void UGrammarListItem::SetData(UGrammarSpecificData* data)
+UGrammarSpecificData* UGrammarListItem::GetGrammarData()
 {
-	GrammarSpecificData = data;
+	std::lock_guard<std::mutex> lock(m_grammarDataMutex);
+	return m_grammarData;
+}
+
+bool UGrammarListItem::IsGrammarOwner()
+{
+	std::lock_guard<std::mutex> lock(m_grammarDataMutex);
+	return m_grammarData->IsOwner;
+}
+bool UGrammarListItem::IsGrammarShared()
+{
+	std::lock_guard<std::mutex> lock(m_grammarDataMutex);
+	return m_grammarData->Shared;
+}
+
+FString UGrammarListItem::GetGrammarName()
+{
+	std::lock_guard<std::mutex> lock(m_grammarDataMutex);
+	return m_grammarData->Name;
+}
+
+void UGrammarListItem::SetGrammarData(UGrammarSpecificData* data)
+{
+	std::lock_guard<std::mutex> lock(m_grammarDataMutex);
+	m_grammarData = data;
+}
+
+FString UGrammarListItem::GetGrammarID()
+{
+	std::lock_guard<std::mutex> lock(m_grammarDataMutex);
+	return m_grammarData->ID;
+}
+
+FString UGrammarListItem::GetErrorMessage()
+{
+	std::lock_guard<std::mutex> lock(m_errorMesssageMutex);
+	return m_errorMessage;
+}
+
+void UGrammarListItem::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	UUserWidget::NativeTick(MyGeometry, InDeltaTime);
+	
+	m_eventsComponent.HandleEvents(*this);
+	m_tasksComponent.Update();
+}
+
+void UGrammarListItem::SetErrorMessage(const FString& errorMessage)
+{
+	std::lock_guard<std::mutex> lock(m_errorMesssageMutex);
+	m_errorMessage = errorMessage;
 }

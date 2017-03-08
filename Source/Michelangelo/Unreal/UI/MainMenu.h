@@ -2,9 +2,7 @@
 
 #pragma once
 
-#include <atomic>
 #include <mutex>
-#include <vector>
 #include <deque>
 #include <map>
 
@@ -13,13 +11,15 @@
 #include "NonUnreal/MichelangeloAPI/GrammarSpecificData.h"
 #include "NonUnreal/Common/Event.h"
 #include "NonUnreal/Common/EventsComponent.h"
+#include "NonUnreal/Common/TasksComponent.h"
 #include "MainMenu.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGrammarCreatedEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrammarCreatedEvent, bool, Success);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLogOutEvent, bool, Success);
 
 /**
- * 
- */
+	* 
+	*/
 UCLASS()
 class MICHELANGELO_API UMainMenu : public UUserWidget
 {
@@ -30,6 +30,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnGrammarCreatedEvent OnGrammarCreatedEvent;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnLogOutEvent OnLogOutEvent;
+
 public:
 	explicit UMainMenu(const FObjectInitializer& ObjectInitializer);
 
@@ -38,26 +41,31 @@ public:
 
 	void NativeDestruct() override;
 
-	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
 	void AddGrammars(const TArray<UGrammarSpecificData*>& grammars);
 
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
-	void CreateNewGrammar();
+	void RequestCreateNewGrammar();
 
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
-	void CreateNewGrammarAsync();
+	void RequestCreateNewGrammarAsync();
 
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
-	void LogOut();
+	void RequestLogOut();
 
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
-	void LogOutAsync();
+	void RequestLogOutAsync();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	FString GetErrorMessage();
+
+protected:
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 private:
 	void HandlePendingGrammars();
-	void GetGrammars(EGrammarType type);
+	void RequestGrammarsList(EGrammarType type) noexcept;
+	void SetErrorMessage(const FString& errorMessage);
 	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
@@ -70,4 +78,8 @@ private:
 	std::deque<MichelangeloAPI::GrammarSpecificData> m_pendingGrammars;
 
 	Common::EventsComponent<UMainMenu> m_eventsComponent;
+	Common::TasksComponent m_tasksComponent;
+
+	std::mutex m_errorMessageMutex;
+	FString m_errorMessage;
 };

@@ -18,6 +18,8 @@ namespace MichelangeloAPI
 		void IsAuthenticated(bool value);
 		bool IsAuthenticated() const;
 
+		void Reset();
+
 		CurlList GenerateHeaderWithCookies() const;
 
 	private:

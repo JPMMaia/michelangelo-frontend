@@ -1,16 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include <mutex>
 
 #include "Blueprint/UserWidget.h"
 #include "Unreal/Web/GrammarSpecificData.h"
+#include "NonUnreal/Common/EventsComponent.h"
+#include "NonUnreal/Common/TasksComponent.h"
 #include "GrammarListItem.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrammarSharedEvent, bool, Success);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrammarDeletedEvent, bool, Success);
+
 /**
- * 
- */
+	* 
+	*/
 UCLASS()
 class MICHELANGELO_API UGrammarListItem : public UUserWidget
 {
@@ -18,26 +21,62 @@ class MICHELANGELO_API UGrammarListItem : public UUserWidget
 
 public:
 
-	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
-	void ShareGrammar();
+	UPROPERTY(BlueprintAssignable)
+	FOnGrammarSharedEvent OnGrammarSharedEvent;
 
-	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
-	void ShareGrammarAsync();
-
-	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
-	void DeleteGrammar();
-
-	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
-	void DeleteGrammarAsync();
-
-	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
-	void SetData(UGrammarSpecificData* data);
-
+	UPROPERTY(BlueprintAssignable)
+	FOnGrammarDeletedEvent OnGrammarDeletedEvent;
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void RequestShareGrammar();
 
-	std::mutex m_dataMutex;
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void RequestShareGrammarAsync();
 
-	UPROPERTY(BlueprintReadOnly, Category = Michelangelo)
-	UGrammarSpecificData* GrammarSpecificData;
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void RequestDeleteGrammar();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void RequestDeleteGrammarAsync();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	UGrammarSpecificData* GetGrammarData();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	bool IsGrammarOwner();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	bool IsGrammarShared();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	FString GetGrammarName();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void SetGrammarData(UGrammarSpecificData* data);
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	FString GetGrammarID();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	FString GetErrorMessage();
+
+protected:
+	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
+private:
+	void SetErrorMessage(const FString& errorMessage);
+
+private:
+
+	std::mutex m_grammarDataMutex;
+
+	UPROPERTY()
+	UGrammarSpecificData* m_grammarData;
+
+	Common::EventsComponent<UGrammarListItem> m_eventsComponent;
+	Common::TasksComponent m_tasksComponent;
+
+	std::mutex m_errorMesssageMutex;
+	FString m_errorMessage;
 };
