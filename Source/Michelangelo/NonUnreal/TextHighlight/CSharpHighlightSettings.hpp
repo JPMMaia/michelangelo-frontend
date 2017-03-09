@@ -43,12 +43,29 @@ namespace TextHighlight
 		{
 			using namespace std;
 
-			ifstream fileStream(jsonFilename, ios::in);
-			if (!fileStream.good())
-				throw runtime_error("File not found!");
-
+			// Get highlighing json:
 			nlohmann::json highlightingJson;
-			fileStream >> highlightingJson;
+			{
+				// Try to open file:
+				ifstream fileStreamIn(jsonFilename, ios::in);
+
+				// If it exists, then read content:
+				if (fileStreamIn.good())
+				{
+					fileStreamIn >> highlightingJson;
+				}
+
+				// If not:
+				else
+				{
+					// Create default json:
+					highlightingJson = DefaultHighlighintJson();
+
+					// Output json to file:
+					ofstream fileStreamOut(jsonFilename, ios::out);
+					fileStreamOut << highlightingJson;
+				}
+			}
 
 			// Keywords:
 			{
@@ -63,11 +80,11 @@ namespace TextHighlight
 			// Colors:
 			{
 				auto colorsJson = highlightingJson.at("colors");
-				for(auto iterator = colorsJson.begin(); iterator != colorsJson.end(); ++iterator)
+				for (auto iterator = colorsJson.begin(); iterator != colorsJson.end(); ++iterator)
 				{
 					m_colors.emplace(iterator.key(), iterator.value().get<std::string>());
 				}
-			} 
+			}
 		}
 
 		void BuildRegex()
@@ -92,6 +109,27 @@ namespace TextHighlight
 
 				m_keywordsRegex = std::regex(keywordsRegexSS.str());
 			}
+		}
+
+		static nlohmann::json DefaultHighlighintJson()
+		{
+			return {
+				{ "keywords", {
+					"abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", "class", "const", "continue","decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern", "false", "finally", "fixed", "float", "for",
+				"foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock", "long", "namespace", "new", "null", "object", "operator",
+				"out", "override", "params", "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static",
+				"string", "struct", "switch", "this", "throw", "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "void",
+				"volatile", "while", "add", "alias", "ascending", "async", "await", "descending", "dynamic", "from", "get", "global", "group", "into", "join", "let", "orderby",
+				"partial", "partial", "remove", "select", "set", "var", "where", "yield"
+					}
+				},
+				{ "colors", {
+					{ "comments", "48A433"},
+					{ "keywords", "4A9A9B"},
+					{ "strings", "D4713F" }
+					}
+				}
+			};
 		}
 
 	private:
