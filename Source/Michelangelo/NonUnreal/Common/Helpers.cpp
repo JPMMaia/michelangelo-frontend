@@ -83,6 +83,14 @@ std::string Helpers::ArrayToString(const std::array<float, 3>& value)
 	return ss.str();
 }
 
+std::chrono::system_clock::time_point Helpers::ParseTime(const std::string& time, const std::string& format)
+{
+	std::tm tm = {};
+	std::stringstream ss(time);
+	ss >> std::get_time(&tm, format.c_str());
+	return std::chrono::system_clock::from_time_t(std::mktime(&tm));
+}
+
 bool Helpers::ParseColor(const nlohmann::json& json, const std::string& name, std::array<float, 4>& output)
 {
 	auto location = json.find(name);

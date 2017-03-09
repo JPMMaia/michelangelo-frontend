@@ -15,6 +15,7 @@ namespace MichelangeloAPI
 		bool Shared;
 		bool IsOwner;
 		MichelangeloAPI::GrammarType GrammarType;
+		std::chrono::system_clock::time_point LastModified;
 
 		static GrammarSpecificData FromJson(const nlohmann::json& objectJson, MichelangeloAPI::GrammarType grammarType)
 		{
@@ -26,6 +27,7 @@ namespace MichelangeloAPI
 			object.Shared = objectJson.at("shared").get<bool>();
 			object.IsOwner = objectJson.at("isOwner").get<bool>();
 			object.GrammarType = grammarType;
+			object.LastModified = Common::Helpers::ParseTime(objectJson.at("lastModified").get<std::string>(), "%Y-%m-%dT%H:%M:%S");
 			return object;
 		}
 	};

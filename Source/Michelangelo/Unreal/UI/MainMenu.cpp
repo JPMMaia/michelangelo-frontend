@@ -197,6 +197,13 @@ void UMainMenu::RequestGrammarsList(EGrammarType type) noexcept
 		// Make web request to get list of grammars of the desired type:
 		auto grammars = nativeWebAPI.GetGrammarsList(Helpers::UnrealToNativeGrammarType(type));
 
+		// Sort grammars by date:
+		auto sortByDate = [](const GrammarSpecificData& element1, const GrammarSpecificData& element2)
+		{
+			return element1.LastModified < element2.LastModified;
+		};
+		std::sort(grammars.begin(), grammars.end(), sortByDate);
+
 		// Lock mutex and add the fetched grammars to the pending grammars list:
 		std::lock_guard<std::mutex> lock(m_pendingGrammarsMutex);
 		m_pendingGrammars.insert(std::end(m_pendingGrammars), std::begin(grammars), std::end(grammars));

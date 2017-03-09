@@ -23,6 +23,8 @@ namespace Common
 
 		std::string ArrayToString(const std::array<float, 3>& value);
 
+		std::chrono::system_clock::time_point ParseTime(const std::string& time, const std::string& format);
+
 		template<typename ContainerType>
 		void ReadData(const std::wstring& filename, ContainerType& buffer)
 		{
