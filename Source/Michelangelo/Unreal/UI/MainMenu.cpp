@@ -7,28 +7,56 @@
 #include "NonUnreal/MichelangeloAPI/NativeWebAPI.h"
 #include "Unreal/Common/UnrealHelpers.h"
 
+#include <vector>
 #include <functional>
-#include <future>
 
 using namespace Common;
 using namespace MichelangeloAPI;
 
 namespace Events
 {
-	class OnGrammarCreatedEvent : public Common::Event<UMainMenu>
+	class OnGetGrammarsListEvent : public Common::Event<UMainMenu>
 	{
 	public:
-		explicit OnGrammarCreatedEvent(bool success) :
+		explicit OnGetGrammarsListEvent(const std::vector<GrammarSpecificData>& grammars, GrammarType grammarType, bool success) :
+			m_grammars(grammars),
+			m_grammarType(grammarType),
 			m_success(success)
 		{
 		}
 
 		void Handle(UMainMenu& sender) override
 		{
-			sender.OnGrammarCreatedEvent.Broadcast(m_success);
+			TArray<UGrammarSpecificData*> unrealGrammars;
+			unrealGrammars.Reserve(m_grammars.size());
+			for (const auto& grammar : m_grammars)
+				unrealGrammars.Add(UGrammarSpecificData::FromNativeData(grammar));
+
+			sender.OnGetGrammarsListEvent.Broadcast(unrealGrammars, Helpers::NativeToUnrealGrammarType(m_grammarType), m_success);
 		}
 
 	private:
+		std::vector<GrammarSpecificData> m_grammars;
+		GrammarType m_grammarType;
+		bool m_success;
+	};
+
+	class OnGrammarCreatedEvent : public Common::Event<UMainMenu>
+	{
+	public:
+		explicit OnGrammarCreatedEvent(const GrammarSpecificData& grammarData, bool success) :
+			m_grammarData(grammarData),
+			m_success(success)
+		{
+		}
+
+		void Handle(UMainMenu& sender) override
+		{
+			sender.OnGrammarCreatedEvent.Broadcast(UGrammarSpecificData::FromNativeData(m_grammarData), m_success);
+		}
+
+	private:
+		GrammarSpecificData m_grammarData;
 		bool m_success;
 	};
 
@@ -50,45 +78,36 @@ namespace Events
 	};
 }
 
-UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer) :
-	UUserWidget(ObjectInitializer),
-	ListItemWidgetTemplate(ConstructorHelpers::FClassFinder<UGrammarListItem>(TEXT("/Game/UI/W_GrammarListItem")).Class)
+void UMainMenu::RequestGrammarsList(EGrammarType type)
 {
-}
-
-void UMainMenu::OnConstruct(UPanelWidget* ownGrammarsContainer, UPanelWidget* sharedGrammarsContainer, UPanelWidget* tutorialsContainer)
-{
-	m_grammarContainers.emplace(EGrammarType::Own, ownGrammarsContainer);
-	m_tasksComponent.Add(Task(std::bind(&UMainMenu::RequestGrammarsList, this, EGrammarType::Own)));
-
-	m_grammarContainers.emplace(EGrammarType::Shared, sharedGrammarsContainer);
-	m_tasksComponent.Add(Task(std::bind(&UMainMenu::RequestGrammarsList, this, EGrammarType::Shared)));
-
-	m_grammarContainers.emplace(EGrammarType::Tutorial, tutorialsContainer);
-	m_tasksComponent.Add(Task(std::bind(&UMainMenu::RequestGrammarsList, this, EGrammarType::Tutorial)));
-}
-void UMainMenu::NativeDestruct()
-{
-	for (const auto& pair : m_grammarContainers)
-		pair.second->ClearChildren();
-	m_grammarContainers.clear();
-}
-
-void UMainMenu::AddGrammars(const TArray<UGrammarSpecificData*>& grammars)
-{
-	auto* gameData = UGameDataSingleton::Get();
-	auto* world = gameData->GetSpawner()->GetWorld();
-
-	for (const auto& grammar : grammars)
+	try
 	{
-		// Create list item widget:
-		auto* listItemWidget = CreateWidget<UGrammarListItem>(world, ListItemWidgetTemplate.Get());
-		listItemWidget->SetGrammarData(grammar);
-		
-		// Add it to the respective container:
-		auto* container = m_grammarContainers.at(grammar->GrammarType);
-		container->AddChild(listItemWidget);
+		// Get native web api:
+		auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI();
+
+		// Make web request to get list of grammars of the desired type:
+		auto grammars = nativeWebAPI.GetGrammarsList(Helpers::UnrealToNativeGrammarType(type));
+
+		// Sort grammars by date:
+		auto sortByDate = [](const GrammarSpecificData& element1, const GrammarSpecificData& element2)
+		{
+			return element1.LastModified < element2.LastModified;
+		};
+		std::sort(grammars.begin(), grammars.end(), sortByDate);
+
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGetGrammarsListEvent>(grammars, Helpers::UnrealToNativeGrammarType(type), true));
 	}
+	catch (const std::exception& error)
+	{
+		SetErrorMessage(error.what());
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGetGrammarsListEvent>(std::vector<GrammarSpecificData>(), Helpers::UnrealToNativeGrammarType(type), false));
+	}
+}
+void UMainMenu::RequestGrammarsListAsync()
+{
+	m_tasksComponent.Add(Task(std::bind(&UMainMenu::RequestGrammarsList, this, EGrammarType::Own)));
+	m_tasksComponent.Add(Task(std::bind(&UMainMenu::RequestGrammarsList, this, EGrammarType::Shared)));
+	m_tasksComponent.Add(Task(std::bind(&UMainMenu::RequestGrammarsList, this, EGrammarType::Tutorial)));
 }
 
 void UMainMenu::RequestCreateNewGrammar()
@@ -101,19 +120,13 @@ void UMainMenu::RequestCreateNewGrammar()
 	{
 		auto grammar = nativeWebAPI.CreateNewGrammar();
 
-		// Lock mutex and add the new grammar to the pending grammars list:
-		std::lock_guard<std::mutex> lock(m_pendingGrammarsMutex);
-		m_pendingGrammars.push_back(grammar);
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarCreatedEvent>(grammar, true));
 	}
 	catch (const std::exception& error)
 	{
 		SetErrorMessage(error.what());
-		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarCreatedEvent>(false));
-		return;
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarCreatedEvent>(GrammarSpecificData(), false));
 	}
-
-	// Notify that grammar was created:
-	m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarCreatedEvent>(true));
 }
 void UMainMenu::RequestCreateNewGrammarAsync()
 {
@@ -160,59 +173,8 @@ void UMainMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	m_eventsComponent.HandleEvents(*this);
 
 	m_tasksComponent.Update();
-
-	// Handle pending grammars:
-	HandlePendingGrammars();
 }
 
-void UMainMenu::HandlePendingGrammars()
-{
-	TArray<UGrammarSpecificData*> unrealGrammars;
-	{
-		// Lock pending grammars mutex:
-		std::lock_guard<std::mutex> lock(m_pendingGrammarsMutex);
-
-		// Nothing to do if there aren't any pending grammars:
-		if (m_pendingGrammars.empty())
-			return;
-
-		// Convert native to unreal grammars:
-		while(!m_pendingGrammars.empty())
-		{
-			unrealGrammars.Add(UGrammarSpecificData::FromNativeData(m_pendingGrammars.front()));
-			m_pendingGrammars.pop_front();
-		}
-	}
-	
-	// Add the grammars to the respective containers:
-	AddGrammars(unrealGrammars);
-}
-void UMainMenu::RequestGrammarsList(EGrammarType type) noexcept
-{
-	try
-	{
-		// Get native web api:
-		auto& nativeWebAPI = UGameDataSingleton::Get()->GetWebAPI();
-
-		// Make web request to get list of grammars of the desired type:
-		auto grammars = nativeWebAPI.GetGrammarsList(Helpers::UnrealToNativeGrammarType(type));
-
-		// Sort grammars by date:
-		auto sortByDate = [](const GrammarSpecificData& element1, const GrammarSpecificData& element2)
-		{
-			return element1.LastModified < element2.LastModified;
-		};
-		std::sort(grammars.begin(), grammars.end(), sortByDate);
-
-		// Lock mutex and add the fetched grammars to the pending grammars list:
-		std::lock_guard<std::mutex> lock(m_pendingGrammarsMutex);
-		m_pendingGrammars.insert(std::end(m_pendingGrammars), std::begin(grammars), std::end(grammars));
-	}
-	catch (const std::exception& error)
-	{
-		SetErrorMessage(error.what());
-	}
-}
 void UMainMenu::SetErrorMessage(const FString& errorMessage)
 {
 	std::lock_guard<std::mutex> lock(m_errorMessageMutex);
