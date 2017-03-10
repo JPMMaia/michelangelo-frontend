@@ -44,8 +44,6 @@ AInstancedProceduralMeshActor::AInstancedProceduralMeshActor(const FObjectInitia
 	this->SetActorEnableCollision(false);
 
 	PrimaryActorTick.bCanEverTick = true;
-
-	
 }
 
 void AInstancedProceduralMeshActor::AddInstance(const MichelangeloAPI::ObjectGeometry& instanceData)

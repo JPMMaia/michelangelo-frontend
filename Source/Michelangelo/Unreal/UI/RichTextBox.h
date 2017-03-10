@@ -87,5 +87,5 @@ protected:
 	/** Native Slate Widget */
 	TSharedPtr<SMultiLineEditableRichText> MyRichTextBlock;
 
-	FText RawText;
+	FText PlainText;
 };

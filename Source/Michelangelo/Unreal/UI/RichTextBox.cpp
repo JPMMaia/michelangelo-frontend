@@ -30,29 +30,26 @@ FText URichTextBox::GetText() const
 
 	return Text;
 }
-FText URichTextBox::GetPlainText() const 
+FText URichTextBox::GetPlainText() const
 {
 	if (MyRichTextBlock.IsValid())
 	{
 		return MyRichTextBlock->GetPlainText();
 	}
 
-	return RawText;
+	return PlainText;
 }
 
 void URichTextBox::SetText(FText InText)
 {
-	RawText = InText;
+	PlainText = InText;
+	Text = InText;
 
-	// Parse and highlight code:
-	TextHighlight::CSharpHighlighter highlighter(Common::Helpers::FStringToString(InText.ToString()));
-	highlighter.Parse();
-
-	Text = FText::FromString(Common::Helpers::StringToFString(highlighter.ToString()));
 	if (MyRichTextBlock.IsValid())
 	{
-		MyRichTextBlock->SetText(Text);
+		MyRichTextBlock->SetText(InText);
 	}
+	
 }
 void URichTextBox::SetError(FText InError)
 {

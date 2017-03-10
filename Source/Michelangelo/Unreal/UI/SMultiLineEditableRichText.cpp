@@ -94,10 +94,6 @@ void SMultiLineEditableRichText::Construct(const FArguments& InArgs)
 	EditableTextLayout->SetLineHeightPercentage(InArgs._LineHeightPercentage);
 	EditableTextLayout->SetDebugSourceInfo(TAttribute<FString>::Create(TAttribute<FString>::FGetter::CreateLambda([this] { return FReflectionMetaData::GetWidgetDebugInfo(this); })));
 
-	TAttribute<FText> x;
-	x.Set(FText::FromString(TEXT("<span color=\"#ff00ff\">Hello!</>")));
-	EditableTextLayout->SetText(x);
-
 	// build context menu extender
 	MenuExtender = MakeShareable(new FExtender);
 	MenuExtender->AddMenuExtension("EditText", EExtensionHook::Before, TSharedPtr<FUICommandList>(), InArgs._ContextMenuExtender);
