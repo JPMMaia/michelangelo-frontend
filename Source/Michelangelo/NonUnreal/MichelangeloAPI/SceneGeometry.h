@@ -4,6 +4,7 @@
 #include "ObjectGeometry.h"
 
 #include <vector>
+#include <unordered_map>
 
 namespace MichelangeloAPI
 {
@@ -13,13 +14,13 @@ namespace MichelangeloAPI
 		static SceneGeometry CreateFromJson(const nlohmann::json& objectJson);
 
 	public:
-		const std::vector<Material>& GetMaterials() const;
+		const std::unordered_map<std::string, Material>& GetMaterials() const;
 		const std::vector<ObjectGeometry>& GetObjects() const;
 
 		bool IsEmpty() const;
 
 	private:
-		std::vector<Material> m_materials;
+		std::unordered_map<std::string, Material> m_materials;
 		std::vector<ObjectGeometry> m_objects;
 	};
 }

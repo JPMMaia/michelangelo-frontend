@@ -11,11 +11,11 @@ SceneGeometry SceneGeometry::CreateFromJson(const nlohmann::json& sceneGeometryJ
 	{
 		const auto& materialsJson = sceneGeometryJson.at("ml");
 		scene.m_materials.reserve(materialsJson.size());
-		for (auto& element : materialsJson)
+		for (auto iterator = materialsJson.cbegin(); iterator != materialsJson.cend(); ++iterator)
 		{
-			auto str = element.get<std::string>();
-			auto jsonValue = nlohmann::json::parse(str.c_str());
-			scene.m_materials.push_back(Material::CreateFromJSON(jsonValue));
+			auto materialStr = iterator.value().get<std::string>();
+			auto materialJson = nlohmann::json::parse(materialStr.c_str());
+			scene.m_materials.emplace(iterator.key(), Material::CreateFromJSON(materialJson));
 		}
 	}
 
@@ -23,7 +23,7 @@ SceneGeometry SceneGeometry::CreateFromJson(const nlohmann::json& sceneGeometryJ
 	{
 		const auto& objectsJson = sceneGeometryJson.at("o");
 		scene.m_objects.reserve(objectsJson.size());
-		for (auto& element : objectsJson)
+		for (const auto& element : objectsJson)
 		{
 			scene.m_objects.push_back(ObjectGeometry::CreateFromJSON(element));
 		}
@@ -32,7 +32,7 @@ SceneGeometry SceneGeometry::CreateFromJson(const nlohmann::json& sceneGeometryJ
 	return scene;
 }
 
-const std::vector<Material>& SceneGeometry::GetMaterials() const
+const std::unordered_map<std::string, Material>& SceneGeometry::GetMaterials() const
 {
 	return m_materials;
 }

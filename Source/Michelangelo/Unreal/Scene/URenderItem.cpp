@@ -48,7 +48,7 @@ URenderItem* URenderItem::Create(const SceneGeometry& sceneGeometry, const Objec
 
 		// Get material data:
 		auto materialIndex = objectGeometry.GetMaterialIndex();
-		const auto& materialData = sceneGeometry.GetMaterials()[materialIndex];
+		const auto& materialData = sceneGeometry.GetMaterials().at(std::to_string(materialIndex));
 		output->m_materialIndex = objectGeometry.GetMaterialIndex();
 		
 		// Set diffuse albedo:

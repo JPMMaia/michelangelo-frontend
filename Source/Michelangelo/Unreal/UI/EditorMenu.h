@@ -74,7 +74,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
 	void SetCode(const FString& value);
 
-	static void HandleSceneGeometry(const MichelangeloAPI::SceneGeometry& sceneGeometry);
+	void HandleSceneGeometry(const MichelangeloAPI::SceneGeometry& sceneGeometry);
 
 private:
 	std::mutex m_grammarDataMutex;

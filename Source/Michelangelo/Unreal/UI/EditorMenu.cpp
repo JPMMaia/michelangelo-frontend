@@ -228,5 +228,13 @@ void UEditorMenu::HandleSceneGeometry(const SceneGeometry& sceneGeometry)
 	// Spawn actors from objects:
 	auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();
 	renderItems->Clear();
-	renderItems->AddGeometry(sceneGeometry);
+
+	try
+	{
+		renderItems->AddGeometry(sceneGeometry);
+	}
+	catch(const std::exception&)
+	{
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarErrorEvent>("Scene geometry sent by server not supported by this application."));
+	}
 }

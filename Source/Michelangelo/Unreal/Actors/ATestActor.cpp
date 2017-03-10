@@ -18,7 +18,7 @@ ATestActor::ATestActor(const FObjectInitializer& objectInitializer) :
 
 void ATestActor::BeginPlay()
 {
-/*	// Read geometry from file:
+	// Read geometry from file:
 	MichelangeloAPI::SceneGeometry sceneGeometry;
 	{
 		ifstream fileStream(L"TestMesh.json", ios::in);
@@ -29,5 +29,5 @@ void ATestActor::BeginPlay()
 
 	auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
 	renderItems->Clear();
-	renderItems->AddGeometry(sceneGeometry);*/
+	renderItems->AddGeometry(sceneGeometry);
 }

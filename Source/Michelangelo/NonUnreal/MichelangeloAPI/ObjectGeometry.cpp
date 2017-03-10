@@ -85,18 +85,6 @@ ObjectGeometry ObjectGeometry::CreateFromJSON(const nlohmann::json& jsonObject)
 			std::iota(geometry.m_indices.begin(), geometry.m_indices.end(), 0);
 		}
 
-		// Invert orientation of faces:
-		/*{
-			auto iterator = geometry.m_indices.begin();
-			while (iterator != geometry.m_indices.end())
-			{
-				++iterator;
-				auto& index1 = *iterator++;
-				auto& index2 = *iterator++;
-				std::swap(index1, index2);
-			}
-		}*/
-
 		return geometry;
 	}
 

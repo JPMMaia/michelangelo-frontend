@@ -41,3 +41,4 @@ float Material::GetShininess() const
 {
 	return m_shininess;
 }
+
