@@ -42,6 +42,7 @@ AInstancedStaticMeshActor::AInstancedStaticMeshActor(const FObjectInitializer& o
 	
 	// Set it as root component:
 	RootComponent = m_instancedStaticMeshComponent;
+	this->SetActorEnableCollision(false);
 
 	PrimaryActorTick.bCanEverTick = true;
 }

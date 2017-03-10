@@ -57,8 +57,8 @@ namespace UnitTest
 
 		TEST_METHOD(TextHighlightTestString2)
 		{
-			std::string input("\"\n");
-			std::string expectedOutput("<span color=\"#" + m_stringsColor + "\">&quot;\\n</>");
+			std::string input("\" \\n \n Hello!");
+			std::string expectedOutput("<span color=\"#" + m_stringsColor + "\">&quot; \\n </>\n Hello!");
 
 			CSharpHighlighter parser(input);
 			parser.Parse();

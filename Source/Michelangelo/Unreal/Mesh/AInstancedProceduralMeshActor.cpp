@@ -41,8 +41,11 @@ AInstancedProceduralMeshActor::AInstancedProceduralMeshActor(const FObjectInitia
 
 	// Set it as root component:
 	RootComponent = m_proceduralMeshComponent;
+	this->SetActorEnableCollision(false);
 
 	PrimaryActorTick.bCanEverTick = true;
+
+	
 }
 
 void AInstancedProceduralMeshActor::AddInstance(const MichelangeloAPI::ObjectGeometry& instanceData)

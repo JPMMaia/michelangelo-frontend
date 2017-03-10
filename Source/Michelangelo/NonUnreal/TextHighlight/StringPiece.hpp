@@ -18,7 +18,7 @@ namespace TextHighlight
 			auto color = CSharpHighlightSettings::Get()->GetColor("strings");
 
 			std::stringstream ss;
-			ss << "<span color=\"#" + color + "\">" << EscapeText(m_text, true) << "</>";
+			ss << "<span color=\"#" + color + "\">" << EscapeText(m_text, false) << "</>";
 			return ss.str();
 		}
 

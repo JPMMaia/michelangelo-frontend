@@ -25,6 +25,8 @@ namespace TextHighlight
 
 		void Parse()
 		{
+			m_text = EarlyEscapeText(m_text);
+
 			auto iterator = m_text.cbegin();
 			std::shared_ptr<State::ParserState> currentState(std::make_shared<State::Normal>(*this, iterator));
 			while (iterator != m_text.cend())

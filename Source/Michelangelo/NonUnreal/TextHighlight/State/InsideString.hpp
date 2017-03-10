@@ -25,6 +25,11 @@ namespace TextHighlight
 						nextState = std::make_shared<State::Normal>(m_observer, textIterator + 1);
 						m_observer.FoundString(m_beginText, textIterator + 1);
 					}
+					else if(*textIterator == '\n')
+					{
+						nextState = std::make_shared<State::Normal>(m_observer, textIterator);
+						m_observer.FoundString(m_beginText, textIterator);
+					}
 					else if(*textIterator == '\\')
 					{
 						m_thisState = ThisState::Escape;
