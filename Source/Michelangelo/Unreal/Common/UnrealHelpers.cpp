@@ -71,10 +71,6 @@ FMatrix Helpers::MichelangeloToUnrealGeneralTransform(const FMatrix& transform)
 	constexpr auto translationScalar = 100.0f;
 	output.ScaleTranslation(FVector(translationScalar, translationScalar, translationScalar));
 
-	auto determinant = output.Determinant();
-	if (determinant < 0.0f)
-		output = FScaleMatrix(-1.0f) * output;
-
 	return output;
 }
 FMatrix Helpers::MichelangeloToUnrealPrimitiveTransform(const FMatrix& transform)
