@@ -32,6 +32,7 @@ namespace MichelangeloAPI
 		const std::vector<float>& GetVertices() const;
 		const std::vector<int32>& GetIndices() const;
 		const std::array<float, 16>& GetTransform() const;
+		bool IsMesh() const;
 
 	private:
 		Type m_type = Type::StaticMesh;

@@ -30,8 +30,13 @@ FText URichTextBox::GetText() const
 
 	return Text;
 }
-FText URichTextBox::GetRawText() const 
+FText URichTextBox::GetPlainText() const 
 {
+	if (MyRichTextBlock.IsValid())
+	{
+		return MyRichTextBlock->GetPlainText();
+	}
+
 	return RawText;
 }
 

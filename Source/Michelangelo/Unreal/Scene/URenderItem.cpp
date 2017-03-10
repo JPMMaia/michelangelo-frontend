@@ -8,6 +8,7 @@
 #include <Materials/MaterialInstanceDynamic.h>
 #include <Materials/MaterialInstance.h>
 #include "Unreal/Common/UnrealHelpers.h"
+#include "NonUnreal/Common/EngineException.h"
 
 using namespace Common;
 using namespace MichelangeloAPI;
@@ -32,6 +33,10 @@ URenderItem* URenderItem::Create(const SceneGeometry& sceneGeometry, const Objec
 		
 		// Set mesh name:
 		output->m_meshName = output->m_meshActor->GetName();
+	}
+	else
+	{
+		throw std::invalid_argument("Geometry type not supported");
 	}
 
 	// Add instance:

@@ -146,3 +146,8 @@ const std::array<float, 16>& ObjectGeometry::GetTransform() const
 {
 	return m_transform;
 }
+
+bool ObjectGeometry::IsMesh() const
+{
+	return m_type == Type::StaticMesh || m_type == Type::ProceduralMesh;
+}

@@ -24,8 +24,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Widget", meta = (DisplayName = "GetText (Multi-Line Text Box)"))
 		FText GetText() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Widget", meta = (DisplayName = "GetRawText (Multi-Line Text Box)"))
-		FText GetRawText() const;
+	UFUNCTION(BlueprintCallable, Category = "Widget", meta = (DisplayName = "GetPlainText (Multi-Line Text Box)"))
+		FText GetPlainText() const;
 
 	/**  */
 	UFUNCTION(BlueprintCallable, Category = "Widget", meta = (DisplayName = "SetText (Multi-Line Text Box)"))

@@ -34,8 +34,9 @@ void URenderItemsCollection::AddGeometry(const SceneGeometry& sceneGeometry)
 		// If a match is not found:
 		if (match == m_renderItems.end())
 		{
-			// Create new render item:
-			m_renderItems.insert(URenderItem::Create(sceneGeometry, object));
+			// If object corresponds to a mesh, create new render item:
+			if(object.IsMesh())
+				m_renderItems.insert(URenderItem::Create(sceneGeometry, object));
 		}
 		// If found:
 		else

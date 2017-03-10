@@ -40,12 +40,6 @@ FString Helpers::StringToFString(const std::string& str)
 }
 FMatrix Helpers::ArrayToMatrix(const std::array<float, 16>& transformArray)
 {
-	/*return FMatrix(
-		FPlane(transformArray[0], transformArray[1], transformArray[2], transformArray[3]),
-		FPlane(transformArray[4], transformArray[5], transformArray[6], transformArray[7]),
-		FPlane(transformArray[8], transformArray[9], transformArray[10], transformArray[11]),
-		FPlane(transformArray[12], transformArray[13], transformArray[14], transformArray[15])
-	);*/
 	return FMatrix(
 	FPlane(transformArray[0], transformArray[4], transformArray[8], transformArray[12]),
 	FPlane(transformArray[1], transformArray[5], transformArray[9], transformArray[13]),
@@ -77,6 +71,10 @@ FMatrix Helpers::MichelangeloToUnrealGeneralTransform(const FMatrix& transform)
 	constexpr auto translationScalar = 100.0f;
 	output.ScaleTranslation(FVector(translationScalar, translationScalar, translationScalar));
 
+	auto determinant = output.Determinant();
+	if (determinant < 0.0f)
+		output = FScaleMatrix(-1.0f) * output;
+
 	return output;
 }
 FMatrix Helpers::MichelangeloToUnrealPrimitiveTransform(const FMatrix& transform)
@@ -89,6 +87,10 @@ FMatrix Helpers::MichelangeloToUnrealPrimitiveTransform(const FMatrix& transform
 
 	constexpr auto translationScalar = 100.0f;
 	output.ScaleTranslation(FVector(translationScalar, translationScalar, translationScalar));
+
+	auto determinant = output.Determinant();
+	if (determinant < 0.0f)
+		output = FScaleMatrix(-1.0f) * output;
 
 	return output;
 }
