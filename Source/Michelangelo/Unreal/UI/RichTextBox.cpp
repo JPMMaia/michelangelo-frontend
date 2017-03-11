@@ -21,6 +21,14 @@ URichTextBox::URichTextBox(const FObjectInitializer& ObjectInitializer)
 	Decorators.Add(ObjectInitializer.CreateOptionalDefaultSubobject<URichTextBlockDecorator>(this, FName("DefaultDecorator")));
 }
 
+void URichTextBox::Refresh()
+{
+	if(MyRichTextBlock.IsValid())
+	{
+		MyRichTextBlock->Refresh();
+	}
+}
+
 FText URichTextBox::GetText() const
 {
 	if (MyRichTextBlock.IsValid())

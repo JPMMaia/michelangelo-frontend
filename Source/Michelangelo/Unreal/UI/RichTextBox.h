@@ -20,6 +20,9 @@ public:
 	explicit URichTextBox(const FObjectInitializer& ObjectInitializer);
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "Widget")
+	void Refresh();
+
 	/**  */
 	UFUNCTION(BlueprintCallable, Category = "Widget", meta = (DisplayName = "GetText (Multi-Line Text Box)"))
 		FText GetText() const;
