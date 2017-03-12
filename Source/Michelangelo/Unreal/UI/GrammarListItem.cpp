@@ -138,12 +138,36 @@ void UGrammarListItem::SetGrammarData(UGrammarSpecificData* data)
 {
 	std::lock_guard<std::mutex> lock(m_grammarDataMutex);
 	m_grammarData = data;
+	OnGrammarDataChanged.Broadcast();
 }
 
 FString UGrammarListItem::GetGrammarID()
 {
 	std::lock_guard<std::mutex> lock(m_grammarDataMutex);
 	return m_grammarData->ID;
+}
+
+FString UGrammarListItem::GetGrammarType()
+{
+	std::lock_guard<std::mutex> lock(m_grammarDataMutex);
+	return m_grammarData->Type;
+}
+
+FDateTime UGrammarListItem::GetGrammarLastModified()
+{
+	std::lock_guard<std::mutex> lock(m_grammarDataMutex);
+	return m_grammarData->LastModified;
+}
+
+FString UGrammarListItem::GetGrammarLastModifiedFormattedString()
+{
+	FDateTime lastModified;
+	{
+		std::lock_guard<std::mutex> lock(m_grammarDataMutex);
+		lastModified = m_grammarData->LastModified;
+	}
+
+	return lastModified.ToString(TEXT("%Y/%m/%d %H:%M:%S"));
 }
 
 FString UGrammarListItem::GetErrorMessage()

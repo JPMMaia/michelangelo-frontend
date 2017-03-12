@@ -4,6 +4,7 @@
 #include <string>
 #include "Unreal/Web/EGrammarType.h"
 #include "NonUnreal/MichelangeloAPI/GrammarType.h"
+#include <chrono>
 
 namespace Common
 {
@@ -23,5 +24,7 @@ namespace Common
 		int32 GetObjectReferenceCount(UObject* Obj, TArray<UObject*>* OutReferredToObjects = nullptr);
 		MichelangeloAPI::GrammarType UnrealToNativeGrammarType(EGrammarType unrealGrammarType);
 		EGrammarType NativeToUnrealGrammarType(MichelangeloAPI::GrammarType nativeGrammarType);
+		FDateTime TimePointToDateTime(const std::chrono::system_clock::time_point& timePoint);
+		std::chrono::system_clock::time_point DateTimeToTimePoint(const FDateTime& dateTime);
 	}
 }

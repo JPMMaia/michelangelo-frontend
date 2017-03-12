@@ -37,6 +37,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grammar Specific Data")
 	EGrammarType GrammarType;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grammar Specific Data")
+	FDateTime LastModified;
+
 public:
 	static UGrammarSpecificData* FromNativeData(const MichelangeloAPI::GrammarSpecificData& object);
 

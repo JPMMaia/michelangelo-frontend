@@ -143,3 +143,29 @@ EGrammarType Helpers::NativeToUnrealGrammarType(MichelangeloAPI::GrammarType nat
 	default: return EGrammarType::Unknown;
 	}
 }
+
+FDateTime Helpers::TimePointToDateTime(const std::chrono::system_clock::time_point& timePoint)
+{
+	auto timeT = std::chrono::system_clock::to_time_t(timePoint);
+	std::tm time;
+	gmtime_s(&time, &timeT);
+	
+	return FDateTime(1900 + time.tm_year, 1 + time.tm_mon, time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
+}
+
+std::chrono::system_clock::time_point Helpers::DateTimeToTimePoint(const FDateTime& dateTime)
+{
+	std::tm time;
+	time.tm_year = dateTime.GetYear() - 1900;
+	time.tm_mon = dateTime.GetMonth() - 1;
+	time.tm_wday = static_cast<int>(dateTime.GetDayOfWeek());
+	time.tm_mday = dateTime.GetDay();
+	time.tm_yday = dateTime.GetDayOfYear() - 1;
+	time.tm_hour = dateTime.GetHour();
+	time.tm_min = dateTime.GetMinute();
+	time.tm_sec = dateTime.GetSecond();
+	time.tm_isdst = -1;
+
+	auto tt = std::mktime(&time);
+	return std::chrono::system_clock::from_time_t(tt);
+}

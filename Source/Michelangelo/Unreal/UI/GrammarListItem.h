@@ -8,6 +8,7 @@
 #include "NonUnreal/Common/TasksComponent.h"
 #include "GrammarListItem.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGrammarDataChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrammarSharedEvent, bool, Success);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrammarDeletedEvent, bool, Success);
 
@@ -20,6 +21,9 @@ class MICHELANGELO_API UGrammarListItem : public UUserWidget
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGrammarDataChanged OnGrammarDataChanged;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnGrammarSharedEvent OnGrammarSharedEvent;
@@ -57,6 +61,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
 	FString GetGrammarID();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	FString GetGrammarType();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	FDateTime GetGrammarLastModified();
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	FString GetGrammarLastModifiedFormattedString();
 
 	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
 	FString GetErrorMessage();

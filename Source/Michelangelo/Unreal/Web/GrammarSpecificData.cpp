@@ -13,7 +13,8 @@ UGrammarSpecificData::UGrammarSpecificData() :
 	Code("Unknown"),
 	Shared(false),
 	IsOwner(false),
-	GrammarType(EGrammarType::Unknown)
+	GrammarType(EGrammarType::Unknown),
+	LastModified()
 {
 }
 
@@ -27,6 +28,7 @@ MichelangeloAPI::GrammarSpecificData UGrammarSpecificData::ToNativeData() const
 	apiData.Shared = Shared;
 	apiData.IsOwner = IsOwner;
 	apiData.GrammarType = Helpers::UnrealToNativeGrammarType(GrammarType);
+	apiData.LastModified = Helpers::DateTimeToTimePoint(LastModified);
 	return apiData;
 }
 
@@ -40,5 +42,6 @@ UGrammarSpecificData* UGrammarSpecificData::FromNativeData(const MichelangeloAPI
 	object->Shared = other.Shared;
 	object->IsOwner = other.IsOwner;
 	object->GrammarType = Helpers::NativeToUnrealGrammarType(other.GrammarType);
+	object->LastModified = Helpers::TimePointToDateTime(other.LastModified);
 	return object;
 }
