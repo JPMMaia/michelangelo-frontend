@@ -21,6 +21,10 @@ public:
 
 public:
 	void NativeConstruct() override;
+
+	UFUNCTION(BlueprintCallable, Category = "Michelangelo")
+	void OnConstruct(UPanelWidget* widgetToResize);
+
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
@@ -29,4 +33,7 @@ public:
 private:
 	bool m_focus;
 	FVector2D m_lastMousePosition;
+
+	UPROPERTY()
+	UPanelWidget* m_widgetToResize;
 };

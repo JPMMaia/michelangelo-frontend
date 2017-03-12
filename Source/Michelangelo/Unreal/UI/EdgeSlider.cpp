@@ -23,15 +23,16 @@ void UEdgeSlider::NativeConstruct()
 		playerController->InputComponent->BindAction("Drag", IE_Released, this, &UEdgeSlider::OnDragReleased);
 	}
 }
+void UEdgeSlider::OnConstruct(UPanelWidget* widgetToResize)
+{
+	m_widgetToResize = widgetToResize;
+}
 
 void UEdgeSlider::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	UUserWidget::Tick(MyGeometry, InDeltaTime);
 
-	// Get player controller:
-	auto playerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	
-	if (!m_focus)
+	if (!m_focus || !m_widgetToResize)
 		return;
 
 	// Get parent:
@@ -39,10 +40,8 @@ void UEdgeSlider::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	if (!parent)
 		return;
 
-	// Get grandparent:
-	auto grandParent = parent->GetParent();
-	if (!grandParent)
-		return;
+	// Get player controller:
+	auto playerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
 	// Get current mouse position:
 	FVector2D currentMousePosition;
@@ -55,7 +54,7 @@ void UEdgeSlider::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	m_lastMousePosition = currentMousePosition;
 
 	// Resize slot:
-	auto* slot = Cast<UCanvasPanelSlot>(grandParent->Slot);
+	auto* slot = Cast<UCanvasPanelSlot>(m_widgetToResize->Slot);
 	auto anchors = slot->LayoutData.Anchors;
 	auto desiredSize = slot->GetSize();
 	if (!anchors.IsStretchedHorizontal())
