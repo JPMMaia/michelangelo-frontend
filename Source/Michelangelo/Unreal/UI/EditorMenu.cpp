@@ -142,6 +142,7 @@ void UEditorMenu::RequestEvaluateGrammar()
 		}
 		
 		nativeWebAPI.EvaluateGrammar(grammarData, cameraParameters, sceneGeometry, message);
+		FormatText(message);
 	}
 	catch (const std::exception&)
 	{
@@ -238,3 +239,21 @@ void UEditorMenu::HandleSceneGeometry(const SceneGeometry& sceneGeometry)
 		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarErrorEvent>("Scene geometry sent by server not supported by this application."));
 	}
 }
+
+void UEditorMenu::FormatText(std::string& message)
+{
+	static const auto beginColorTag = "<span color=\"#FF0000\">";
+	static const auto endColorTag = "</>";
+
+	std::stringstream ss;
+	ss << beginColorTag;
+
+	std::string breakTag("<br/>");
+	for(auto beginTag = message.find(breakTag), lastEndTag = static_cast<size_t>(0); beginTag != std::string::npos; lastEndTag = beginTag + breakTag.size(), beginTag = message.find(breakTag, lastEndTag))
+		ss << message.substr(lastEndTag, beginTag) << endColorTag << "\n" << beginColorTag;
+		
+	ss << endColorTag;
+
+	message = ss.str();
+}
+

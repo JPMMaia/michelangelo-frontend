@@ -77,6 +77,9 @@ public:
 	void HandleSceneGeometry(const MichelangeloAPI::SceneGeometry& sceneGeometry);
 
 private:
+	static void FormatText(std::string& message);
+
+private:
 	std::mutex m_grammarDataMutex;
 
 	UPROPERTY()

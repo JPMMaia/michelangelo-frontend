@@ -124,9 +124,9 @@ namespace TextHighlight
 					}
 				},
 				{ "colors", {
-					{ "comments", "48A433"},
-					{ "keywords", "4A9A9B"},
-					{ "strings", "D4713F" }
+					{ "comments", "51B53D"},
+					{ "keywords", "4A9AE4"},
+					{ "strings", "E27944" }
 					}
 				}
 			};
