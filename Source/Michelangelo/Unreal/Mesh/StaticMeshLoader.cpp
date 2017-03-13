@@ -1,5 +1,5 @@
 #include "Michelangelo.h"
-#include "UStaticMeshLoader.h"
+#include "StaticMeshLoader.h"
 
 UStaticMeshLoader::UStaticMeshLoader(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

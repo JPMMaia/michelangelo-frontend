@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Unreal/Mesh/UStaticMeshLoader.h"
+#include "Unreal/Mesh/StaticMeshLoader.h"
 #include "Unreal/Materials/UMaterialLoader.h"
 #include "Unreal/Scene/URenderItemsCollection.h"
 #include "NonUnreal/MichelangeloAPI/NativeWebAPI.h"
