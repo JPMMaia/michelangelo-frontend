@@ -3,7 +3,7 @@
 
 UMaterialLoader::UMaterialLoader(const FObjectInitializer& ObjectInitializer)
 {
-	AddMaterial("BasicMaterial");
+	AddMaterial("BaseMaterial");
 }
 
 UMaterialInterface* UMaterialLoader::GetMaterial(const FString& name)

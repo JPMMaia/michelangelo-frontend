@@ -18,16 +18,7 @@ ATestActor::ATestActor(const FObjectInitializer& objectInitializer) :
 
 void ATestActor::BeginPlay()
 {
-	// Read geometry from file:
-	MichelangeloAPI::SceneGeometry sceneGeometry;
-	{
-		ifstream fileStream(L"TestMesh.json", ios::in);
-		nlohmann::json json;
-		fileStream >> json;
-		sceneGeometry = MichelangeloAPI::SceneGeometry::CreateFromJson(json);
-	}
-
-	auto renderItems = UGameDataSingleton::Get()->GetRenderItemsCollection();;
-	renderItems->Clear();
-	renderItems->AddGeometry(sceneGeometry);
+	auto x = FString::SanitizeFloat(GNearClippingPlane);
+	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, FString::Printf(TEXT("%s"), *x));
+	
 }
