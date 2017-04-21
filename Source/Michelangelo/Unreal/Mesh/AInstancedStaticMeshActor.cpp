@@ -60,7 +60,7 @@ UMaterialInstanceDynamic* AInstancedStaticMeshActor::CreateDynamicMaterialInstan
 {
 	// Get a source material loaded from a blueprint:
 	auto materialLoader = UGameDataSingleton::Get()->GetMaterialLoader();
-	auto sourceMaterial = materialLoader->GetMaterial("BasicMaterial");
+	auto sourceMaterial = materialLoader->GetMaterial("BaseMaterial");
 
 	// Create material instance:
 	return m_instancedStaticMeshComponent->CreateDynamicMaterialInstance(0, sourceMaterial);

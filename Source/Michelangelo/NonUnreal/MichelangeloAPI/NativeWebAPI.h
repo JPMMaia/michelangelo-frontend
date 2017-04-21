@@ -32,6 +32,8 @@ namespace MichelangeloAPI
 		const SessionData& GetSessionData() const;
 
 	private:
+		nlohmann::json WaitForLongTaskToFinish(const CurlHandle& curlHandle, const GrammarSpecificData& grammarData, const nlohmann::json& responseData) const;
+
 		static bool ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookieValue);
 		static bool ExtractLogInVerificationToken(const std::string& body, std::string& verificationToken);
 		static bool ExtractLogOutVerificationToken(const std::string& body, std::string& verificationToken);

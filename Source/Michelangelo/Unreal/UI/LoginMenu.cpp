@@ -5,7 +5,7 @@
 #include "Unreal/UGameDataSingleton.h"
 #include "Unreal/Common/UnrealHelpers.h"
 #include "NonUnreal/MichelangeloAPI/NativeWebAPI.h"
-#include "NonUnreal/MichelangeloAPI/AuthenticationError.h"
+#include "NonUnreal/MichelangeloAPI/Exceptions/AuthenticationError.h"
 
 using namespace Common;
 
