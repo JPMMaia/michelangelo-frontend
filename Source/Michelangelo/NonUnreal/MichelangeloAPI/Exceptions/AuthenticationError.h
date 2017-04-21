@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace MichelangeloAPI
 {
 	class AuthenticationError : public std::exception

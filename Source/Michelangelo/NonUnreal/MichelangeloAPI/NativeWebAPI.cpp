@@ -9,7 +9,8 @@
 #include "CurlHandle.h"
 #include "CurlList.h"
 #include "CurlBody.h"
-#include "AuthenticationError.h"
+#include "Exceptions/AuthenticationError.h"
+#include "Exceptions/TimeoutError.h"
 
 #include <regex>
 #include <limits>
@@ -118,7 +119,7 @@ GrammarSpecificData NativeWebAPI::CreateNewGrammar() const
 	CurlBody requestBody;
 	std::string responseHeader, responseBody;
 	curlHandle.PerformPUTRequest(URLConstants::OwnGrammarAPI, requestHeader, requestBody, responseHeader, responseBody);
-	
+
 	return GrammarSpecificData::FromJson(nlohmann::json::parse(responseBody.c_str()), GrammarType::Own);
 }
 void NativeWebAPI::DeleteGrammar(const std::string& id) const
@@ -166,7 +167,7 @@ GrammarSpecificData NativeWebAPI::GetGrammarData(GrammarType grammarType, const 
 	return GrammarSpecificData::FromJson(grammarsJson, grammarType);
 }
 
-void NativeWebAPI::EvaluateGrammar(const GrammarSpecificData& data, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const
+void NativeWebAPI::EvaluateGrammar(const GrammarSpecificData& grammarData, const CameraParameters& cameraParameters, SceneGeometry& sceneGeometry, std::string& errorMessage) const
 {
 	CurlHandle curlHandle;
 
@@ -174,10 +175,10 @@ void NativeWebAPI::EvaluateGrammar(const GrammarSpecificData& data, const Camera
 	std::string responseBody;
 	{
 		CurlBody requestBody;
-		requestBody.AddPair("ID", data.ID);
-		requestBody.AddPair("Name", data.Name);
-		requestBody.AddPair("Type", data.Type);
-		requestBody.AddPair("Code", Helpers::WStringToString(data.Code));
+		requestBody.AddPair("ID", grammarData.ID);
+		requestBody.AddPair("Name", grammarData.Name);
+		requestBody.AddPair("Type", grammarData.Type);
+		requestBody.AddPair("Code", Helpers::WStringToString(grammarData.Code));
 		requestBody.AddPair("OnlyNID", std::to_string(std::numeric_limits<unsigned int>::max()));
 		requestBody.AddPair("CamPos", Helpers::ArrayToString(cameraParameters.GetCameraPosition()));
 		requestBody.AddPair("CamUp", Helpers::ArrayToString(cameraParameters.GetCameraUpDirection()));
@@ -189,11 +190,29 @@ void NativeWebAPI::EvaluateGrammar(const GrammarSpecificData& data, const Camera
 
 		auto requestHeader = m_sessionData.GenerateHeaderWithCookies();
 		std::string responseHeader;
-		curlHandle.PerformPOSTRequest(URLConstants::EvaluateGrammarURL.at(data.GrammarType), requestHeader, requestBody, responseHeader, responseBody);
+		curlHandle.PerformPOSTRequest(URLConstants::EvaluateGrammarURL.at(grammarData.GrammarType), requestHeader, requestBody, responseHeader, responseBody);
 	}
 
 	// Parse response json:
 	auto dataJson = nlohmann::json::parse(responseBody.c_str());
+
+	// Handle long requests:
+	{
+		auto location = dataJson.find("img");
+		if (location != dataJson.end())
+		{
+			auto image = location->get<std::string>();
+			if (image.size() > 0)
+			{
+				auto parsedJson = dataJson.at("parsedJSON");
+				if (image == parsedJson)
+				{
+					// Wait for long task to finish:
+					dataJson = WaitForLongTaskToFinish(curlHandle, grammarData, dataJson);
+				}
+			}
+		}
+	}
 
 	// Find if any unexpected error occurred:
 	{
@@ -215,6 +234,30 @@ void NativeWebAPI::EvaluateGrammar(const GrammarSpecificData& data, const Camera
 const SessionData& NativeWebAPI::GetSessionData() const
 {
 	return m_sessionData;
+}
+
+nlohmann::json NativeWebAPI::WaitForLongTaskToFinish(const CurlHandle& curlHandle, const GrammarSpecificData& grammarData, const nlohmann::json& responseData) const
+{
+	auto key = responseData.at("img").get<std::string>();
+	auto url = URLConstants::EvaluateGrammarURL.at(grammarData.GrammarType) + grammarData.ID + "/Response/" + key;
+
+	// Try for at most 1 hour:
+	auto startTime = chrono::high_resolution_clock::now();
+	auto endTime = startTime + chrono::hours(1);
+	while (startTime < endTime)
+	{
+		auto dataJson = PerformGetJsonRequest(curlHandle, url);
+
+		auto location = dataJson.find("img");
+		if (location == dataJson.end())
+			ThrowEngineException(L"Expected parameter 'img' in JSON.");
+
+		auto image = location->get<std::string>();
+		if (image != key)
+			return dataJson;
+	}
+
+	throw TimeoutError("Long request timeout.");
 }
 
 bool NativeWebAPI::ExtractCookieValue(const std::string& header, const std::string& cookieName, std::string& cookieValue)
