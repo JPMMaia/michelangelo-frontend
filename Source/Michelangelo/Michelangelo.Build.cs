@@ -4,23 +4,36 @@ using UnrealBuildTool;
 
 public class Michelangelo : ModuleRules
 {
-	public Michelangelo(TargetInfo Target)
-	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+    public Michelangelo(TargetInfo Target)
+    {
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Http", "Json", "JsonUtilities", "ProceduralMeshComponent", "UMG", "PhysX", "APEX" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+        // Add lib curl:
+        AddEngineThirdPartyPrivateStaticDependencies(Target, "libcurl");
+        PublicIncludePaths.Add("C:/Program Files/Epic Games/UE_4.15/Engine/Source/ThirdParty/libcurl/curl-7.47.1/include/Win64/VS2015");
+        PublicAdditionalLibraries.Add("C:/Program Files/Epic Games/UE_4.15/Engine/Source/ThirdParty/libcurl/curl-7.47.1/lib/Win64/VS2015/libcurl_a.lib");
+        Definitions.Add("CURL_STATICLIB=1");
 
-		// Uncomment if you are using Slate UI
-		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-		
-		// Uncomment if you are using online features
-		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
-		// if ((Target.Platform == UnrealTargetPlatform.Win32) || (Target.Platform == UnrealTargetPlatform.Win64))
-		// {
-		//		if (UEBuildConfiguration.bCompileSteamOSS == true)
-		//		{
-		//			DynamicallyLoadedModuleNames.Add("OnlineSubsystemSteam");
-		//		}
-		// }
-	}
+        PublicIncludePaths.AddRange(
+          new string[] {
+                "ThirdParty/boost/spirit/include"
+          }
+          );
+        PrivateIncludePaths.AddRange(
+            new string[] {
+                "MichelangeloAPI/Source"
+            }
+            );
+
+        // Uncomment if you are using online features
+        PrivateDependencyModuleNames.Add("OnlineSubsystem");
+
+        // Build fast:
+        MinFilesUsingPrecompiledHeaderOverride = 1;
+        bFasterWithoutUnity = true;
+
+        // Enable exceptions:
+        UEBuildConfiguration.bForceEnableExceptions = true;
+    }
 }

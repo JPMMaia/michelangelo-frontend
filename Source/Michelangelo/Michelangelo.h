@@ -2,5 +2,6 @@
 
 #pragma once
 
+#ifndef NATIVE_CPP
 #include "Engine.h"
-
+#endif

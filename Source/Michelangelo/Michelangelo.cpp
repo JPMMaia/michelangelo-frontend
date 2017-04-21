@@ -2,4 +2,6 @@
 
 #include "Michelangelo.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, Michelangelo, "Michelangelo" );
+#ifndef NATIVE_CPP
+IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl, Michelangelo, "Michelangelo");
+#endif
