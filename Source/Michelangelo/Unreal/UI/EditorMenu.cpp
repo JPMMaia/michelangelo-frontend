@@ -5,6 +5,7 @@
 #include "NonUnreal/MichelangeloAPI/CameraParameters.h"
 #include "Unreal/Common/UnrealHelpers.h"
 #include "Unreal/Web/GrammarSpecificData.h"
+#include "NonUnreal/MichelangeloAPI/Exceptions/TimeoutError.h"
 
 using namespace Common;
 using namespace MichelangeloAPI;
@@ -144,6 +145,11 @@ void UEditorMenu::RequestEvaluateGrammar()
 		nativeWebAPI.EvaluateGrammar(grammarData, cameraParameters, sceneGeometry, message);
 		FormatText(message);
 	}
+	catch (const TimeoutError&)
+	{
+		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarErrorEvent>("Request took too long to complete."));
+		return;
+	}
 	catch (const std::exception&)
 	{
 		m_eventsComponent.AddEvent(std::make_unique<Events::OnGrammarErrorEvent>("Internal application error."));
@@ -256,4 +262,3 @@ void UEditorMenu::FormatText(std::string& message)
 
 	message = ss.str();
 }
-

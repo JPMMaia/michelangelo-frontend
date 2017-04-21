@@ -214,6 +214,13 @@ void NativeWebAPI::EvaluateGrammar(const GrammarSpecificData& grammarData, const
 		}
 	}
 
+	{
+#ifdef NDEBUG
+		std::ofstream fileStream("debugGrammar.json");
+		fileStream << std::setw(4) << dataJson << std::endl;
+#endif
+	}
+
 	// Find if any unexpected error occurred:
 	{
 		auto location = dataJson.find("message");
@@ -242,9 +249,8 @@ nlohmann::json NativeWebAPI::WaitForLongTaskToFinish(const CurlHandle& curlHandl
 	auto url = URLConstants::EvaluateGrammarURL.at(grammarData.GrammarType) + grammarData.ID + "/Response/" + key;
 
 	// Try for at most 1 hour:
-	auto startTime = chrono::high_resolution_clock::now();
-	auto endTime = startTime + chrono::hours(1);
-	while (startTime < endTime)
+	auto endTime = chrono::high_resolution_clock::now() + chrono::hours(1);
+	while (chrono::high_resolution_clock::now() < endTime)
 	{
 		auto dataJson = PerformGetJsonRequest(curlHandle, url);
 
