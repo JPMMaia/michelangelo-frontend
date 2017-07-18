@@ -1,6 +1,6 @@
 # Michelangelo Frontend
 
-Michelangelo Frontend is a client made using Unreal Engine for [Michelangelo](https://michelangelo.graphics/), a tool that allows artists to create 3D content through procedural modeling.
+Michelangelo Frontend is a client application made using Unreal Engine for [Michelangelo](https://michelangelo.graphics/), a tool that allows artists to create 3D content through procedural modeling.
 
 ## Getting Started
 
